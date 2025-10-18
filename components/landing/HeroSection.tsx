@@ -61,15 +61,15 @@ export function HeroSection() {
             
             <div className="grid grid-cols-3 gap-8 pt-8">
               <div className="text-center">
-                <p className="text-3xl font-bold text-primary-100 animate-pulse-glow">800+</p>
+                <p className="text-3xl font-bold text-primary-100 rounded-md py-4 ">800+</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Active Tutors</p>
               </div>
               <div className="text-center">
-                <p className="text-3xl font-bold text-secondary-100 dark:text-pink-100 animate-pulse-glow">700+</p>
+                <p className="text-3xl font-bold text-secondary-100 dark:text-pink-100 rounded-md py-4 ">700+</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Active Students</p>
               </div>
               <div className="text-center">
-                <p className="text-3xl font-bold text-lemon-400 dark:text-lemon-100 animate-pulse-glow">20K+</p>
+                <p className="text-3xl font-bold text-lemon-400 dark:text-lemon-100 rounded-md py-4 ">20K+</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Hours Tutored</p>
               </div>
             </div>
@@ -77,7 +77,7 @@ export function HeroSection() {
           
           <div className="relative mx-auto w-full max-w-lg lg:max-w-xl">
             <div className="relative">
-              <div className="absolute -inset-8 rounded-full bg-gradient-to-r from-primary-100/20 to-lemon-100/20 blur-3xl animate-pulse-glow"></div>
+              <div className="absolute -inset-8 rounded-full bg-gradient-to-r from-primary-100/20 to-lemon-100/20 blur-3xl"></div>
               <div className="relative z-10 flex items-center justify-center perspective-1000">
                 <div className="relative transform-gpu hover:scale-105 transition-transform duration-500">
                   <Image

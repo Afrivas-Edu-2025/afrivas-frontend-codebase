@@ -1,16 +1,42 @@
-import {
-  BarChart,
-  Calendar,
-  Globe,
-  Mail,
-  MapPin,
-  MessageCircle,
-  Phone,
-  Shield,
-  Users,
-} from "lucide-react"
+import React from "react";
+import { BarChart, Calendar, Globe, Mail, MapPin, MessageCircle, Phone, Shield, Users, Box, Settings, Lock, Sparkles, Search } from "lucide-react";
 
 export const features = [
+  {
+    area: "md:[grid-area:1/1/2/7] xl:[grid-area:1/1/2/5]",
+    icon: React.createElement(MessageCircle, { className: "h-4 w-4" }),
+    title: "Real-time Communication",
+    description: "Instant messaging and notifications between students, parents, and teachers.",
+  },
+  {
+    area: "md:[grid-area:1/7/2/13] xl:[grid-area:2/1/3/5]",
+    icon: React.createElement(BarChart, { className: "h-4 w-4" }),
+    title: "Progress Tracking",
+    description:
+      "Monitor student performance and attendance in real-time.",
+  },
+  {
+    area: "md:[grid-area:2/1/3/7] xl:[grid-area:1/5/3/8]",
+    icon: React.createElement(Users, { className: "h-4 w-4" }),
+    title: "Resource Sharing",
+    description: "Easy sharing of educational materials and assignments.",
+  },
+  {
+    area: "md:[grid-area:2/7/3/13] xl:[grid-area:1/8/2/13]",
+    icon: React.createElement(Shield, { className: "h-4 w-4" }),
+    title: "Secure Platform",
+    description:
+      "End-to-end encryption and privacy protection for all users.",
+  },
+  {
+    area: "md:[grid-area:3/1/4/13] xl:[grid-area:2/8/3/13]",
+    icon: React.createElement(Globe, { className: "h-4 w-4" }),
+    title: "Global Access",
+    description: "Access your educational resources from anywhere in the world",
+  },
+];
+
+export const featuresOld = [
   {
     title: "Real-time Communication",
     description: "Instant messaging and notifications between students, parents, and teachers.",
@@ -25,11 +51,6 @@ export const features = [
     title: "Resource Sharing",
     description: "Easy sharing of educational materials and assignments.",
     icon: Users,
-  },
-  {
-    title: "Calendar Integration",
-    description: "Synchronized schedules for classes, events, and deadlines.",
-    icon: Calendar,
   },
   {
     title: "Secure Platform",

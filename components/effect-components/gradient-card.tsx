@@ -1,10 +1,8 @@
 'use client'
-import RadialOrbitalTimeline from "@/components/effect-components/radial-orbital-timeline"
-import { Calendar, FileText, Code, User, Clock, ChartBar } from "lucide-react"
 import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
 
-const GradientAboutCard = ({ title, description, uppercase = false }) => {
+const GradientCard = ({ children, className = "", uppercaseTitle = false, title, description, ...props }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -35,10 +33,71 @@ const GradientAboutCard = ({ title, description, uppercase = false }) => {
     setRotation({ x: 0, y: 0 });
   };
 
+  const defaultContent = (
+    <motion.div
+      className="relative flex flex-col h-full p-8 z-40"
+      animate={{
+        z: 2
+      }}
+    >
+      <motion.div
+        className="mb-auto"
+        animate={{
+          z: isHovered ? 5 : 2,
+          rotateX: isHovered ? -rotation.x * 0.3 : 0,
+          rotateY: isHovered ? -rotation.y * 0.3 : 0
+        }}
+        transition={{
+          duration: 0.4,
+          ease: "easeOut"
+        }}
+      >
+        {title && (
+          <motion.h3
+            className={`text-xl font-bold mb-4 ${uppercaseTitle ? 'uppercase' : ''}`}
+            style={{
+              letterSpacing: "-0.01em",
+              lineHeight: 1.2,
+              color: 'white'
+            }}
+            initial={{ filter: "blur(3px)", opacity: 0.7 }}
+            animate={{
+              textShadow: isHovered ? "0 2px 4px rgba(0,0,0,0.2)" : "none",
+              filter: "blur(0px)",
+              opacity: 1,
+              transition: { duration: 1.2, delay: 0.2 }
+            }}
+          >
+            {title}
+          </motion.h3>
+        )}
+        {description && (
+          <motion.p
+            className="text-muted-foreground text-sm"
+            style={{
+              lineHeight: 1.5,
+              fontWeight: 350,
+              color: 'rgb(156 163 175)'
+            }}
+            initial={{ filter: "blur(3px)", opacity: 0.7 }}
+            animate={{
+              textShadow: isHovered ? "0 1px 2px rgba(0,0,0,0.1)" : "none",
+              filter: "blur(0px)",
+              opacity: 0.85,
+              transition: { duration: 1.2, delay: 0.4 }
+            }}
+          >
+            {description}
+          </motion.p>
+        )}
+      </motion.div>
+    </motion.div>
+  );
+
   return (
     <motion.div
       ref={cardRef}
-      className="relative rounded-[32px] overflow-hidden w-full"
+      className={`relative rounded-[32px] overflow-hidden w-full ${className}`}
       style={{
         height: "auto",
         minHeight: "300px",
@@ -61,6 +120,7 @@ const GradientAboutCard = ({ title, description, uppercase = false }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={handleMouseLeave}
       onMouseMove={handleMouseMove}
+      {...props}
     >
       {/* Subtle glass reflection overlay */}
       <motion.div
@@ -81,7 +141,7 @@ const GradientAboutCard = ({ title, description, uppercase = false }) => {
         }}
       />
 
-      {/* Dark background with black gradient like in the image */}
+      {/* Dark background with black gradient */}
       <motion.div
         className="absolute inset-0 z-0"
         style={{
@@ -243,157 +303,10 @@ const GradientAboutCard = ({ title, description, uppercase = false }) => {
         }}
       />
 
-      {/* Card content - adapted for about cards, no icon */}
-      <motion.div
-        className="relative flex flex-col h-full p-8 z-40"
-        animate={{
-          z: 2
-        }}
-      >
-        <motion.div
-          className="mb-auto"
-          animate={{
-            z: isHovered ? 5 : 2,
-            rotateX: isHovered ? -rotation.x * 0.3 : 0,
-            rotateY: isHovered ? -rotation.y * 0.3 : 0
-          }}
-          transition={{
-            duration: 0.4,
-            ease: "easeOut"
-          }}
-        >
-          <motion.h3
-            className={`text-xl font-bold mb-4 ${uppercase ? 'uppercase' : ''}`}
-            style={{
-              letterSpacing: "-0.01em",
-              lineHeight: 1.2,
-              color: 'white'
-            }}
-            initial={{ filter: "blur(3px)", opacity: 0.7 }}
-            animate={{
-              textShadow: isHovered ? "0 2px 4px rgba(0,0,0,0.2)" : "none",
-              filter: "blur(0px)",
-              opacity: 1,
-              transition: { duration: 1.2, delay: 0.2 }
-            }}
-          >
-            {title}
-          </motion.h3>
-
-          <motion.p
-            className="text-muted-foreground text-sm"
-            style={{
-              lineHeight: 1.5,
-              fontWeight: 350,
-              color: 'rgb(156 163 175)'
-            }}
-            initial={{ filter: "blur(3px)", opacity: 0.7 }}
-            animate={{
-              textShadow: isHovered ? "0 1px 2px rgba(0,0,0,0.1)" : "none",
-              filter: "blur(0px)",
-              opacity: 0.85,
-              transition: { duration: 1.2, delay: 0.4 }
-            }}
-          >
-            {description}
-          </motion.p>
-        </motion.div>
-      </motion.div>
+      {/* Render children or default content */}
+      {children || defaultContent}
     </motion.div>
   );
 };
 
-export default function AboutPage() {
-    const timelineData = [
-  {
-    id: 1,
-    title: "Classes",
-    date: "Jan 2024",
-    content: "All your classes in one place.",
-    category: "classes",
-    icon: Calendar,
-    relatedIds: [2],
-    status: "completed" as const,
-    energy: 100,
-  },
-  {
-    id: 2,
-    title: "Notes",
-    date: "Feb 2024",
-    content: "All your college notes in one place.",
-    category: "Notes",
-    icon: FileText,
-    relatedIds: [1, 3],
-    status: "completed" as const,
-    energy: 90,
-  },
-  {
-    id: 3,
-    title: "Assignment",
-    date: "Mar 2024",
-    content: "All your assignments in one place.",
-    category: "Assignment",
-    icon: Code,
-    relatedIds: [2, 4],
-    status: "in-progress" as const,
-    energy: 60,
-  },
-  {
-    id: 4,
-    title: "Grades",
-    date: "Apr 2024",
-    content: "All your grades in one place.",
-    category: "Grades",
-    icon: ChartBar,
-    relatedIds: [3, 5],
-    status: "pending" as const,
-    energy: 30,
-  },
-  {
-    id: 5,
-    title: "Tracker",
-    date: "May 2024",
-    content: "Track your progress and stay organized.",
-    category: "Tracker",
-    icon: Clock,
-    relatedIds: [4],
-    status: "pending" as const,
-    energy: 10,
-  },
-];
-
-  return ( 
-    <section id="about-us" className="flex justify-center align-center py-16 md:py-24 dark:bg-gray-800 rounded h-auto ">
-      <div className="container">
-        <h2 className="mb-2 text-3xl font-bold md:text-4xl text-lemon-100">About Us</h2>
-        <p className="mb-8 text-muted-foreground">Why Choose Us?</p>
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-
-          {/* Focus Card */}
-          <GradientAboutCard 
-            title="Focus" 
-            description="We focus on creating intuitive tools that enhance communication and collaboration in educational settings, making it easier for students, parents, and educators to work together toward academic success."
-            uppercase={true}
-          />
-
-          {/* Vision Card */}
-          <GradientAboutCard 
-            title="Vision" 
-            description="Our vision is to transform education through technology, creating a world where every student has the support they need to succeed, and where parents and educators can work together seamlessly."
-            uppercase={true}
-          />
-          
-          {/* Mission Card */}
-          <GradientAboutCard 
-            title="Mission" 
-            description="Our mission is to provide innovative solutions that bridge the gap between home and school, empowering all stakeholders in education to communicate effectively and collaborate productively."
-            uppercase={false}
-          />
-        </div>
-
-      
-        <RadialOrbitalTimeline timelineData={timelineData} />
-      </div>
-    </section>
-  )
-}
+export default GradientCard;

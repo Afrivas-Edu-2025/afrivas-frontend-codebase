@@ -6,12 +6,15 @@ import ReduxProvider from '@/components/ReduxProvider';
 import { AuthProvider } from '@/components/auth-context';
 import { ThemeProvider } from '@/components/theme-provider';
 
+import Navbar from "@/components/Navbar"
+import Footer from "@/components/Footer"
+
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Afrivas Learning Platform',
   description: 'A comprehensive educational platform for students and educators',
-  generator: '',
+  generator: '', 
 };
 
 export default function RootLayout({
@@ -31,7 +34,13 @@ export default function RootLayout({
         >
           <ReduxProvider>
             <AuthProvider>
+              <div className="navbar">
+                <Navbar />
+              </div>
               {children}
+              <div className="footer">
+                <Footer />
+              </div>
             </AuthProvider>
           </ReduxProvider>
         </ThemeProvider>

@@ -11,7 +11,7 @@ export default function Footer(){
 
     return(
         <>
-                  <footer className="border-t bg-white py-12 dark:bg-gray-900 dark:border-gray-800">
+        <footer className="border-t bg-white py-12 dark:bg-gray-900 dark:border-gray-800">
         <div className="container px-4 sm:px-6 lg:px-8 mx-auto">
           <div className="grid gap-8 md:grid-cols-4">
             <div>

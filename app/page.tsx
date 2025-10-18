@@ -9,7 +9,7 @@ import {
   HowItWorksSection,
   TestimonialsSection,
   FAQSection,
-  CTASection,
+  CTASection, 
   ContactSection,
   ScrollToTopButton
 } from "@/components/landing"
@@ -17,9 +17,7 @@ import {
 export default function Home() {
   return (
     <div className="min-h-screen">
-      <div className="navbar">
-        <Navbar />
-      </div>
+
 
       <ScrollToTopButton />
 
@@ -28,9 +26,9 @@ export default function Home() {
         <UserRolesSection />
         <FeaturesSection />
         <AboutPage />
-        <HowItWorksSection />
+        {/* <HowItWorksSection /> */}
         <TestimonialsSection />
-        <FAQSection />
+        {/* <FAQSection /> */}
         <CTASection />
         <ContactSection />
       </main>
