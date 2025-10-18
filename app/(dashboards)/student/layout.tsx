@@ -15,7 +15,7 @@ export default function StudentLayout({
   children: React.ReactNode
 }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <PrivateRoute allowedRoles={['student']}>
         <DashboardLayout userRole="student">{children}</DashboardLayout>
       </PrivateRoute>

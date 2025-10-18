@@ -1,7 +1,6 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { faqs } from "./data"
+import FAQ1 from "../effect-components/faq-monochrome"
 
 export function FAQSection() {
   return (
@@ -15,21 +14,7 @@ export function FAQSection() {
             Find answers to commonly asked questions about Afrivas.
           </p>
         </div>
-        
-        <div className="mx-auto max-w-3xl space-y-4">
-          {faqs.map((faq, index) => (
-            <Card key={index} className="border-0 shadow-md bg-white dark:bg-gray-900">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-medium mb-2 text-gray-900 dark:text-gray-100">
-                  {faq.question}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  {faq.answer}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <FAQ1 />
       </div>
     </section>
   )

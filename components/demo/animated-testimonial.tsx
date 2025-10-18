@@ -1,4 +1,4 @@
-import { AnimatedTestimonials } from "@/components/anieffect-componentsmated/animated-testimonial";
+import { AnimatedTestimonials } from "@/components/effect-components/animated-testimonial";
 
 function AnimatedTestimonialsDemo() {
   const testimonials = [

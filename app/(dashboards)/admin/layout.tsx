@@ -9,14 +9,14 @@ export const metadata: Metadata = {
   description: "Lecturer portal for the educational platform",
 }
 
-export default function LecturerLayout({
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-      <PrivateRoute allowedRoles={['ADMIN']}>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <PrivateRoute allowedRoles={["ADMIN"]}>
         <DashboardLayout userRole="ADMIN">{children}</DashboardLayout>
       </PrivateRoute>
     </ThemeProvider>

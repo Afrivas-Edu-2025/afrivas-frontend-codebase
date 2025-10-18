@@ -26,9 +26,9 @@ export default function Home() {
         <UserRolesSection />
         <FeaturesSection />
         <AboutPage />
-        {/* <HowItWorksSection /> */}
-        <TestimonialsSection />
-        {/* <FAQSection /> */}
+        <HowItWorksSection />
+        {/* <TestimonialsSection /> */}
+        <FAQSection />
         <CTASection />
         <ContactSection />
       </main>

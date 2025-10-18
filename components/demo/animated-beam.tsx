@@ -91,11 +91,17 @@ export function AnimatedBeamDemo() {
   const div7Ref = useRef<HTMLDivElement>(null);
 
   return (
+    <div className="rounded-lg border bg-background h-[600px] w-full p-10 md:shadow-xl mt-16 overflow-hidden">
+       <div className="flex justify-center items-center w-full mt-24">
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            A seamless environment for students and lecturers
+          </p>
+        </div>
+
     <div
-      className="relative flex h-[600px] w-full items-center justify-center overflow-hidden rounded-lg border bg-background p-10 md:shadow-xl mt-16"
+      className="relative flex items-center justify-center"
       ref={containerRef}
     >
-
       <div className="flex size-full flex-row max-w-2xl max-h-[400px] items-center justify-between gap-10">
        
         {/* Lecturers (Left) */}
@@ -216,5 +222,6 @@ export function AnimatedBeamDemo() {
         reverse
       />
     </div>
+        </div>
   );
 }

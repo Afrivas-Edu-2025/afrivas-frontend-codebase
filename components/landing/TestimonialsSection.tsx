@@ -1,5 +1,5 @@
 "use client"
-
+import { AnimatedTestimonials } from "@/components/effect-components/animated-testimonial";
 import { WobbleCard } from "@/components/aceternity/wobble-card"
 import { testimonials } from "./data"
 
@@ -24,7 +24,7 @@ export function TestimonialsSection() {
           </p>
         </div>
         
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto">
+        {/* <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto">
           {testimonials.map((testimonial, index) => (
             <WobbleCard key={index} containerClassName="col-span-1 min-h-[300px]">
               <div className="max-w-xs">
@@ -64,7 +64,9 @@ export function TestimonialsSection() {
               </div>
             </WobbleCard>
           ))}
-        </div>
+        </div> */}
+
+        <AnimatedTestimonials testimonials={testimonials} />  
       </div>
     </section>
   )

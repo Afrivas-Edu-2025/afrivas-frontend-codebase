@@ -80,8 +80,8 @@ const Feature108 = ({
     <section className="py-20 bg-white dark:bg-gray-900">
       <div className="container mx-auto">
         <div className="flex flex-col items-center gap-4 text-center">
-          <Badge variant="outline">{badge}</Badge>
-          <h1 className="max-w-2xl text-3xl font-semibold md:text-4xl text-gray-900 dark:text-gray-100">
+          <Badge variant="outline" className="bg-secondary-300/25 border border-secondary-300">{badge}</Badge>
+          <h1 className="max-w-2xl text-3xl font-semibold md:text-4xl text-secondary-200 dark:text-primary-100">
             {heading}
           </h1>
           <p className="text-muted-foreground text-lg">{description}</p>
@@ -92,7 +92,7 @@ const Feature108 = ({
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-muted-foreground data-[state=active]:bg-muted data-[state=active]:text-primary"
+                className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-muted-foreground data-[state=active]:bg-muted data-[state=active]:text-lemon-200 data-[state=active]:dark:text-lemon-100"
               >
                 {tab.icon} {tab.label}
               </TabsTrigger>
@@ -134,11 +134,6 @@ const Feature108 = ({
             ))}
           </div>
         </Tabs>
-        <div className="flex justify-center items-center w-full mt-24">
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            A seamless environment for students and lecturers
-          </p>
-        </div>
       </div>
     </section>
   );
