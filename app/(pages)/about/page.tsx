@@ -1,5 +1,5 @@
 'use client'
-import RadialOrbitalTimeline from "@/components/effect-components/radial-orbital-timeline"
+import { RadialOrbitalTimeline } from "@/components/effect-components/radial-orbital-timeline-new";
 import { Calendar, FileText, Code, User, Clock, BarChart3 } from "lucide-react"
 import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
@@ -172,7 +172,7 @@ const GradientAboutCard = ({ title, description, uppercase = false }) => {
   );
 };
 
-export default function AboutPage() {
+export default function AboutUsPage() {
     const timelineData = [
   {
     id: 1,
