@@ -1,5 +1,5 @@
 'use client'
-import { RadialOrbitalTimeline } from "@/components/effect-components/radial-orbital-timeline-new";
+// import RadialOrbitalTimeline from "@/components/effect-components/radial-orbital-timeline";
 import { Calendar, FileText, Code, User, Clock, BarChart3 } from "lucide-react"
 import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
@@ -261,7 +261,9 @@ export default function AboutUsPage() {
         </div>
 
       
-        <RadialOrbitalTimeline timelineData={timelineData} />
+        {/* Temporarily disable timeline to isolate build error */}
+        {/* <RadialOrbitalTimeline timelineData={timelineData} /> */}
+        <div className="h-0" />
       </div>
     </section>
   )

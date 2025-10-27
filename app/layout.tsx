@@ -36,13 +36,7 @@ export default function RootLayout({
         >
           <ReduxProvider>
             <AuthProvider>
-              <div className="navbar">
-                <Navbar />
-              </div>
               {children}
-              <div className="footer">
-                <Footer />
-              </div>
             </AuthProvider>
           </ReduxProvider>
         </ThemeProvider>
