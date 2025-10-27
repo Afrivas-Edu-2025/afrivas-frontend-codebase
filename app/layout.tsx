@@ -5,7 +5,6 @@ import './globals.css';
 import ReduxProvider from '@/components/ReduxProvider';
 import { AuthProvider } from '@/components/auth-context';
 import { ThemeProvider } from '@/components/theme-provider';
-
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 
