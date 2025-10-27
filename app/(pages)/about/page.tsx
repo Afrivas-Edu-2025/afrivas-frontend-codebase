@@ -1,6 +1,6 @@
 'use client'
 import RadialOrbitalTimeline from "@/components/effect-components/radial-orbital-timeline"
-import { Calendar, FileText, Code, User, Clock, ChartBar } from "lucide-react"
+import { Calendar, FileText, Code, User, Clock, BarChart3 } from "lucide-react"
 import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
 
@@ -119,185 +119,54 @@ const GradientAboutCard = ({ title, description, uppercase = false }) => {
       <motion.div
         className="absolute bottom-0 left-0 right-0 h-2/3 z-20"
         style={{
-          background: `
-            radial-gradient(ellipse at bottom right, rgba(8, 177, 248, 0.7) -10%, rgba(14, 165, 233, 0) 70%),
-            radial-gradient(ellipse at bottom left, rgba(59, 130, 246, 0.7) -10%, rgba(8, 177, 248, 0) 70%)
-          `,
-          filter: "blur(40px)",
+          background: `radial-gradient(circle at 30% 70%, rgba(0, 123, 255, 0.15), rgba(0, 0, 0, 0) 35%), radial-gradient(circle at 70% 20%, rgba(88, 129, 234, 0.15), rgba(0, 0, 0, 0) 45%)`,
+          filter: "blur(10px)",
         }}
         animate={{
-          opacity: isHovered ? 0.9 : 0.8,
-          y: isHovered ? rotation.x * 0.5 : 0,
-          z: 0
-        }}
-        transition={{
-          duration: 0.4,
-          ease: "easeOut"
+          opacity: isHovered ? 0.8 : 0.5,
         }}
       />
 
-      {/* Central blue glow */}
+      {/* Main content */}
       <motion.div
-        className="absolute bottom-0 left-0 right-0 h-2/3 z-21"
-        style={{
-          background: `
-            radial-gradient(circle at bottom center, rgba(8, 177, 248, 0.7) -20%, rgba(59, 130, 246, 0) 60%)
-          `,
-          filter: "blur(45px)",
-        }}
+        className="relative z-30 p-8"
         animate={{
-          opacity: isHovered ? 0.85 : 0.75,
-          y: isHovered ? `calc(10% + ${rotation.x * 0.3}px)` : "10%",
-          z: 0
-        }}
-        transition={{
-          duration: 0.4,
-          ease: "easeOut"
-        }}
-      />
-
-      {/* Enhanced bottom border glow for premium look */}
-      <motion.div
-        className="absolute bottom-0 left-0 right-0 h-[2px] z-25"
-        style={{
-          background: "linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.7) 50%, rgba(255, 255, 255, 0.05) 100%)",
-        }}
-        animate={{
-          boxShadow: isHovered
-            ? "0 0 20px 4px rgba(8, 177, 248, 0.9), 0 0 30px 6px rgba(14, 165, 233, 0.7), 0 0 40px 8px rgba(2, 132, 199, 0.5)"
-            : "0 0 15px 3px rgba(8, 177, 248, 0.8), 0 0 25px 5px rgba(14, 165, 233, 0.6), 0 0 35px 7px rgba(2, 132, 199, 0.4)",
-          opacity: isHovered ? 1 : 0.9,
-          z: 0.5
-        }}
-        transition={{
-          duration: 0.4,
-          ease: "easeOut"
-        }}
-      />
-      <motion.div
-        className="absolute bottom-0 left-0 h-1/4 w-[1px] z-25 rounded-full"
-        style={{
-          background: "linear-gradient(to top, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.5) 20%, rgba(255, 255, 255, 0.3) 40%, rgba(255, 255, 255, 0.1) 60%, rgba(255, 255, 255, 0) 80%)",
-        }}
-        animate={{
-          boxShadow: isHovered
-            ? "0 0 20px 4px rgba(8, 177, 248, 0.9), 0 0 30px 6px rgba(14, 165, 233, 0.7), 0 0 40px 8px rgba(2, 132, 199, 0.5)"
-            : "0 0 15px 3px rgba(8, 177, 248, 0.8), 0 0 25px 5px rgba(14, 165, 233, 0.6), 0 0 35px 7px rgba(2, 132, 199, 0.4)",
-          opacity: isHovered ? 1 : 0.9,
-          z: 0.5
-        }}
-        transition={{
-          duration: 0.4,
-          ease: "easeOut"
-        }}
-      />
-      <motion.div
-        className="absolute bottom-0 left-0 h-1/4 z-25"
-        style={{
-          background: "linear-gradient(to top, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.55) 15%, rgba(255, 255, 255, 0.4) 30%, rgba(255, 255, 255, 0.25) 45%, rgba(255, 255, 255, 0.1) 70%, rgba(255, 255, 255, 0) 85%)",
-        }}
-        animate={{
-          boxShadow: isHovered
-            ? "0 0 20px 4px rgba(8, 177, 248, 0.9), 0 0 30px 6px rgba(14, 165, 233, 0.7), 0 0 40px 8px rgba(2, 132, 199, 0.5)"
-            : "0 0 15px 3px rgba(8, 177, 248, 0.8), 0 0 25px 5px rgba(14, 165, 233, 0.6), 0 0 35px 7px rgba(2, 132, 199, 0.4)",
-          opacity: isHovered ? 1 : 0.9,
-          z: 0.5
-        }}
-        transition={{
-          duration: 0.4,
-          ease: "easeOut"
-        }}
-      />
-      <motion.div
-        className="absolute bottom-0 right-0 h-1/4 w-[1px] z-25 rounded-full"
-        style={{
-          background: "linear-gradient(to top, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.5) 20%, rgba(255, 255, 255, 0.3) 40%, rgba(255, 255, 255, 0.1) 60%, rgba(255, 255, 255, 0) 80%)",
-        }}
-        animate={{
-          boxShadow: isHovered
-            ? "0 0 20px 4px rgba(8, 177, 248, 0.9), 0 0 30px 6px rgba(14, 165, 233, 0.7), 0 0 40px 8px rgba(2, 132, 199, 0.5)"
-            : "0 0 15px 3px rgba(8, 177, 248, 0.8), 0 0 25px 5px rgba(14, 165, 233, 0.6), 0 0 35px 7px rgba(2, 132, 199, 0.4)",
-          opacity: isHovered ? 1 : 0.9,
-          z: 0.5
-        }}
-        transition={{
-          duration: 0.4,
-          ease: "easeOut"
-        }}
-      />
-      <motion.div
-        className="absolute bottom-0 right-0 h-1/3 z-25"
-        style={{
-          background: "linear-gradient(to top, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.55) 15%, rgba(255, 255, 255, 0.4) 30%, rgba(255, 255, 255, 0.25) 45%, rgba(255, 255, 255, 0.1) 70%, rgba(255, 255, 255, 0) 85%)",
-        }}
-        animate={{
-          boxShadow: isHovered
-            ? "0 0 20px 4px rgba(8, 177, 248, 0.9), 0 0 30px 6px rgba(14, 165, 233, 0.7), 0 0 40px 8px rgba(2, 132, 199, 0.5)"
-            : "0 0 15px 3px rgba(8, 177, 248, 0.8), 0 0 25px 5px rgba(14, 165, 233, 0.6), 0 0 35px 7px rgba(2, 132, 199, 0.4)",
-          opacity: isHovered ? 1 : 0.9,
-          z: 0.5
-        }}
-        transition={{
-          duration: 0.4,
-          ease: "easeOut"
-        }}
-      />
-
-      {/* Card content - adapted for about cards, no icon */}
-      <motion.div
-        className="relative flex flex-col h-full p-8 z-40"
-        animate={{
-          z: 2
+          z: 10
         }}
       >
         <motion.div
-          className="mb-auto"
-          animate={{
-            z: isHovered ? 5 : 2,
-            rotateX: isHovered ? -rotation.x * 0.3 : 0,
-            rotateY: isHovered ? -rotation.y * 0.3 : 0
+          className={`uppercase text-sm font-semibold tracking-widest ${uppercase ? 'text-blue-100' : 'text-blue-200'} mb-2`}
+          initial={{ y: 5, opacity: 0 }}
+          animate={{ y: 0, opacity: 1, transition: { duration: 0.6 } }}
+        >
+          {uppercase ? title.toUpperCase() : title}
+        </motion.div>
+
+        <motion.h3
+          className="text-2xl md:text-3xl font-[500] text-white"
+          initial={{ y: 10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1, transition: { duration: 0.8 } }}
+        >
+          {title}
+        </motion.h3>
+
+        <motion.p
+          className="text-muted-foreground text-sm"
+          style={{
+            lineHeight: 1.5,
+            fontWeight: 350,
+            color: 'rgb(156 163 175)'
           }}
-          transition={{
-            duration: 0.4,
-            ease: "easeOut"
+          initial={{ filter: "blur(3px)", opacity: 0.7 }}
+          animate={{
+            textShadow: isHovered ? "0 1px 2px rgba(0,0,0,0.1)" : "none",
+            filter: "blur(0px)",
+            opacity: 0.85,
+            transition: { duration: 1.2, delay: 0.4 }
           }}
         >
-          <motion.h3
-            className={`text-xl font-bold mb-4 ${uppercase ? 'uppercase' : ''}`}
-            style={{
-              letterSpacing: "-0.01em",
-              lineHeight: 1.2,
-              color: 'white'
-            }}
-            initial={{ filter: "blur(3px)", opacity: 0.7 }}
-            animate={{
-              textShadow: isHovered ? "0 2px 4px rgba(0,0,0,0.2)" : "none",
-              filter: "blur(0px)",
-              opacity: 1,
-              transition: { duration: 1.2, delay: 0.2 }
-            }}
-          >
-            {title}
-          </motion.h3>
-
-          <motion.p
-            className="text-muted-foreground text-sm"
-            style={{
-              lineHeight: 1.5,
-              fontWeight: 350,
-              color: 'rgb(156 163 175)'
-            }}
-            initial={{ filter: "blur(3px)", opacity: 0.7 }}
-            animate={{
-              textShadow: isHovered ? "0 1px 2px rgba(0,0,0,0.1)" : "none",
-              filter: "blur(0px)",
-              opacity: 0.85,
-              transition: { duration: 1.2, delay: 0.4 }
-            }}
-          >
-            {description}
-          </motion.p>
-        </motion.div>
+          {description}
+        </motion.p>
       </motion.div>
     </motion.div>
   );
@@ -344,7 +213,7 @@ export default function AboutPage() {
     date: "Apr 2024",
     content: "All your grades in one place.",
     category: "Grades",
-    icon: ChartBar,
+    icon: BarChart3,
     relatedIds: [3, 5],
     status: "pending" as const,
     energy: 30,

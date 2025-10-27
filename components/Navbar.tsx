@@ -141,7 +141,7 @@ export default function Navbar() {
                 </div>
               ) : (
                 <div className="hidden sm:flex items-center gap-2">
-                  <Link href="/auth">
+                  <Link href="/login">
                     <motion.button 
                       className="rounded-xl bg-primary-100 hover:bg-primary-100/90 px-4 py-2 text-sm font-medium text-white shadow-glass hover:shadow-neon-primary transition-all duration-300 backdrop-blur-md"
                       whileHover={{ scale: 1.02 }}
@@ -150,7 +150,7 @@ export default function Navbar() {
                       Login
                     </motion.button>
                   </Link>
-                  {/* <Link href="/auth/signup">
+                  {/* <Link href="/signup">
                     <motion.button 
                       className="rounded-xl border border-primary-100/30 px-4 py-2 text-sm font-medium text-primary-100 bg-white/20 hover:bg-primary-100/10 dark:bg-gray-900/20 dark:hover:bg-primary-100/10 backdrop-blur-md transition-all duration-300 shadow-glass hover:border-primary-100/50"
                       whileHover={{ scale: 1.02 }}
@@ -238,7 +238,7 @@ export default function Navbar() {
                   </>
                 ) : (
                   <>
-                    <Link href="/auth" className="w-full">
+                    <Link href="/login" className="w-full">
                       <motion.button 
                         className="w-full rounded-xl bg-primary-100 hover:bg-primary-100/90 px-4 py-3 text-sm font-medium text-white shadow-glass transition-all duration-300"
                         whileHover={{ scale: 1.02 }}
@@ -247,7 +247,7 @@ export default function Navbar() {
                         Login
                       </motion.button>
                     </Link>
-                    {/* <Link href="/auth/signup" className="w-full">
+                    {/* <Link href="/signup" className="w-full">
                       <motion.button 
                         className="w-full rounded-xl border border-primary-100/30 px-4 py-3 text-sm font-medium text-primary-100 bg-white/20 hover:bg-primary-100/10 dark:bg-gray-900/20 dark:hover:bg-primary-100/10 backdrop-blur-md transition-all duration-300 shadow-glass"
                         whileHover={{ scale: 1.02 }}

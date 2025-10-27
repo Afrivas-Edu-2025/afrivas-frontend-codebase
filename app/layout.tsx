@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   title: 'Afrivas Learning Platform',
   description: 'A comprehensive educational platform for students and educators',
   generator: '', 
+  icons: {
+    icon: '/icon.svg',
+  },
 };
 
 export default function RootLayout({

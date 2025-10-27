@@ -1,7 +1,7 @@
 "use client"
 
 import Navbar from "@/components/Navbar"
-import AboutPage from "./(pages)/about/page"
+// Removed import of about route page to avoid importing page components directly
 import {
   HeroSection,
   UserRolesSection,
@@ -25,7 +25,7 @@ export default function Home() {
         <HeroSection />
         <UserRolesSection />
         <FeaturesSection />
-        <AboutPage />
+        {/* Removed AboutPage to prevent importing a route component */}
         <HowItWorksSection />
         {/* <TestimonialsSection /> */}
         <FAQSection />

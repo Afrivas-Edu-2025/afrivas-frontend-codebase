@@ -104,58 +104,58 @@ export function AuthForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-600/50 rounded-lg flex">
+    <div className="min-h-screen w-full bg-gray-50 dark:bg-gray-600/50 rounded-lg flex mb-8 ">
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-emerald-50 to-teal-100 p-12 flex-col justify-between rounded-lg">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary-200/25 to-primary-100/25 p-12 flex-col justify-between rounded-lg">
         <div>
           <div className="flex items-center gap-2 mb-12">
-            <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-              <Shield className="w-5 h-5 text-white" />
+            <div className="w-8 h-8 bg-lemon-100 rounded-lg flex items-center justify-center">
+              <Shield className="w-5 h-5 text-gray-800 dark:text-secondary-100" />
             </div>
-            <span className="text-xl font-bold text-gray-900">Afrivas</span>
+            <span className="text-xl font-bold text-gray-900 dark:text-gray-200">Afrivas Auth</span>
           </div>
           <div className="space-y-8">
-            <h1 className="text-3xl font-bold text-gray-900 leading-tight">Welcome Back to Afrivas</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-primary-100 leading-tight">Welcome Back to Afrivas</h1>
             <div className="space-y-6">
               <div className="flex items-start gap-4">
-                <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" />
+                <div className="w-8 h-8 bg-lemon-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <CheckCircle className="w-5 h-5 text-primary-100" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Easy Course Management</h3>
-                  <p className="text-gray-600 text-sm">Streamline your academic journey with our intuitive course management system.</p>
+                  <h3 className="font-semibold text-primary-100 dark:text-primary-200 mb-1">Easy Course Management</h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">Streamline your academic journey with our intuitive course management system.</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
-                <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                  <Users className="w-5 h-5 text-emerald-600" />
+                <div className="w-8 h-8 bg-lemon-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <Users className="w-5 h-5 text-primary-100" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Connect with Peers</h3>
-                  <p className="text-gray-600 text-sm">Build meaningful connections with students and faculty across departments.</p>
+                  <h3 className="font-semibold text-primary-100 dark:text-primary-200 mb-1">Connect with Peers</h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">Build meaningful connections with students and faculty across departments.</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
-                <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                  <Shield className="w-5 h-5 text-emerald-600" />
+                <div className="w-8 h-8 bg-lemon-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <Shield className="w-5 h-5 text-primary-100" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Secure & Private</h3>
-                  <p className="text-gray-600 text-sm">Your academic data is protected with enterprise-grade security measures.</p>
+                  <h3 className="font-semibold text-primary-100 dark:text-primary-200 mb-1">Secure & Private</h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">Your academic data is protected with enterprise-grade security measures.</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div className="text-sm text-gray-500">© 2025 Afrivas • Privacy & Terms</div>
+       
       </div>
 
       {/* Right Side - Form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md bg-white p-8 dark:bg-gray-800/95 rounded-xl shadow-lg border border-border-gray-200 dark:border-border-gray-400">
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Sign in to Afrivas</h2>
-            <p className="text-gray-600 dark:text-gray-300">Enter your credentials to access the platform</p>
+            <h2 className="text-2xl font-bold text-primary-100 dark:text-primary-100 mb-2">Sign in</h2>
+            <p className="text-gray-600 dark:text-primary-200">Enter your credentials to access your account</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -169,7 +169,7 @@ export function AuthForm() {
                 placeholder="your.email@afrivas.edu"
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1.5 h-11 bg-background-gray-50 dark:bg-gray-900/50 border-border-gray-200 dark:border-gray-700 focus:border-gray-600 dark:focus:border-emerald-500"
+                className="mt-1.5 h-11 bg-background-gray-50 dark:bg-gray-900/50 border-border-gray-200 dark:border-gray-700 focus:border-gray-600 dark:focus:border-secondary-300"
               />
               {fieldErrors.email && <span className="text-red-600 text-sm mt-1">{fieldErrors.email}</span>}
             </div>
@@ -185,7 +185,7 @@ export function AuthForm() {
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="mt-1.5 h-11 bg-background-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 focus:border-gray-700 dark:focus:border-emerald-500 pr-10"
+                  className="mt-1.5 h-11 bg-background-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 focus:border-gray-700 dark:focus:border-secondary-300 pr-10"
                 />
                 <button
                   type="button"
@@ -198,7 +198,7 @@ export function AuthForm() {
               </div>
               {fieldErrors.password && <span className="text-red-600 text-sm mt-1">{fieldErrors.password}</span>}
               <div className="text-right mt-2">
-                <a href="/auth/reset-password" className="text-sm text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors">
+                <a href="/auth/reset-password" className="text-sm text-primary-100 dark:text-lemon-100 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
                   Forgot password?
                 </a>
               </div>
@@ -207,7 +207,7 @@ export function AuthForm() {
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full h-11 bg-emerald-500 hover:bg-emerald-600 text-white font-medium transition-all duration-200"
+              className="w-full h-11 bg-secondary-100 hover:bg-secondary-100/90 dark:bg-lemon-100 dark:hover:bg-lemon-200 text-white dark:text-secondary-100 font-medium transition-all duration-200"
               disabled={isLoading || !formData.email || !formData.password}
             >
               {isLoading ? (
@@ -233,7 +233,7 @@ export function AuthForm() {
               <button
                 type="button"
                 onClick={() => router.push("/signup")}
-                className="text-sm text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 font-medium"
+                className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
               >
                 Sign up
               </button>
