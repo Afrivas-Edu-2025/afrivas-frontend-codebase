@@ -8,6 +8,14 @@ import { Eye, EyeOff, CheckCircle, Users, Shield, Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { useLoginUserMutation } from "@/services/authServices";
 import { useAuth } from "@/components/auth-context";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export function AuthForm() {
   const router = useRouter();
@@ -234,6 +242,49 @@ export function AuthForm() {
                   "An error occurred during login."}
               </div>
             )}
+
+            {/* Privacy & Security Policy */}
+            <div className="mt-6 text-xs text-gray-600 dark:text-gray-300 text-center">
+              By signing in you agree to our{" "}
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="font-medium text-primary-100 dark:text-lemon-100 hover:underline ml-1"
+                  >
+                    Privacy &amp; security policy
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Privacy &amp; security policy</DialogTitle>
+                    <DialogDescription>
+                      How Afrivas protects your account and educational data.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-3 text-sm text-gray-700 dark:text-gray-100">
+                    <p>
+                      • We use your credentials solely to authenticate you and authorize access to the
+                      Afrivas platform.
+                    </p>
+                    <p>
+                      • Your academic records and personal information are stored securely and are
+                      only accessible to authorized users (you, and where applicable, your
+                      institution&apos;s administrators).
+                    </p>
+                    <p>
+                      • Do not share your password or one-time codes with anyone. Afrivas staff will
+                      never ask for your password.
+                    </p>
+                    <p>
+                      • By continuing, you consent to Afrivas processing your data in accordance with
+                      our privacy and security practices.
+                    </p>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              .
+            </div>
           </form>
         </div>
       </div>

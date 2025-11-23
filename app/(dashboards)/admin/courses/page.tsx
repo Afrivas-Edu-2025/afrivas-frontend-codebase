@@ -6,8 +6,7 @@ import {
   useGetCoursesQuery, 
   useCreateCourseMutation, 
   useUpdateCourseMutation, 
-  useDeleteCourseMutation,
-  useToggleCourseStatusMutation 
+  useDeleteCourseMutation
 } from '@/services/adminApi';
 import { Course } from '@/types/admin';
 import CreateCourseForm from '@/components/forms/CreateCourseForm';
@@ -28,7 +27,6 @@ export default function CoursesPage() {
   const [createCourse] = useCreateCourseMutation();
   const [updateCourse] = useUpdateCourseMutation();
   const [deleteCourse] = useDeleteCourseMutation();
-  const [toggleCourseStatus] = useToggleCourseStatusMutation();
 
   const courses = coursesResponse?.data || [];
   const filteredCourses = courses?.filter(course =>
@@ -81,13 +79,6 @@ export default function CoursesPage() {
     }
   };
 
-  const handleApprove = async (id: string) => {
-    try {
-      await toggleCourseStatus(id).unwrap();
-    } catch (error) {
-      console.error('Error toggling course status:', error);
-    }
-  };
 
   if (isLoading) return <div className="flex justify-center items-center h-64">Loading courses...</div>;
   if (error) return <div className="text-red-500">Error loading courses</div>;
@@ -266,15 +257,6 @@ export default function CoursesPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex gap-2">
-                      {!course.approved && (
-                        <button
-                          onClick={() => handleApprove(course.id)}
-                          className="text-green-600 hover:text-green-900"
-                          title="Approve Course"
-                        >
-                          <Check size={16} />
-                        </button>
-                      )}
                       <button
                         onClick={() => handleEdit(course)}
                         className="text-blue-600 hover:text-blue-900"

@@ -3,9 +3,14 @@ import Link from "next/link"
 import {
     Facebook,
     Instagram,
-    Linkedin,
-    Twitter,
+    Youtube,
+    MessageCircle,
   } from "lucide-react"
+
+const INSTAGRAM_URL = "https://www.instagram.com/afrivas_llc?igsh=MXhhZzFjZXh4aGc2Nw==&utm_source=ig_contact_invite"
+const FACEBOOK_URL = "https://www.facebook.com/share/15QcvDt8ew/?mibextid=wwXIfr"
+const YOUTUBE_URL = "https://youtube.com/@afrivasllc?si=96mzK8ZNR5LAj0co"
+const WHATSAPP_URL = "https://whatsapp.com/channel/0029Vb64oKD2phHMG5ZoHF3s"
 
 export default function Footer(){
 
@@ -24,32 +29,40 @@ export default function Footer(){
               </p>
               <div className="flex space-x-4">
                 <Link
-                  href="#"
+                  href={FACEBOOK_URL}
                   aria-label="Facebook"
+                  target="_blank"
+                  rel="noreferrer"
                   className="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
                 >
                   <Facebook className="h-5 w-5" />
                 </Link>
                 <Link
-                  href="#"
-                  aria-label="Twitter"
-                  className="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
-                >
-                  <Twitter className="h-5 w-5" />
-                </Link>
-                <Link
-                  href="#"
+                  href={INSTAGRAM_URL}
                   aria-label="Instagram"
-                  className="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-gray-500 hover:text-pink-600 dark:text-gray-400 dark:hover:text-pink-400"
                 >
                   <Instagram className="h-5 w-5" />
                 </Link>
                 <Link
-                  href="#"
-                  aria-label="LinkedIn"
-                  className="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
+                  href={YOUTUBE_URL}
+                  aria-label="YouTube"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-500"
                 >
-                  <Linkedin className="h-5 w-5" />
+                  <Youtube className="h-5 w-5" />
+                </Link>
+                <Link
+                  href={WHATSAPP_URL}
+                  aria-label="WhatsApp"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-500"
+                >
+                  <MessageCircle className="h-5 w-5" />
                 </Link>
               </div>
             </div>

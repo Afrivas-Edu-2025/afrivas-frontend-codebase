@@ -323,26 +323,29 @@ export const adminApi = createApi({
     }),
 
     getFacultyAnalytics: builder.query<ApiResponse<FacultyAnalytics[]>, void>({
-      query: () => '/faculty/analytics',
+      // Backend route: GET /api/v1/admin/faculty/analytics/performance
+      query: () => '/faculty/analytics/performance',
       providesTags: ['Faculty'],
     }),
-
+    
     // Department Management
     getDepartments: builder.query<ApiResponse<Department[]>, void>({
+      // Backend route: GET /api/v1/admin/departments
       query: () => '/departments',
       providesTags: ['Department'],
     }),
-
+    
     getDepartmentById: builder.query<ApiResponse<Department>, string>({
       query: (id) => `/departments/${id}`,
       providesTags: (result, error, id) => [{ type: 'Department', id }],
     }),
-
+    
     getDepartmentsByFaculty: builder.query<ApiResponse<Department[]>, string>({
-      query: (facultyId) => `/departments/faculty/${facultyId}`,
+      // Backend route uses facultyId as query param: /departments?facultyId=<id>
+      query: (facultyId) => `/departments?facultyId=${facultyId}`,
       providesTags: ['Department'],
     }),
-
+    
     createDepartment: builder.mutation<ApiResponse<Department>, CreateDepartmentRequest>({
       query: (data) => ({
         url: '/departments',
@@ -351,7 +354,7 @@ export const adminApi = createApi({
       }),
       invalidatesTags: ['Department', 'Stats'],
     }),
-
+    
     updateDepartment: builder.mutation<ApiResponse<Department>, { id: string; data: Partial<CreateDepartmentRequest> }>({
       query: ({ id, data }) => ({
         url: `/departments/${id}`,
@@ -360,7 +363,7 @@ export const adminApi = createApi({
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Department', id }, 'Department'],
     }),
-
+    
     deleteDepartment: builder.mutation<ApiResponse<void>, string>({
       query: (id) => ({
         url: `/departments/${id}`,
@@ -368,9 +371,10 @@ export const adminApi = createApi({
       }),
       invalidatesTags: ['Department', 'Stats'],
     }),
-
+    
     getDepartmentAnalytics: builder.query<ApiResponse<DepartmentAnalytics[]>, void>({
-      query: () => '/departments/analytics',
+      // Backend route: GET /api/v1/admin/departments/analytics/performance
+      query: () => '/departments/analytics/performance',
       providesTags: ['Department'],
     }),
 
@@ -454,14 +458,6 @@ export const adminApi = createApi({
       invalidatesTags: ['Grade'],
     }),
 
-    toggleGradeStatus: builder.mutation<ApiResponse<Grade>, string>({
-      query: (id) => ({
-        url: `/grades/${id}/toggle-status`,
-        method: 'PATCH',
-      }),
-      invalidatesTags: (result, error, id) => [{ type: 'Grade', id }, 'Grade'],
-    }),
-
     // Course Management
     getCourses: builder.query<ApiResponse<Course[]>, void>({
       query: () => '/courses',
@@ -502,14 +498,6 @@ export const adminApi = createApi({
         method: 'DELETE',
       }),
       invalidatesTags: ['Course'],
-    }),
-
-    toggleCourseStatus: builder.mutation<ApiResponse<Course>, string>({
-      query: (id) => ({
-        url: `/courses/${id}/toggle-status`,
-        method: 'PATCH',
-      }),
-      invalidatesTags: (result, error, id) => [{ type: 'Course', id }, 'Course'],
     }),
 
     // Class Management
@@ -554,14 +542,6 @@ export const adminApi = createApi({
       invalidatesTags: ['Class'],
     }),
 
-    toggleClassStatus: builder.mutation<ApiResponse<Class>, string>({
-      query: (id) => ({
-        url: `/classes/${id}/toggle-status`,
-        method: 'PATCH',
-      }),
-      invalidatesTags: (result, error, id) => [{ type: 'Class', id }, 'Class'],
-    }),
-
     // Student Management
     getStudents: builder.query<ApiResponse<Student[]>, { page?: number; limit?: number; departmentId?: string }>({
       query: ({ page = 1, limit = 10, departmentId } = {}) => {
@@ -570,7 +550,8 @@ export const adminApi = createApi({
           limit: limit.toString(),
         });
         if (departmentId) params.append('departmentId', departmentId);
-        return `/students?${params.toString()}`;
+        // Backend route: GET /api/v1/admin/users/students
+        return `/users/students?${params.toString()}`;
       },
       providesTags: ['Student'],
     }),
@@ -661,7 +642,8 @@ export const adminApi = createApi({
           limit: limit.toString(),
         });
         if (departmentId) params.append('departmentId', departmentId);
-        return `/lecturers?${params.toString()}`;
+        // Backend route: GET /api/v1/admin/users/lecturers
+        return `/users/lecturers?${params.toString()}`;
       },
       providesTags: ['Lecturer'],
     }),
@@ -833,7 +815,6 @@ export const {
   useCreateGradeMutation,
   useUpdateGradeMutation,
   useDeleteGradeMutation,
-  useToggleGradeStatusMutation,
   
   // Course hooks
   useGetCoursesQuery,
@@ -842,7 +823,6 @@ export const {
   useCreateCourseMutation,
   useUpdateCourseMutation,
   useDeleteCourseMutation,
-  useToggleCourseStatusMutation,
   
   // Class hooks
   useGetClassesQuery,
@@ -851,7 +831,6 @@ export const {
   useCreateClassMutation,
   useUpdateClassMutation,
   useDeleteClassMutation,
-  useToggleClassStatusMutation,
   
   // Student hooks
   useGetStudentsQuery,

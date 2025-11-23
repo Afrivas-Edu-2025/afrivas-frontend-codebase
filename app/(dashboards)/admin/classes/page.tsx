@@ -6,8 +6,7 @@ import {
   useGetClassesQuery, 
   useCreateClassMutation, 
   useUpdateClassMutation, 
-  useDeleteClassMutation,
-  useToggleClassStatusMutation 
+  useDeleteClassMutation
 } from '@/services/adminApi';
 import { Class } from '@/types/admin';
 import CreateClassForm from '@/components/forms/CreateClassForm';
@@ -27,7 +26,6 @@ export default function ClassesPage() {
   const [createClass] = useCreateClassMutation();
   const [updateClass] = useUpdateClassMutation();
   const [deleteClass] = useDeleteClassMutation();
-  const [toggleClassStatus] = useToggleClassStatusMutation();
 
   const classes = classesResponse?.data || [];
   const filteredClasses = classes?.filter(cls =>
@@ -77,13 +75,6 @@ export default function ClassesPage() {
     }
   };
 
-  const handleApprove = async (id: string) => {
-    try {
-      await toggleClassStatus(id).unwrap();
-    } catch (error) {
-      console.error('Error toggling class status:', error);
-    }
-  };
 
   if (isLoading) return <div className="flex justify-center items-center h-64">Loading classes...</div>;
   if (error) return <div className="text-red-500">Error loading classes</div>;
@@ -238,15 +229,6 @@ export default function ClassesPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex gap-2">
-                      {!cls.approved && (
-                        <button
-                          onClick={() => handleApprove(cls.id)}
-                          className="text-green-600 hover:text-green-900"
-                          title="Approve Class"
-                        >
-                          <Check size={16} />
-                        </button>
-                      )}
                       <button
                         onClick={() => handleEdit(cls)}
                         className="text-blue-600 hover:text-blue-900"

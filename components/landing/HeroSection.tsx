@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { TextGenerateEffect } from "@/components/aceternity/text-generate-effect"
 import { LiquidGlass } from "@/components/aceternity/liquid-glass"
 import { FloatingElements } from "@/components/aceternity/floating-elements"
+import { LandingImageSlider } from "./LandingImageSlider"
 
 export function HeroSection() {
   return (
@@ -77,26 +78,10 @@ export function HeroSection() {
           
           <div className="relative mx-auto w-full max-w-lg lg:max-w-xl">
             <div className="relative">
-              <div className="absolute -inset-8 rounded-full bg-gradient-to-r from-primary-100/20 to-lemon-100/20 blur-3xl"></div>
-              <div className="relative z-10 flex items-center justify-center perspective-1000">
-                <div className="relative transform-gpu hover:scale-105 transition-transform duration-500">
-                  <Image
-                    src="/images/DASHBOARD.png"
-                    width={320}
-                    height={640}
-                    alt="Mobile app dashboard"
-                    className="relative -rotate-6 rounded-3xl border-4 border-white/20 shadow-3d backdrop-blur-sm hidden sm:block animate-float"
-                    style={{ transformStyle: "preserve-3d" }}
-                  />
-                  <Image
-                    src="/images/STUDENT.png"
-                    width={300}
-                    height={600}
-                    alt="Student app interface"
-                    className="sm:absolute sm:-right-16 sm:top-8 rotate-6 rounded-3xl border-4 border-white/20 shadow-3d backdrop-blur-sm animate-liquid-float"
-                    style={{ transformStyle: "preserve-3d" }}
-                  />
-                </div>
+              <div className="absolute -inset-8 rounded-[40px] bg-gradient-to-br from-primary-100/25 via-primary-100/10 to-lemon-100/25 blur-3xl" />
+              <div className="relative z-10 flex items-center justify-center">
+                {/* Slider embedded inside the hero "Join the Future" visual area */}
+                <LandingImageSlider />
               </div>
             </div>
           </div>

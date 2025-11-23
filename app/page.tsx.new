@@ -450,16 +450,40 @@ export default function Home() {
                 </Link>
               </div>
               <div className="flex items-center gap-4">
-                <Link href="#" aria-label="Facebook" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
+                <Link
+                  href="https://www.facebook.com/share/15QcvDt8ew/?mibextid=wwXIfr"
+                  aria-label="Facebook"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+                >
                   <Facebook className="h-5 w-5" />
                 </Link>
-                <Link href="#" aria-label="Twitter" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
-                  <Twitter className="h-5 w-5" />
-                </Link>
-                <Link href="#" aria-label="Instagram" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
+                <Link
+                  href="https://www.instagram.com/afrivas_llc?igsh=MXhhZzFjZXh4aGc2Nw==&utm_source=ig_contact_invite"
+                  aria-label="Instagram"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+                >
                   <Instagram className="h-5 w-5" />
                 </Link>
-                <Link href="#" aria-label="LinkedIn" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
+                <Link
+                  href="https://youtube.com/@afrivasllc?si=96mzK8ZNR5LAj0co"
+                  aria-label="YouTube"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+                >
+                  <Twitter className="h-5 w-5" />
+                </Link>
+                <Link
+                  href="https://whatsapp.com/channel/0029Vb64oKD2phHMG5ZoHF3s"
+                  aria-label="WhatsApp"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+                >
                   <Linkedin className="h-5 w-5" />
                 </Link>
               </div>

@@ -27,7 +27,13 @@ export default function PrivateRoute({
       if (!token || !user) {
         router.push('/auth');
       } else if (!allowedRoles.includes(user.role)) {
-        // router.push('/');
+        // If an admin hits a non-admin route, always send them back to the admin dashboard
+        if (user.role === 'ADMIN') {
+          router.replace('/admin/dashboard');
+        } else {
+          // For other roles, send them to the public home page
+          router.replace('/');
+        }
       }
     }
   }, [user, token, loading, router, allowedRoles]);

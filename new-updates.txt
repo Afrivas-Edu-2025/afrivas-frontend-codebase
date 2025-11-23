@@ -1,0 +1,11 @@
+here are updates i want you to implement:
+- insert or use these social media links in their respective social media icons in the footer and other pages:
+	https://www.instagram.com/afrivas_llc?igsh=MXhhZzFjZXh4aGc2Nw==&utm_source=ig_contact_invite
+	https://www.facebook.com/share/15QcvDt8ew/?mibextid=wwXIfr
+	https://youtube.com/@afrivasllc?si=96mzK8ZNR5LAj0co
+	https://whatsapp.com/channel/0029Vb64oKD2phHMG5ZoHF3s
+
+- when logged in as an admin you should be only have access to the admin dashboard, that is even in the landing and login page you should be redirected to the admin dashboard as long as you are logged in.
+
+- add an image slider above the contact section in the landing page and use the images in landing-page-slider-images folder in the /public folder
+- add a security policy message popup/model in the login page, it is triggered only when the 'Privacy & security policy' text is clicked.

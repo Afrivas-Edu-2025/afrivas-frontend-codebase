@@ -8,6 +8,7 @@ export { FAQSection } from "./FAQSection"
 export { CTASection } from "./CTASection"
 export { ContactSection } from "./ContactSection"
 export { ScrollToTopButton } from "./ScrollToTopButton"
+export { LandingImageSlider } from "./LandingImageSlider"
 
 // Data exports
 export * from "./data"

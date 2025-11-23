@@ -6,8 +6,7 @@ import {
   useGetGradesQuery, 
   useCreateGradeMutation, 
   useUpdateGradeMutation, 
-  useDeleteGradeMutation,
-  useToggleGradeStatusMutation 
+  useDeleteGradeMutation
 } from '@/services/adminApi';
 import { Grade } from '@/types/admin';
 import CreateGradeForm from '@/components/forms/CreateGradeForm';
@@ -31,7 +30,6 @@ export default function GradesPage() {
   const [createGrade] = useCreateGradeMutation();
   const [updateGrade] = useUpdateGradeMutation();
   const [deleteGrade] = useDeleteGradeMutation();
-  const [toggleGradeStatus] = useToggleGradeStatusMutation();
 
   const grades = gradesResponse?.data || [];
   const filteredGrades = grades?.filter(grade =>
@@ -97,13 +95,6 @@ export default function GradesPage() {
     }
   };
 
-  const handleApprove = async (id: string) => {
-    try {
-      await toggleGradeStatus(id).unwrap();
-    } catch (error) {
-      console.error('Error toggling grade status:', error);
-    }
-  };
 
   const getGradeColor = (score: number) => {
     if (score >= 80) return 'text-green-600';
@@ -331,15 +322,6 @@ export default function GradesPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex gap-2">
-                      {!grade.approved && (
-                        <button
-                          onClick={() => handleApprove(grade.id)}
-                          className="text-green-600 hover:text-green-900"
-                          title="Approve Grade"
-                        >
-                          <Check size={16} />
-                        </button>
-                      )}
                       <button
                         onClick={() => handleEdit(grade)}
                         className="text-blue-600 hover:text-blue-900"
