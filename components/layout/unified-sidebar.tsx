@@ -5,8 +5,9 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/components/auth-context"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -36,10 +37,11 @@ import {
 
 // Define the navigation item type
 type NavItem = {
-  href: string
+  href?: string
   icon: React.ReactNode
   label: string
   section?: string
+  onClick?: () => void
 }
 
 // Define the props for the UnifiedSidebar component
@@ -54,6 +56,8 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
   const [isMobile, setIsMobile] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
+  const { logout } = useAuth()
   const sidebarRef = useRef<HTMLElement>(null)
 
   // Check if the current path matches the nav item href
@@ -103,7 +107,7 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
 
   // Define navigation items based on user role
   const getNavItems = (): { [key: string]: NavItem[] } => {
-    const commonItems = [
+    const commonItems: NavItem[] = [
       {
         href: `/${userRole}/dashboard/settings`,
         icon: <Settings size={20} />,
@@ -117,10 +121,13 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
         section: "Common",
       },
       {
-        href: "/auth",
         icon: <LogOut size={20} />,
         label: "Logout",
         section: "Common",
+        onClick: () => {
+          logout()
+          router.push("/login")
+        },
       },
     ]
 
@@ -357,7 +364,8 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Link
-                              href={item.href}
+                              href={item.href || "#"}
+                              onClick={item.onClick}
                               className={cn(
                                 "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
                                 isActive(item.href)

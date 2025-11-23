@@ -25,7 +25,7 @@ export type SignupFormData = {
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'http://localhost', // Base URL; endpoints will append specific paths
+    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost', // Base URL; endpoints will append specific paths
   }),
   endpoints: (builder) => ({
     registerUser: builder.mutation<ApiResponse, SignupFormData>({

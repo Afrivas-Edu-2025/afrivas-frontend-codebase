@@ -243,7 +243,7 @@ export function AuthForm() {
               </div>
             )}
 
-            {/* Privacy & Security Policy */}
+            {/* Terms & Conditions */}
             <div className="mt-6 text-xs text-gray-600 dark:text-gray-300 text-center">
               By signing in you agree to our{" "}
               <Dialog>
@@ -252,33 +252,40 @@ export function AuthForm() {
                     type="button"
                     className="font-medium text-primary-100 dark:text-lemon-100 hover:underline ml-1"
                   >
-                    Privacy &amp; security policy
+                    Terms &amp; Conditions
                   </button>
                 </DialogTrigger>
                 <DialogContent className="max-w-lg">
                   <DialogHeader>
-                    <DialogTitle>Privacy &amp; security policy</DialogTitle>
+                    <DialogTitle>Terms &amp; Conditions</DialogTitle>
                     <DialogDescription>
-                      How Afrivas protects your account and educational data.
+                      Summary of how Afrivas handles accounts, data protection, and platform use.
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-3 text-sm text-gray-700 dark:text-gray-100">
+                  <div className="space-y-3 text-sm text-gray-700 dark:text-gray-100 text-left">
                     <p>
-                      • We use your credentials solely to authenticate you and authorize access to the
-                      Afrivas platform.
+                      • Afrivas is provided for authorized students, lecturers, and administrators of
+                      participating institutions. You must keep your credentials confidential and use the
+                      platform only for legitimate academic and administrative purposes.
                     </p>
                     <p>
-                      • Your academic records and personal information are stored securely and are
-                      only accessible to authorized users (you, and where applicable, your
-                      institution&apos;s administrators).
+                      • Your personal and academic information is collected and processed to create and
+                      manage your account, deliver academic services, and comply with applicable
+                      educational and data-protection regulations.
                     </p>
                     <p>
-                      • Do not share your password or one-time codes with anyone. Afrivas staff will
-                      never ask for your password.
+                      • Access to your data is restricted to you and authorized institutional personnel
+                      who need it for academic or administrative duties. Afrivas applies technical and
+                      organizational measures to help safeguard your information.
                     </p>
                     <p>
-                      • By continuing, you consent to Afrivas processing your data in accordance with
-                      our privacy and security practices.
+                      • By continuing, you confirm that you have read and understood the Afrivas Terms &amp;
+                      Conditions and Privacy Policy and consent to the processing of your data as
+                      described there.
+                    </p>
+                    <p>
+                      • For full details, please review our dedicated <a href="/privacy-policy" className="underline text-primary-100 dark:text-lemon-100">Privacy Policy</a>{" "}
+                      and <a href="/legal-compliance" className="underline text-primary-100 dark:text-lemon-100">Legal Compliance</a> pages.
                     </p>
                   </div>
                 </DialogContent>

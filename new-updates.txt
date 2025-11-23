@@ -1,11 +1,9 @@
 here are updates i want you to implement:
-- insert or use these social media links in their respective social media icons in the footer and other pages:
-	https://www.instagram.com/afrivas_llc?igsh=MXhhZzFjZXh4aGc2Nw==&utm_source=ig_contact_invite
-	https://www.facebook.com/share/15QcvDt8ew/?mibextid=wwXIfr
-	https://youtube.com/@afrivasllc?si=96mzK8ZNR5LAj0co
-	https://whatsapp.com/channel/0029Vb64oKD2phHMG5ZoHF3s
 
-- when logged in as an admin you should be only have access to the admin dashboard, that is even in the landing and login page you should be redirected to the admin dashboard as long as you are logged in.
+- use context from the legal file in public folder to update the privacy protection(change to terms and conditions) in the the login page popup(basically a summerised version of the legal compliance.docx file ) and create seperate pages for privacy policy and legal compliance 
+using the content from the same legal compliance.docx file. styling these pages using the current design patterns 
 
-- add an image slider above the contact section in the landing page and use the images in landing-page-slider-images folder in the /public folder
-- add a security policy message popup/model in the login page, it is triggered only when the 'Privacy & security policy' text is clicked.
+- Whenever someone is logged in as an admin they should always be redirected to the admin dashboard /admin even if the landing and login page, that is to say if the user access the  main directors / or /login and they are logged in as admin they sould be redirected to the admin dashboard.
+
+- when logging out instead of redirecting to /auth after login, redirect to /login instead
+- make sure all the api calls use NEXT_PUBLIC_API_BASE_URL

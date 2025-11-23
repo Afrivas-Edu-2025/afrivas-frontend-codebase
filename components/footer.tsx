@@ -3,13 +3,17 @@ import Link from "next/link"
 import {
     Facebook,
     Instagram,
-    Youtube,
+    Linkedin,
     MessageCircle,
+    Twitter,
+    Youtube,
   } from "lucide-react"
 
 const INSTAGRAM_URL = "https://www.instagram.com/afrivas_llc?igsh=MXhhZzFjZXh4aGc2Nw==&utm_source=ig_contact_invite"
 const FACEBOOK_URL = "https://www.facebook.com/share/15QcvDt8ew/?mibextid=wwXIfr"
 const YOUTUBE_URL = "https://youtube.com/@afrivasllc?si=96mzK8ZNR5LAj0co"
+const X_URL = "https://x.com/Afrivas_llc"
+const LINKEDIN_URL = "https://www.linkedin.com/company/afrivas-llc"
 const WHATSAPP_URL = "https://whatsapp.com/channel/0029Vb64oKD2phHMG5ZoHF3s"
 
 export default function Footer(){
@@ -45,6 +49,24 @@ export default function Footer(){
                   className="text-gray-500 hover:text-pink-600 dark:text-gray-400 dark:hover:text-pink-400"
                 >
                   <Instagram className="h-5 w-5" />
+                </Link>
+                <Link
+                  href={X_URL}
+                  aria-label="X"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-gray-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  <Twitter className="h-5 w-5" />
+                </Link>
+                <Link
+                  href={LINKEDIN_URL}
+                  aria-label="LinkedIn"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-gray-500 hover:text-blue-700 dark:text-gray-400 dark:hover:text-blue-500"
+                >
+                  <Linkedin className="h-5 w-5" />
                 </Link>
                 <Link
                   href={YOUTUBE_URL}

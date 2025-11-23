@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { Sun, Moon, Menu, X, User } from "lucide-react"
 import { useAuth } from "@/components/auth-context"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 
 export default function Navbar() {
+  const router = useRouter()
   const { theme, setTheme } = useTheme()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -133,7 +135,10 @@ export default function Navbar() {
                     </button>
                   </Link>
                   <button
-                    onClick={logout}
+                    onClick={() => {
+                      logout()
+                      router.push("/login")
+                    }}
                     className="rounded-md border border-blue-600 px-4 py-1 text-sm font-medium text-blue-600 bg-white/30 hover:bg-white/50 transition-all duration-300"
                   >
                     Logout
@@ -228,7 +233,10 @@ export default function Navbar() {
                       </motion.button>
                     </Link>
                     <motion.button
-                      onClick={logout}
+                      onClick={() => {
+                        logout()
+                        router.push("/login")
+                      }}
                       className="w-full rounded-xl border border-primary-100/30 px-4 py-3 text-sm font-medium text-primary-100 bg-white/20 hover:bg-primary-100/10 dark:bg-gray-900/20 dark:hover:bg-primary-100/10 backdrop-blur-md transition-all duration-300 shadow-glass"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
