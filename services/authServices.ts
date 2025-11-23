@@ -74,8 +74,9 @@ export const authApi = createApi({
       }),
       transformErrorResponse: (response: any): ApiResponse => ({
         success: false,
-        message: response.data?.message || 'Login failed',
-        data: response.data?.errors || [],
+        // Backend sends { error: { message, details } }
+        message: response.data?.error?.message || response.data?.message || 'Login failed',
+        data: response.data?.error?.details || response.data?.errors || [],
       }),
     }),
   }),

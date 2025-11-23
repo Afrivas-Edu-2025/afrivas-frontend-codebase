@@ -1,27 +1,50 @@
 // app/(dashboards)/admin/dashboard/page.tsx
+'use client';
+
 import type React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, LineChart, PieChart, Loader2, AlertCircle } from "lucide-react";
 import { AdminDashboardSkeleton, StatsCardSkeleton } from "@/components/skeletons/admin-dashboard-skeleton";
 import { AuthDebugPanel } from "@/components/debug/auth-debug-panel";
-
-// Define the static overview data
-const overview = {
-  totalStudents: 3,
-  totalLecturers: 0,
-  totalCourses: 0,
-  totalDepartments: 0,
-  totalFaculties: 0,
-  totalEnrollments: 0,
-  completionRate: 0,
-};
+import { useGetDashboardStatsQuery } from "@/services/adminApi";
 
 export default function AdminDashboard() {
+  const { data: dashboardData, isLoading, error } = useGetDashboardStatsQuery();
+
   // Helper function to format numbers
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat().format(num);
   };
+
+  // Extract data from API response
+  const overview = dashboardData?.data?.overview || {
+    totalStudents: 0,
+    totalLecturers: 0,
+    totalCourses: 0,
+    totalDepartments: 0,
+    totalFaculties: 0,
+    totalEnrollments: 0,
+    completionRate: 0,
+  };
+
+  const recentActivity = dashboardData?.data?.recentActivity || [];
+
+  if (isLoading) {
+    return <AdminDashboardSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Failed to load dashboard</h2>
+          <p className="text-gray-600">Please try refreshing the page or contact support if the problem persists.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -126,17 +149,25 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="flex items-start gap-4">
-                      <div className="rounded-full h-8 w-8 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                        <User className="h-4 w-4" />
+                  {recentActivity.length > 0 ? (
+                    recentActivity.slice(0, 5).map((activity) => (
+                      <div key={activity.id} className="flex items-start gap-4">
+                        <div className="rounded-full h-8 w-8 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                          <User className="h-4 w-4" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium">{activity.action}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {activity.name} • {new Date(activity.time).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">New user registered</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{i * 10} minutes ago</p>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-gray-500">No recent activities</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>

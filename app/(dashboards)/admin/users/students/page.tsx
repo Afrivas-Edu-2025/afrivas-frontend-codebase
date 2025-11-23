@@ -108,27 +108,41 @@ const StudentsPage = () => {
   const [years, setYears] = useState<number[]>([])
  
   // Fetch students from backend API
- const { data, error, isLoading } = useGetAllStudentsQuery({ page: currentPage, search: searchTerm, program: filterProgram, year: filterYear, status: filterStatus });
+  const { data, error, isLoading } = useGetAllStudentsQuery({ page: currentPage, search: searchTerm, program: filterProgram, year: filterYear, status: filterStatus });
 
-useEffect(() => {
-  console.log('API Response:', data);
-  if (data) {
-    const lecturersData = Array.isArray(data.data) ? data.data : [];
-    // setLecturers(lecturersData);
-    setTotalPages(data.totalPages || Math.ceil((data.total || lecturersData.length || 0) / 10));
-    setCurrentPage(data.currentPage || currentPage);
+  useEffect(() => {
+    console.log('Students API Response:', data);
 
-    const uniqueDepartments = Array.isArray(lecturersData)
-      ? [...new Set(lecturersData.map((l: Lecturer) => l.department).filter(Boolean))]
-      : [];
-    setDepartments(uniqueDepartments);
-  }
-  if (error) {
-    console.error('Error fetching lecturers:', error);
-    toast.error('Failed to fetch lecturers');
-  }
-  setLoading(isLoading);
-}, [data, error, isLoading]);
+    if (data) {
+      const studentsData: Student[] = Array.isArray(data.data) ? data.data : [];
+      setStudents(studentsData);
+
+      const calculatedTotal = data.total ?? studentsData.length ?? 0;
+      const derivedTotalPages = data.totalPages ?? Math.max(1, Math.ceil(calculatedTotal / 10));
+      setTotalPages(derivedTotalPages);
+
+      if (typeof data.currentPage === 'number') {
+        setCurrentPage(data.currentPage);
+      }
+
+      const uniquePrograms = studentsData
+        .map((student) => student.program)
+        .filter((program): program is string => Boolean(program));
+      setPrograms([...new Set(uniquePrograms)]);
+
+      const uniqueYears = studentsData
+        .map((student) => student.yearOfStudy)
+        .filter((year): year is number => typeof year === 'number');
+      setYears([...new Set(uniqueYears)].sort((a, b) => a - b));
+    }
+
+    if (error) {
+      console.error('Error fetching students:', error);
+      toast.error('Failed to fetch students');
+    }
+
+    setLoading(isLoading);
+  }, [data, error, isLoading]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

@@ -1,6 +1,5 @@
 "use client"
 
-import Navbar from "@/components/Navbar"
 // Removed import of about route page to avoid importing page components directly
 import {
   HeroSection,

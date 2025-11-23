@@ -83,18 +83,24 @@ export function AuthForm() {
       setTimeout(() => router.push(dashboardRoute), 2000);
     } catch (err: any) {
       console.error("Login error:", err);
-      const errorMessage = err?.data?.message || err.message || "An unexpected error occurred.";
-      const errorDetails = err?.data?.errors
-        ? err.data.errors.map((e: { field: string; message: string }) => `${e.field}: ${e.message}`).join(", ")
+      const apiError = err?.data?.error || err?.data || {};
+      const errorMessage = apiError.message || err.message || "An unexpected error occurred.";
+      const errorDetails = apiError.details?.errors
+        ? apiError.details.errors
+            .map((e: { field: string; message: string }) => `${e.field}: ${e.message}`)
+            .join(", ")
         : "";
-      setFieldErrors(
-        err?.data?.errors
-          ? err.data.errors.reduce((acc: Record<string, string>, e: { field: string; message: string }) => {
-              acc[e.field] = e.message;
-              return acc;
-            }, {})
-          : {}
-      );
+
+      if (apiError.details?.errors) {
+        setFieldErrors(
+          apiError.details.errors.reduce((acc: Record<string, string>, e: { field: string; message: string }) => {
+            acc[e.field] = e.message;
+            return acc;
+          }, {})
+        );
+      } else {
+        setFieldErrors({});
+      }
       toast({
         variant: "destructive",
         title: "Error",
@@ -223,21 +229,11 @@ export function AuthForm() {
             {/* Error Display */}
             {error && (
               <div className="text-center mt-4 text-sm text-red-600">
-                {((error as any).data as { message?: string })?.message || "An error occurred during login."}
+                {((error as any).data as { error?: { message?: string }; message?: string })?.error?.message ||
+                  ((error as any).data as { message?: string })?.message ||
+                  "An error occurred during login."}
               </div>
             )}
-
-            {/* Signup Link */}
-            <div className="text-center mt-4">
-              <span className="text-sm text-gray-600 dark:text-gray-300">Don't have an account? </span>
-              <button
-                type="button"
-                onClick={() => router.push("/signup")}
-                className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
-              >
-                Sign up
-              </button>
-            </div>
           </form>
         </div>
       </div>
