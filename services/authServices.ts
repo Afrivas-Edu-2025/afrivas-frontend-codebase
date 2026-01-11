@@ -33,7 +33,9 @@ export type LoginUserRequest = {
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
+    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL?.endsWith('/api/v1')
+      ? process.env.NEXT_PUBLIC_API_BASE_URL
+      : `${process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '')}/api/v1`,
     prepareHeaders: (headers, { getState }) => {
       const token = localStorage.getItem('authToken');
       if (token) {
