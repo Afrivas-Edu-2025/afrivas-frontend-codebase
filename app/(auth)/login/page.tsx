@@ -10,8 +10,8 @@ export default function StudentLoginPage() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && token && user?.role === "ADMIN") {
-      router.replace("/admin/dashboard")
+    if (!loading && token) {
+      router.replace("/profile")
     }
   }, [loading, token, user, router])
 

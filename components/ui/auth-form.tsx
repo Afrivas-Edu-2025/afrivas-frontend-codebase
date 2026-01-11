@@ -81,22 +81,16 @@ export function AuthForm() {
         description: "You have successfully logged in.",
       });
 
-      // Redirect based on user role
-      const dashboardRoute =
-        result.data.user.role === "student"
-          ? "/student/dashboard"
-          : result.data.user.role === "lecturer"
-          ? "/lecturer/dashboard"
-          : "/admin/dashboard";
-      setTimeout(() => router.push(dashboardRoute), 2000);
+      // Redirect to profile page (dashboards are disabled for now)
+      setTimeout(() => router.push("/profile"), 2000);
     } catch (err: any) {
       console.error("Login error:", err);
       const apiError = err?.data?.error || err?.data || {};
       const errorMessage = apiError.message || err.message || "An unexpected error occurred.";
       const errorDetails = apiError.details?.errors
         ? apiError.details.errors
-            .map((e: { field: string; message: string }) => `${e.field}: ${e.message}`)
-            .join(", ")
+          .map((e: { field: string; message: string }) => `${e.field}: ${e.message}`)
+          .join(", ")
         : "";
 
       if (apiError.details?.errors) {
@@ -161,7 +155,7 @@ export function AuthForm() {
             </div>
           </div>
         </div>
-       
+
       </div>
 
       {/* Right Side - Form */}

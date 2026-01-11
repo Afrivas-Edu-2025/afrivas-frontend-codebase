@@ -16,7 +16,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const { user, logout } = useAuth()
   const { scrollY } = useScroll()
-  
+
   // Transform scroll position to navbar opacity and blur
   const navbarOpacity = useTransform(scrollY, [0, 100], [0.7, 0.95])
   const navbarBlur = useTransform(scrollY, [0, 100], [8, 20])
@@ -26,7 +26,7 @@ export default function Navbar() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50)
     }
-    
+
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
@@ -48,19 +48,18 @@ export default function Navbar() {
   }
 
   return (
-    <motion.header 
+    <motion.header
       className="fixed top-0 left-0 right-0 z-50 mx-auto max-w-7xl pt-4"
       style={{
         scale: navbarScale
       }}
     >
       <div className="container px-4">
-        <motion.div 
-          className={`rounded-2xl backdrop-blur-xl p-4 shadow-glass border transition-all duration-500 ${
-            isScrolled 
-              ? "bg-white/80 dark:bg-gray-900/80 border-white/30 dark:border-gray-700/30 shadow-3d" 
-              : "bg-white/60 dark:bg-gray-900/60 border-white/20 dark:border-gray-700/20 shadow-glass"
-          }`}
+        <motion.div
+          className={`rounded-2xl backdrop-blur-xl p-4 shadow-glass border transition-all duration-500 ${isScrolled
+            ? "bg-white/80 dark:bg-gray-900/80 border-white/30 dark:border-gray-700/30 shadow-3d"
+            : "bg-white/60 dark:bg-gray-900/60 border-white/20 dark:border-gray-700/20 shadow-glass"
+            }`}
           style={{
             backdropFilter: `blur(${navbarBlur}px)`,
           }}
@@ -71,23 +70,23 @@ export default function Navbar() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-8">
               <Link href="/" className="flex items-center gap-2 group">
-                <motion.div 
+                <motion.div
                   className="relative p-1 rounded-lg"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-primary-100/20 to-lemon-100/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <Image 
-                    src="/images/logo.webp" 
-                    width={32} 
-                    height={32} 
-                    alt="Afrivas Logo" 
-                    className="relative z-10 rounded-md transition-transform duration-300 group-hover:rotate-3" 
+                  <Image
+                    src="/images/logo.webp"
+                    width={32}
+                    height={32}
+                    alt="Afrivas Logo"
+                    className="relative z-10 rounded-md transition-transform duration-300 group-hover:rotate-3"
                   />
                 </motion.div>
                 <span className="font-bold text-primary-100 group-hover:text-primary-100/80 transition-colors duration-300">Afrivas</span>
               </Link>
-              
+
               <nav className="hidden md:flex gap-1">
                 {[
                   { href: "/", label: "Home" },
@@ -96,8 +95,8 @@ export default function Navbar() {
                   { href: "#contact-us", label: "Contact" }
                 ].map((item, index) => (
                   <motion.div key={item.href} className="relative">
-                    <Link 
-                      href={item.href} 
+                    <Link
+                      href={item.href}
                       className="px-3 py-2 text-sm font-medium rounded-lg transition-all duration-300 hover:text-primary-100 relative z-10 block"
                     >
                       {item.label}
@@ -128,10 +127,10 @@ export default function Navbar() {
 
               {user ? (
                 <div className="flex items-center gap-2">
-                  <Link href={getDashboardLink()}>
+                  <Link href="/profile">
                     <button className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-1 text-sm font-medium text-white">
                       <User className="h-4 w-4" />
-                      Dashboard
+                      Profile
                     </button>
                   </Link>
                   <button
@@ -147,7 +146,7 @@ export default function Navbar() {
               ) : (
                 <div className="hidden sm:flex items-center gap-2">
                   <Link href="/login">
-                    <motion.button 
+                    <motion.button
                       className="rounded-xl bg-primary-100 hover:bg-primary-100/90 px-4 py-2 text-sm font-medium text-white shadow-glass hover:shadow-neon-primary transition-all duration-300 backdrop-blur-md"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -186,7 +185,7 @@ export default function Navbar() {
           </div>
 
           {isMenuOpen && (
-            <motion.div 
+            <motion.div
               className="md:hidden mt-4 pt-4 border-t border-white/20 dark:border-gray-700/20"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -199,14 +198,14 @@ export default function Navbar() {
                   { href: "#features", label: "Features" },
                   { href: "#contact-us", label: "Contact" }
                 ].map((item, index) => (
-                  <motion.div 
+                  <motion.div
                     key={item.href}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 + 0.1 }}
                   >
-                    <Link 
-                      href={item.href} 
+                    <Link
+                      href={item.href}
                       className="block px-3 py-2 text-sm font-medium rounded-lg hover:bg-primary-100/10 hover:text-primary-100 transition-all duration-300"
                       onClick={() => setIsMenuOpen(false)}
                     >
@@ -215,7 +214,7 @@ export default function Navbar() {
                   </motion.div>
                 ))}
               </nav>
-              <motion.div 
+              <motion.div
                 className="flex flex-col gap-2 mt-4 pt-4 border-t border-white/20 dark:border-gray-700/20"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -223,13 +222,13 @@ export default function Navbar() {
               >
                 {user ? (
                   <>
-                    <Link href={getDashboardLink()} className="w-full">
-                      <motion.button 
+                    <Link href="/profile" className="w-full">
+                      <motion.button
                         className="w-full rounded-xl bg-primary-100 hover:bg-primary-100/90 px-4 py-3 text-sm font-medium text-white shadow-glass transition-all duration-300"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        Dashboard
+                        Profile
                       </motion.button>
                     </Link>
                     <motion.button
@@ -247,7 +246,7 @@ export default function Navbar() {
                 ) : (
                   <>
                     <Link href="/login" className="w-full">
-                      <motion.button 
+                      <motion.button
                         className="w-full rounded-xl bg-primary-100 hover:bg-primary-100/90 px-4 py-3 text-sm font-medium text-white shadow-glass transition-all duration-300"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
