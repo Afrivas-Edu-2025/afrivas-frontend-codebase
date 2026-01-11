@@ -126,7 +126,7 @@ export default function Navbar() {
               </motion.button>
 
               {user ? (
-                <div className="flex items-center gap-2">
+                <div className="hidden md:flex items-center gap-2">
                   <Link href="/profile">
                     <button className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-1 text-sm font-medium text-white">
                       <User className="h-4 w-4" />
