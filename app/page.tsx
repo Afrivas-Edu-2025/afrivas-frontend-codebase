@@ -12,20 +12,13 @@ import {
   HowItWorksSection,
   TestimonialsSection,
   FAQSection,
-  CTASection, 
+  CTASection,
   ContactSection,
   ScrollToTopButton,
 } from "@/components/landing"
 
 export default function Home() {
-  const { user, token, loading } = useAuth()
-  const router = useRouter()
-
-  useEffect(() => {
-    if (!loading && token && user?.role === "ADMIN") {
-      router.replace("/admin/dashboard")
-    }
-  }, [loading, token, user, router])
+  // Removed redirect logic - allow all users to view landing page
 
   return (
     <div className="min-h-screen">
