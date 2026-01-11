@@ -83,20 +83,25 @@ export function AuthForm() {
 
       // Redirect based on user role
       const dashboardRoute =
-        result.data.user.role === "student"
-          ? "/student/dashboard"
-          : result.data.user.role === "lecturer"
-          ? "/lecturer/dashboard"
-          : "/admin/dashboard";
-      setTimeout(() => router.push(dashboardRoute), 2000);
+        result.data.user.role === "SUPER_ADMIN"
+          ? "/super-admin/dashboard"
+          : result.data.user.role === "UNIVERSITY_ADMIN" || result.data.user.role === "ADMIN"
+            ? "/admin/dashboard"
+            : result.data.user.role === "STUDENT"
+              ? "/student/dashboard"
+              : result.data.user.role === "LECTURER"
+                ? "/lecturer/dashboard"
+                : "/login";
+
+      setTimeout(() => router.push(dashboardRoute), 1500);
     } catch (err: any) {
       console.error("Login error:", err);
       const apiError = err?.data?.error || err?.data || {};
       const errorMessage = apiError.message || err.message || "An unexpected error occurred.";
       const errorDetails = apiError.details?.errors
         ? apiError.details.errors
-            .map((e: { field: string; message: string }) => `${e.field}: ${e.message}`)
-            .join(", ")
+          .map((e: { field: string; message: string }) => `${e.field}: ${e.message}`)
+          .join(", ")
         : "";
 
       if (apiError.details?.errors) {
@@ -161,7 +166,7 @@ export function AuthForm() {
             </div>
           </div>
         </div>
-       
+
       </div>
 
       {/* Right Side - Form */}

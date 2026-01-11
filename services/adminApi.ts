@@ -266,7 +266,7 @@ export type DepartmentAnalytics = {
 export const adminApi = createApi({
   reducerPath: 'adminApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3303/api/v1'}/admin`,
+    baseUrl: `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5050/api/v1'}/admin`,
     prepareHeaders: (headers, { getState }) => {
       const token = localStorage.getItem('authToken');
       console.log('Admin API - Token from localStorage:', token ? `Bearer ${token.substring(0, 20)}...` : 'No token found');
@@ -327,25 +327,25 @@ export const adminApi = createApi({
       query: () => '/faculty/analytics/performance',
       providesTags: ['Faculty'],
     }),
-    
+
     // Department Management
     getDepartments: builder.query<ApiResponse<Department[]>, void>({
       // Backend route: GET /api/v1/admin/departments
       query: () => '/departments',
       providesTags: ['Department'],
     }),
-    
+
     getDepartmentById: builder.query<ApiResponse<Department>, string>({
       query: (id) => `/departments/${id}`,
       providesTags: (result, error, id) => [{ type: 'Department', id }],
     }),
-    
+
     getDepartmentsByFaculty: builder.query<ApiResponse<Department[]>, string>({
       // Backend route uses facultyId as query param: /departments?facultyId=<id>
       query: (facultyId) => `/departments?facultyId=${facultyId}`,
       providesTags: ['Department'],
     }),
-    
+
     createDepartment: builder.mutation<ApiResponse<Department>, CreateDepartmentRequest>({
       query: (data) => ({
         url: '/departments',
@@ -354,7 +354,7 @@ export const adminApi = createApi({
       }),
       invalidatesTags: ['Department', 'Stats'],
     }),
-    
+
     updateDepartment: builder.mutation<ApiResponse<Department>, { id: string; data: Partial<CreateDepartmentRequest> }>({
       query: ({ id, data }) => ({
         url: `/departments/${id}`,
@@ -363,7 +363,7 @@ export const adminApi = createApi({
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Department', id }, 'Department'],
     }),
-    
+
     deleteDepartment: builder.mutation<ApiResponse<void>, string>({
       query: (id) => ({
         url: `/departments/${id}`,
@@ -371,7 +371,7 @@ export const adminApi = createApi({
       }),
       invalidatesTags: ['Department', 'Stats'],
     }),
-    
+
     getDepartmentAnalytics: builder.query<ApiResponse<DepartmentAnalytics[]>, void>({
       // Backend route: GET /api/v1/admin/departments/analytics/performance
       query: () => '/departments/analytics/performance',
@@ -784,7 +784,7 @@ export const adminApi = createApi({
 export const {
   // Dashboard
   useGetDashboardStatsQuery,
-  
+
   // Faculty hooks
   useGetFacultiesQuery,
   useGetFacultyByIdQuery,
@@ -792,7 +792,7 @@ export const {
   useUpdateFacultyMutation,
   useDeleteFacultyMutation,
   useGetFacultyAnalyticsQuery,
-  
+
   // Department hooks
   useGetDepartmentsQuery,
   useGetDepartmentByIdQuery,
@@ -801,21 +801,21 @@ export const {
   useUpdateDepartmentMutation,
   useDeleteDepartmentMutation,
   useGetDepartmentAnalyticsQuery,
-  
+
   // User hooks
   useGetUsersQuery,
   useGetUserByIdQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
   useToggleUserStatusMutation,
-  
+
   // Grade hooks
   useGetGradesQuery,
   useGetGradeByIdQuery,
   useCreateGradeMutation,
   useUpdateGradeMutation,
   useDeleteGradeMutation,
-  
+
   // Course hooks
   useGetCoursesQuery,
   useGetCourseByIdQuery,
@@ -823,7 +823,7 @@ export const {
   useCreateCourseMutation,
   useUpdateCourseMutation,
   useDeleteCourseMutation,
-  
+
   // Class hooks
   useGetClassesQuery,
   useGetClassByIdQuery,
@@ -831,7 +831,7 @@ export const {
   useCreateClassMutation,
   useUpdateClassMutation,
   useDeleteClassMutation,
-  
+
   // Student hooks
   useGetStudentsQuery,
   useGetAllStudentsQuery,
@@ -843,7 +843,7 @@ export const {
   useRejectStudentMutation,
   useGetStudentDetailsQuery,
   useDeleteStudentFromUsersMutation,
-  
+
   // Lecturer hooks
   useGetLecturersQuery,
   useGetAllLecturersQuery,
@@ -855,11 +855,11 @@ export const {
   useRejectLecturerMutation,
   useGetLecturerDetailsQuery,
   useDeleteLecturerFromUsersMutation,
-  
+
   // Grade statistics hooks
   useGetGradeStatisticsQuery,
   useCreateBulkGradesMutation,
-  
+
   // Semester management hooks
   useGetSemestersQuery,
   useGetSemesterByIdQuery,

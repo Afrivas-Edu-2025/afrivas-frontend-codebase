@@ -28,10 +28,15 @@ export default function PrivateRoute({
         router.push('/auth');
       } else if (!allowedRoles.includes(user.role)) {
         // If an admin hits a non-admin route, always send them back to the admin dashboard
-        if (user.role === 'ADMIN') {
+        if (user.role === 'SUPER_ADMIN') {
+          router.replace('/super-admin/dashboard');
+        } else if (user.role === 'UNIVERSITY_ADMIN' || user.role === 'ADMIN') {
           router.replace('/admin/dashboard');
+        } else if (user.role === 'STUDENT') {
+          router.replace('/student/dashboard');
+        } else if (user.role === 'LECTURER') {
+          router.replace('/lecturer/dashboard');
         } else {
-          // For other roles, send them to the public home page
           router.replace('/');
         }
       }

@@ -18,7 +18,7 @@ import { Home } from "lucide-react"
 
 type DashboardLayoutProps = {
   children: ReactNode
-  userRole: "ADMIN" | "STUDENT" | "LECTURER"
+  userRole: "SUPER_ADMIN" | "UNIVERSITY_ADMIN" | "ADMIN" | "STUDENT" | "LECTURER"
 }
 
 export default function DashboardLayout({ children, userRole }: DashboardLayoutProps) {

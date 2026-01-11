@@ -33,6 +33,7 @@ import {
   Layers,
   Download,
   ChartBar,
+  Shield,
 } from "lucide-react"
 
 // Define the navigation item type
@@ -46,7 +47,7 @@ type NavItem = {
 
 // Define the props for the UnifiedSidebar component
 type UnifiedSidebarProps = {
-  userRole: "ADMIN" | "STUDENT" | "LECTURER"
+  userRole: "SUPER_ADMIN" | "UNIVERSITY_ADMIN" | "ADMIN" | "STUDENT" | "LECTURER"
   logoSrc?: string
   onToggle?: (collapsed: boolean) => void
 }
@@ -132,6 +133,28 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
     ]
 
     switch (userRole) {
+      case "SUPER_ADMIN":
+        return {
+          Main: [
+            {
+              href: "/super-admin/dashboard",
+              icon: <LayoutDashboard size={20} />,
+              label: "Dashboard",
+            },
+            {
+              href: "/super-admin/universities",
+              icon: <Building2 size={20} />,
+              label: "Universities",
+            },
+            {
+              href: "/super-admin/admins",
+              icon: <Shield size={20} />,
+              label: "Admin Users",
+            },
+          ],
+          Common: commonItems,
+        }
+      case "UNIVERSITY_ADMIN":
       case "ADMIN":
         return {
           Main: [
@@ -150,10 +173,10 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
               icon: <User size={20} />,
               label: "Lecturers",
             },
-    
+
           ],
           Management: [
-              {
+            {
               href: "/admin/courses",
               icon: <BookOpen size={20} />,
               label: "Courses",
@@ -359,8 +382,8 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
                     </h3>
                   )}
                   <ul className="space-y-1">
-                    {items.map((item) => (
-                      <li key={item.href}>
+                    {items.map((item, index) => (
+                      <li key={`${item.label}-${index}`}>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Link
@@ -368,7 +391,7 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
                               onClick={item.onClick}
                               className={cn(
                                 "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                                isActive(item.href)
+                                isActive(item.href || "")
                                   ? "bg-blue-600 text-white"
                                   : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800",
                                 isCollapsed && "justify-center",
