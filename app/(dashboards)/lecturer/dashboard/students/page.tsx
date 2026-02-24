@@ -44,7 +44,7 @@ export default function StudentsPage() {
         ...(search && { search })
       })
 
-      const response = await fetch(`http://localhost:3303/api/v1/admin/users/students`, {
+      const response = await fetch(`http://localhost:5050/api/v1/admin/users/students`, {
         headers: {
           'Content-Type': 'application/json'
         }

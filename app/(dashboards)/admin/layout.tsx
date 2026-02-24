@@ -1,8 +1,8 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { ThemeProvider } from "@/components/theme-provider"
-import DashboardLayout from "@/components/layout/dashboard-layout"
 import PrivateRoute from "@/components/private-route"
+import AdminOnboardingGuard from "@/components/layout/admin-onboarding-guard"
 
 export const metadata: Metadata = {
   title: "ePlatform - Lecturer Dashboard",
@@ -17,7 +17,7 @@ export default function AdminLayout({
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <PrivateRoute allowedRoles={["ADMIN"]}>
-        <DashboardLayout userRole="ADMIN">{children}</DashboardLayout>
+        <AdminOnboardingGuard>{children}</AdminOnboardingGuard>
       </PrivateRoute>
     </ThemeProvider>
   )

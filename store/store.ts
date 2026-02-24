@@ -1,12 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { authApi } from '../services/api';
+import { mainApi } from './api/mainApi';
 
 export const store = configureStore({
   reducer: {
     [authApi.reducerPath]: authApi.reducer,
+    [mainApi.reducerPath]: mainApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(authApi.middleware),
+    getDefaultMiddleware().concat(authApi.middleware, mainApi.middleware),
 });
 
 // TypeScript types for the store

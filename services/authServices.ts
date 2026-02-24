@@ -33,9 +33,9 @@ export type LoginUserRequest = {
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3303/api/v1',
+    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5050/api/v1',
     prepareHeaders: (headers, { getState }) => {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('authToken') || localStorage.getItem('accessToken');
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
@@ -63,7 +63,7 @@ export const authApi = createApi({
     }),
     loginUser: builder.mutation<ApiResponse, LoginUserRequest>({
       query: (data) => ({
-        url: '/auth/signin',
+        url: '/auth/login',
         method: 'POST',
         body: data,
       }),

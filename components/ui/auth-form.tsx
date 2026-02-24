@@ -8,6 +8,7 @@ import { Eye, EyeOff, CheckCircle, Users, Shield, Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { useLoginUserMutation } from "@/services/authServices";
 import { useAuth } from "@/components/auth-context";
+import { isUniversityOnboardingComplete } from "@/lib/universityOnboarding";
 import {
   Dialog,
   DialogContent,
@@ -61,6 +62,10 @@ export function AuthForm() {
     }
 
     try {
+      // Ensure stale/invalid tokens do not interfere with a fresh login attempt.
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("accessToken");
+
       const loginData = {
         email: formData.email,
         password: formData.password,
@@ -82,15 +87,24 @@ export function AuthForm() {
       });
 
       // Redirect based on user role
+      const role = String(result.data.user.role || "").toUpperCase();
       const dashboardRoute =
-        result.data.user.role === "student"
+        role === "STUDENT"
           ? "/student/dashboard"
-          : result.data.user.role === "lecturer"
+          : role === "LECTURER"
           ? "/lecturer/dashboard"
+          : !isUniversityOnboardingComplete(result.data.user.id)
+          ? "/admin/onboarding"
           : "/admin/dashboard";
       setTimeout(() => router.push(dashboardRoute), 2000);
     } catch (err: any) {
-      console.error("Login error:", err);
+      const statusCode = err?.status ?? err?.originalStatus;
+      console.error("Login error details:", {
+        statusCode,
+        data: err?.data,
+        error: err?.error,
+        message: err?.message,
+      });
       const apiError = err?.data?.error || err?.data || {};
       const errorMessage = apiError.message || err.message || "An unexpected error occurred.";
       const errorDetails = apiError.details?.errors
@@ -111,7 +125,7 @@ export function AuthForm() {
       }
       toast({
         variant: "destructive",
-        title: "Error",
+        title: statusCode ? `Error (${statusCode})` : "Error",
         description: errorDetails ? `${errorMessage} (${errorDetails})` : errorMessage,
       });
     }

@@ -5,6 +5,9 @@ import './globals.css';
 import ReduxProvider from '@/components/ReduxProvider';
 import { AuthProvider } from '@/components/auth-context';
 import { ThemeProvider } from '@/components/theme-provider';
+import ReactQueryProvider from '@/lib/react-query/ReactQueryProvider';
+import BootstrapQueries from './_components/BootstrapQueries';
+import OfflineBanner from './_components/OfflineBanner';
 import Navbar from "@/components/Navbar"
 import Footer from "@/components/footer"
 
@@ -34,17 +37,21 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ReduxProvider>
-            <AuthProvider>
-              <div className="navbar">
-                <Navbar />
-              </div>
-              {children}
-              <div className="footer">
-                <Footer />
-              </div>
-            </AuthProvider>
-          </ReduxProvider>
+          <ReactQueryProvider>
+            <ReduxProvider>
+              <AuthProvider>
+                <OfflineBanner />
+                <BootstrapQueries />
+                <div className="navbar">
+                  <Navbar />
+                </div>
+                {children}
+                <div className="footer">
+                  <Footer />
+                </div>
+              </AuthProvider>
+            </ReduxProvider>
+          </ReactQueryProvider>
         </ThemeProvider>
       </body>
     </html>

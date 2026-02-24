@@ -25,7 +25,7 @@ export default function PrivateRoute({
     if (!loading) {
       setIsAuthChecked(true);
       if (!token || !user) {
-        router.push('/auth');
+        router.push('/login');
       } else if (!allowedRoles.includes(user.role)) {
         // If an admin hits a non-admin route, always send them back to the admin dashboard
         if (user.role === 'ADMIN') {

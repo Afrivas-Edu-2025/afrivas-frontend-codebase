@@ -7,13 +7,160 @@ type ApiResponse<T = any> = {
   data?: T;
 };
 
-// Admin Dashboard Stats Types
+type PaginatedApiResponse<T = any> = ApiResponse<T> & {
+  currentPage?: number;
+  totalPages?: number;
+  total?: number;
+  hasMore?: boolean;
+  nextCursor?: number | null;
+  prevCursor?: number | null;
+};
+
+const toNumber = (value: unknown): number | undefined => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+const safeArray = <T = any>(value: unknown): T[] => {
+  return Array.isArray(value) ? (value as T[]) : [];
+};
+
+const isUsableJwt = (token: string): boolean => {
+  const parts = token.split('.');
+  if (parts.length !== 3) return false;
+
+  try {
+    const payload = JSON.parse(atob(parts[1]));
+    if (typeof payload?.exp === 'number') {
+      const now = Math.floor(Date.now() / 1000);
+      if (payload.exp <= now) return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const getStoredToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+
+  const candidates = [
+    localStorage.getItem('authToken'),
+    localStorage.getItem('accessToken'),
+  ].filter((value): value is string => Boolean(value));
+
+  const validToken = candidates.find(isUsableJwt) || null;
+
+  if (!validToken && candidates.length > 0) {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('accessToken');
+  }
+
+  return validToken;
+};
+
+const mapFaculty = (faculty: any): Faculty => ({
+  id: String(faculty?.id ?? ''),
+  name: faculty?.facultyName ?? faculty?.name ?? 'Unnamed Faculty',
+  description: faculty?.description,
+  createdAt: faculty?.createdAt ?? new Date().toISOString(),
+  updatedAt: faculty?.updatedAt ?? faculty?.createdAt ?? new Date().toISOString(),
+  departmentCount: faculty?.departmentCount ?? 0,
+  studentCount: faculty?.studentCount ?? 0,
+  lecturerCount: faculty?.lecturerCount ?? safeArray(faculty?.lecturer).length,
+});
+
+const mapDepartment = (department: any): Department => ({
+  id: String(department?.id ?? ''),
+  name: department?.deptName ?? department?.name ?? 'Unnamed Department',
+  facultyId: String(department?.facultyId ?? ''),
+  faculty: department?.faculty
+    ? mapFaculty(department.faculty)
+    : undefined,
+  createdAt: department?.createdAt ?? new Date().toISOString(),
+  updatedAt: department?.updatedAt ?? department?.createdAt ?? new Date().toISOString(),
+});
+
+const mapLecturer = (lecturer: any) => {
+  const user = lecturer?.user ?? {};
+  const profile = user?.userProfile ?? {};
+  return {
+    id: String(lecturer?.id ?? user?.id ?? ''),
+    userId: String(user?.id ?? lecturer?.userId ?? ''),
+    firstName: user?.firstName ?? '',
+    lastName: user?.lastName ?? '',
+    email: user?.email ?? '',
+    role: user?.role ?? 'LECTURER',
+    isActive: user?.isApproved ?? true,
+    createdAt: user?.createdAt ?? lecturer?.createdAt ?? new Date().toISOString(),
+    updatedAt: user?.updatedAt ?? lecturer?.updatedAt ?? new Date().toISOString(),
+    gender: profile?.gender ?? 'N/A',
+    dateOfBirth: profile?.birthDate ?? '',
+    phoneNumber: profile?.phoneNumber ?? '',
+    address: profile?.address ?? '',
+    employeeId: lecturer?.employeeId ?? `L-${lecturer?.id ?? ''}`,
+    department: user?.department?.deptName ?? '',
+    position: lecturer?.position ?? 'LECTURER',
+    qualifications: safeArray<string>(lecturer?.qualifications),
+    specialization: safeArray<string>(lecturer?.specialization),
+    officeLocation: lecturer?.officeLocation ?? '',
+    officeHours: lecturer?.officeHours ?? '',
+    assignedCourses: lecturer?.assignedCourses ?? 0,
+    totalStudents: lecturer?.totalStudents ?? 0,
+    averageRating: lecturer?.averageRating ?? 0,
+  };
+};
+
+const mapStudent = (student: any) => {
+  const user = student?.user ?? {};
+  const profile = user?.userProfile ?? {};
+  return {
+    id: String(student?.id ?? user?.id ?? ''),
+    userId: String(user?.id ?? student?.userId ?? ''),
+    firstName: user?.firstName ?? '',
+    lastName: user?.lastName ?? '',
+    email: user?.email ?? '',
+    role: user?.role ?? 'STUDENT',
+    isActive: user?.isApproved ?? true,
+    createdAt: user?.createdAt ?? student?.createdAt ?? new Date().toISOString(),
+    updatedAt: user?.updatedAt ?? student?.updatedAt ?? new Date().toISOString(),
+    gender: profile?.gender ?? 'N/A',
+    dateOfBirth: profile?.birthDate ?? '',
+    phoneNumber: profile?.phoneNumber ?? '',
+    address: profile?.address ?? '',
+    studentId: String(student?.studentId ?? ''),
+    program: user?.department?.deptName ?? '',
+    yearOfStudy: student?.levelId ?? 1,
+    semester: student?.semester ?? '',
+    gpa: student?.gpa ?? 0,
+    credits: student?.credits ?? 0,
+    guardianName: student?.guardianName ?? '',
+    guardianContact: student?.guardianContact ?? '',
+    enrollmentDate: student?.createdAt ?? user?.createdAt ?? new Date().toISOString(),
+    enrolledCourses: student?.enrolledCourses ?? 0,
+    completedCourses: student?.completedCourses ?? 0,
+    pendingFees: student?.pendingFees ?? 0,
+  };
+};
+
+export type Activity = {
+  id: string;
+  action: string;
+  name: string;
+  time: string;
+};
+
 export type DashboardStats = {
-  totalStudents: number;
-  totalLecturers: number;
-  totalDepartments: number;
-  totalFaculties: number;
-  recentRegistrations: number;
+  overview: {
+    totalStudents: number;
+    totalLecturers: number;
+    totalCourses: number;
+    totalDepartments: number;
+    totalFaculties: number;
+    totalEnrollments: number;
+    completionRate: number;
+  };
+  recentActivity: Activity[];
 };
 
 // Faculty Types
@@ -266,10 +413,9 @@ export type DepartmentAnalytics = {
 export const adminApi = createApi({
   reducerPath: 'adminApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3303/api/v1'}/admin`,
-    prepareHeaders: (headers, { getState }) => {
-      const token = localStorage.getItem('authToken');
-      console.log('Admin API - Token from localStorage:', token ? `Bearer ${token.substring(0, 20)}...` : 'No token found');
+    baseUrl: `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5050/api/v1'}`,
+    prepareHeaders: (headers) => {
+      const token = getStoredToken();
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
@@ -281,13 +427,46 @@ export const adminApi = createApi({
   endpoints: (builder) => ({
     // Dashboard Stats
     getDashboardStats: builder.query<ApiResponse<DashboardStats>, void>({
-      query: () => '/dashboard/stats',
+      query: () => '/admin/dashboard/stats',
       providesTags: ['Stats'],
     }),
 
     // Faculty Management
     getFaculties: builder.query<ApiResponse<Faculty[]>, void>({
-      query: () => '/faculty',
+      async queryFn(_arg, _queryApi, _extraOptions, fetchWithBQ) {
+        const pageSize = 50;
+        let cursor: number | null = null;
+        let hasMore = true;
+        let guard = 0;
+        const merged: any[] = [];
+
+        while (hasMore && guard < 50) {
+          const params = new URLSearchParams({ page: String(pageSize) });
+          if (cursor !== null) params.append('cursor', String(cursor));
+
+          const response = await fetchWithBQ(`/faculty?${params.toString()}`);
+          if (response.error) {
+            return { error: response.error as any };
+          }
+
+          const payload = response.data as any;
+          const rows = safeArray(payload?.data?.data ?? payload?.data);
+          merged.push(...rows);
+
+          const pagination = payload?.data?.pagination ?? {};
+          hasMore = Boolean(pagination?.hasMore);
+          cursor = typeof pagination?.nextCursor === 'number' ? pagination.nextCursor : null;
+          guard += 1;
+        }
+
+        return {
+          data: {
+            success: true,
+            message: 'Faculties fetched successfully',
+            data: merged.map(mapFaculty),
+          },
+        };
+      },
       providesTags: ['Faculty'],
     }),
 
@@ -300,7 +479,9 @@ export const adminApi = createApi({
       query: (data) => ({
         url: '/faculty',
         method: 'POST',
-        body: data,
+        body: {
+          name: data.name,
+        },
       }),
       invalidatesTags: ['Faculty', 'Stats'],
     }),
@@ -327,51 +508,62 @@ export const adminApi = createApi({
       query: () => '/faculty/analytics/performance',
       providesTags: ['Faculty'],
     }),
-    
+
     // Department Management
     getDepartments: builder.query<ApiResponse<Department[]>, void>({
-      // Backend route: GET /api/v1/admin/departments
-      query: () => '/departments',
+      // Backend route: GET /api/v1/department
+      query: () => '/department',
+      transformResponse: (response: any): ApiResponse<Department[]> => {
+        const rawData = safeArray(response?.data?.data ?? response?.data);
+        return {
+          success: true,
+          message: 'Departments fetched successfully',
+          data: rawData.map(mapDepartment),
+        };
+      },
       providesTags: ['Department'],
     }),
-    
+
     getDepartmentById: builder.query<ApiResponse<Department>, string>({
-      query: (id) => `/departments/${id}`,
+      query: (id) => `/department/${id}`,
       providesTags: (result, error, id) => [{ type: 'Department', id }],
     }),
-    
+
     getDepartmentsByFaculty: builder.query<ApiResponse<Department[]>, string>({
-      // Backend route uses facultyId as query param: /departments?facultyId=<id>
-      query: (facultyId) => `/departments?facultyId=${facultyId}`,
+      // Backend route uses facultyId as query param: /department?facultyId=<id>
+      query: (facultyId) => `/department?facultyId=${facultyId}`,
       providesTags: ['Department'],
     }),
-    
+
     createDepartment: builder.mutation<ApiResponse<Department>, CreateDepartmentRequest>({
       query: (data) => ({
-        url: '/departments',
+        url: '/department',
         method: 'POST',
-        body: data,
+        body: {
+          deptName: data.name,
+          facultyId: toNumber(data.facultyId),
+        },
       }),
       invalidatesTags: ['Department', 'Stats'],
     }),
-    
+
     updateDepartment: builder.mutation<ApiResponse<Department>, { id: string; data: Partial<CreateDepartmentRequest> }>({
       query: ({ id, data }) => ({
-        url: `/departments/${id}`,
+        url: `/department/${id}`,
         method: 'PUT',
         body: data,
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Department', id }, 'Department'],
     }),
-    
+
     deleteDepartment: builder.mutation<ApiResponse<void>, string>({
       query: (id) => ({
-        url: `/departments/${id}`,
+        url: `/department/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Department', 'Stats'],
     }),
-    
+
     getDepartmentAnalytics: builder.query<ApiResponse<DepartmentAnalytics[]>, void>({
       // Backend route: GET /api/v1/admin/departments/analytics/performance
       query: () => '/departments/analytics/performance',
@@ -386,19 +578,19 @@ export const adminApi = createApi({
           limit: limit.toString(),
         });
         if (role) params.append('role', role);
-        return `/users?${params.toString()}`;
+        return `/admin/users/all?${params.toString()}`;
       },
       providesTags: ['User'],
     }),
 
     getUserById: builder.query<ApiResponse<User>, string>({
-      query: (id) => `/users/${id}`,
+      query: (id) => `/admin/users/all/${id}`,
       providesTags: (result, error, id) => [{ type: 'User', id }],
     }),
 
     updateUser: builder.mutation<ApiResponse<User>, { id: string; data: UpdateUserRequest }>({
       query: ({ id, data }) => ({
-        url: `/users/${id}`,
+        url: `/admin/users/all/${id}`,
         method: 'PUT',
         body: data,
       }),
@@ -407,7 +599,7 @@ export const adminApi = createApi({
 
     deleteUser: builder.mutation<ApiResponse<void>, string>({
       query: (id) => ({
-        url: `/users/${id}`,
+        url: `/admin/users/all/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['User', 'Stats'],
@@ -415,7 +607,7 @@ export const adminApi = createApi({
 
     toggleUserStatus: builder.mutation<ApiResponse<User>, string>({
       query: (id) => ({
-        url: `/users/${id}/toggle-status`,
+        url: `/admin/users/all/${id}/toggle-status`,
         method: 'PATCH',
       }),
       invalidatesTags: (result, error, id) => [{ type: 'User', id }, 'User'],
@@ -458,34 +650,62 @@ export const adminApi = createApi({
       invalidatesTags: ['Grade'],
     }),
 
-    // Course Management
+    // Course Management (Modules)
     getCourses: builder.query<ApiResponse<Course[]>, void>({
-      query: () => '/courses',
+      query: () => '/module',
+      transformResponse: (response: any): ApiResponse<Course[]> => {
+        const rawData = safeArray(response?.data?.moduleData ?? response?.data?.data?.moduleData ?? response?.data);
+        return {
+          success: true,
+          message: 'Courses fetched successfully',
+          data: rawData.map((module: any) => ({
+            id: String(module?.id ?? ''),
+            name: module?.moduleName ?? '',
+            code: module?.moduleCode ?? '',
+            description: module?.description,
+            credits: module?.creditHour ?? 0,
+            level: String(module?.levelId ?? ''),
+            semester: module?.semester ?? '',
+            departmentId: String(module?.deptId ?? ''),
+            lecturerId: module?.lecturerId ? String(module.lecturerId) : undefined,
+            isActive: true,
+            createdAt: module?.createdAt ?? new Date().toISOString(),
+            updatedAt: module?.updatedAt ?? module?.createdAt ?? new Date().toISOString(),
+          })),
+        };
+      },
       providesTags: ['Course'],
     }),
 
     getCourseById: builder.query<ApiResponse<Course>, string>({
-      query: (id) => `/courses/${id}`,
+      query: (id) => `/module/${id}`,
       providesTags: (result, error, id) => [{ type: 'Course', id }],
     }),
 
     getCoursesByDepartment: builder.query<ApiResponse<Course[]>, string>({
-      query: (departmentId) => `/courses/department/${departmentId}`,
+      query: (departmentId) => `/module/department/${departmentId}`,
       providesTags: ['Course'],
     }),
 
     createCourse: builder.mutation<ApiResponse<Course>, CreateCourseRequest>({
       query: (data) => ({
-        url: '/courses',
+        url: '/module',
         method: 'POST',
-        body: data,
+        body: {
+          moduleName: data.name,
+          moduleCode: data.code,
+          creditHour: toNumber(data.credits) ?? 0,
+          deptId: toNumber(data.departmentId),
+          facultyId: toNumber((data as any).facultyId) ?? 1,
+          levelId: toNumber(data.level) ?? 1,
+        },
       }),
       invalidatesTags: ['Course'],
     }),
 
     updateCourse: builder.mutation<ApiResponse<Course>, { id: string; data: Partial<CreateCourseRequest> }>({
       query: ({ id, data }) => ({
-        url: `/courses/${id}`,
+        url: `/module/${id}`,
         method: 'PUT',
         body: data,
       }),
@@ -494,7 +714,7 @@ export const adminApi = createApi({
 
     deleteCourse: builder.mutation<ApiResponse<void>, string>({
       query: (id) => ({
-        url: `/courses/${id}`,
+        url: `/module/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Course'],
@@ -550,24 +770,62 @@ export const adminApi = createApi({
           limit: limit.toString(),
         });
         if (departmentId) params.append('departmentId', departmentId);
-        // Backend route: GET /api/v1/admin/users/students
-        return `/users/students?${params.toString()}`;
+        // Backend route: GET /api/v1/admin/users/student
+        return `/users/student?${params.toString()}`;
+      },
+      transformResponse: (response: any): ApiResponse<any[]> => {
+        const studentData = response?.studentData ?? response?.data ?? {};
+        const students = safeArray(studentData?.studentData ?? studentData?.data);
+        return {
+          success: true,
+          message: 'Students fetched successfully',
+          data: students.map(mapStudent),
+        };
       },
       providesTags: ['Student'],
     }),
 
-    // New endpoint for fetching all students from users/students
-    getAllStudents: builder.query<ApiResponse<Student[]>, { page?: number; limit?: number; search?: string; program?: string; year?: string; status?: string }>({
-      query: ({ page = 1, limit = 10, search, program, year, status } = {}) => {
-        const params = new URLSearchParams({
-          page: page.toString(),
-          limit: limit.toString(),
-        });
-        if (search) params.append('search', search);
-        if (program) params.append('program', program);
-        if (year) params.append('year', year);
-        if (status) params.append('status', status);
-        return `/users/students?${params.toString()}`;
+    // Fetch all students by walking backend cursor pagination, then filter on client pages.
+    getAllStudents: builder.query<PaginatedApiResponse<any[]>, { limit?: number }>({
+      async queryFn({ limit = 200 } = {}, _queryApi, _extraOptions, fetchWithBQ) {
+        let cursor: number | null = null;
+        let hasMore = true;
+        let guard = 0;
+        const merged: any[] = [];
+
+        while (hasMore && guard < 100) {
+          const params = new URLSearchParams({
+            page: String(limit),
+          });
+          if (cursor !== null) params.append('cursor', String(cursor));
+
+          const response = await fetchWithBQ(`/users/student?${params.toString()}`);
+          if (response.error) {
+            return { error: response.error as any };
+          }
+
+          const payload = response.data as any;
+          const studentData = payload?.studentData ?? payload?.data ?? {};
+          const rows = safeArray(studentData?.studentData ?? studentData?.data);
+          merged.push(...rows);
+
+          const pagination = studentData?.pagination ?? {};
+          hasMore = Boolean(pagination?.hasMore);
+          cursor = typeof pagination?.nextCursor === 'number' ? pagination.nextCursor : null;
+          guard += 1;
+        }
+
+        return {
+          data: {
+            success: true,
+            message: 'Students fetched successfully',
+            data: merged.map(mapStudent),
+            total: merged.length,
+            hasMore: false,
+            nextCursor: null,
+            prevCursor: null,
+          },
+        };
       },
       providesTags: ['Student'],
     }),
@@ -577,9 +835,9 @@ export const adminApi = createApi({
       providesTags: (result, error, id) => [{ type: 'Student', id }],
     }),
 
-    createStudent: builder.mutation<ApiResponse<Student>, CreateStudentRequest>({
+    createStudent: builder.mutation<ApiResponse<Student>, any>({
       query: (body) => ({
-        url: '/student/create',
+        url: '/users/student',
         method: 'POST',
         body,
       }),
@@ -620,15 +878,33 @@ export const adminApi = createApi({
     }),
 
     // Get student details with stats
-    getStudentDetails: builder.query<ApiResponse<{ student: Student; stats: any }>, string>({
-      query: (id) => `/users/students/${id}`,
+    getStudentDetails: builder.query<ApiResponse<{ student: any; stats: any }>, string>({
+      query: (id) => `/users/student/${id}`,
+      transformResponse: (response: any) => {
+        const student = response?.studentData ?? response?.data ?? null;
+        return {
+          success: true,
+          message: 'Student details fetched successfully',
+          data: {
+            student: student ? mapStudent(student) : null,
+            stats: {
+              totalCredits: 0,
+              completedCredits: 0,
+              averageGPA: 0,
+              enrolledCourses: 0,
+              completedCourses: 0,
+              attendanceRate: 0,
+            },
+          },
+        };
+      },
       providesTags: (result, error, id) => [{ type: 'Student', id }],
     }),
 
     // Delete student from users
     deleteStudentFromUsers: builder.mutation<ApiResponse<void>, string>({
       query: (id) => ({
-        url: `/users/${id}`,
+        url: `/users/student/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Student', 'Stats'],
@@ -642,23 +918,62 @@ export const adminApi = createApi({
           limit: limit.toString(),
         });
         if (departmentId) params.append('departmentId', departmentId);
-        // Backend route: GET /api/v1/admin/users/lecturers
-        return `/users/lecturers?${params.toString()}`;
+        // Backend route: GET /api/v1/admin/users/lecturer
+        return `/users/lecturer?${params.toString()}`;
+      },
+      transformResponse: (response: any): ApiResponse<any[]> => {
+        const lecturerData = response?.lecturerData ?? response?.data ?? {};
+        const lecturers = safeArray(lecturerData?.lecturerData ?? lecturerData?.data);
+        return {
+          success: true,
+          message: 'Lecturers fetched successfully',
+          data: lecturers.map(mapLecturer),
+        };
       },
       providesTags: ['Lecturer'],
     }),
 
-    // New endpoint for fetching all lecturers from users/lecturers
-    getAllLecturers: builder.query<ApiResponse<Lecturer[]>, { page?: number; limit?: number; search?: string; department?: string; status?: string }>({
-      query: ({ page = 1, limit = 10, search, department, status } = {}) => {
-        const params = new URLSearchParams({
-          page: page.toString(),
-          limit: limit.toString(),
-        });
-        if (search) params.append('search', search);
-        if (department) params.append('department', department);
-        if (status) params.append('status', status);
-        return `/users/lecturers?${params.toString()}`;
+    // Fetch all lecturers by walking backend cursor pagination, then filter on client pages.
+    getAllLecturers: builder.query<PaginatedApiResponse<any[]>, { limit?: number }>({
+      async queryFn({ limit = 200 } = {}, _queryApi, _extraOptions, fetchWithBQ) {
+        let cursor: number | null = null;
+        let hasMore = true;
+        let guard = 0;
+        const merged: any[] = [];
+
+        while (hasMore && guard < 100) {
+          const params = new URLSearchParams({
+            page: String(limit),
+          });
+          if (cursor !== null) params.append('cursor', String(cursor));
+
+          const response = await fetchWithBQ(`/users/lecturer?${params.toString()}`);
+          if (response.error) {
+            return { error: response.error as any };
+          }
+
+          const payload = response.data as any;
+          const lecturerData = payload?.lecturerData ?? payload?.data ?? {};
+          const rows = safeArray(lecturerData?.lecturerData ?? lecturerData?.data);
+          merged.push(...rows);
+
+          const pagination = lecturerData?.pagination ?? {};
+          hasMore = Boolean(pagination?.hasMore);
+          cursor = typeof pagination?.nextCursor === 'number' ? pagination.nextCursor : null;
+          guard += 1;
+        }
+
+        return {
+          data: {
+            success: true,
+            message: 'Lecturers fetched successfully',
+            data: merged.map(mapLecturer),
+            total: merged.length,
+            hasMore: false,
+            nextCursor: null,
+            prevCursor: null,
+          },
+        };
       },
       providesTags: ['Lecturer'],
     }),
@@ -668,9 +983,9 @@ export const adminApi = createApi({
       providesTags: (result, error, id) => [{ type: 'Lecturer', id }],
     }),
 
-    createLecturer: builder.mutation<ApiResponse<Lecturer>, CreateLecturerRequest>({
+    createLecturer: builder.mutation<ApiResponse<Lecturer>, any>({
       query: (data) => ({
-        url: '/lecturers',
+        url: '/users/lecturer',
         method: 'POST',
         body: data,
       }),
@@ -711,18 +1026,45 @@ export const adminApi = createApi({
     }),
 
     // Get lecturer details with stats
-    getLecturerDetails: builder.query<ApiResponse<{ lecturer: Lecturer; stats: any }>, string>({
-      query: (id) => `/users/lecturers/${id}`,
+    getLecturerDetails: builder.query<ApiResponse<{ lecturer: any; stats: any }>, string>({
+      query: (id) => `/users/lecturer/${id}`,
+      transformResponse: (response: any) => {
+        const lecturer = response?.lecturerData ?? response?.data ?? null;
+        return {
+          success: true,
+          message: 'Lecturer details fetched successfully',
+          data: {
+            lecturer: lecturer ? mapLecturer(lecturer) : null,
+            stats: {
+              totalCourses: 0,
+              totalStudents: 0,
+              averageRating: 0,
+              yearsOfExperience: 0,
+            },
+          },
+        };
+      },
       providesTags: (result, error, id) => [{ type: 'Lecturer', id }],
     }),
 
     // Delete lecturer from users
     deleteLecturerFromUsers: builder.mutation<ApiResponse<void>, string>({
       query: (id) => ({
-        url: `/users/${id}`,
+        url: `/users/lecturer/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Lecturer', 'Stats'],
+    }),
+
+    // Level Management
+    getLevels: builder.query<ApiResponse<Array<{ id: number; levelName: string }>>, void>({
+      query: () => '/level',
+      transformResponse: (response: any) => ({
+        success: true,
+        message: 'Levels fetched successfully',
+        data: safeArray(response?.data),
+      }),
+      providesTags: ['Student'],
     }),
 
     // Grade Statistics
@@ -743,18 +1085,18 @@ export const adminApi = createApi({
 
     // Semester Management
     getSemesters: builder.query<ApiResponse<Semester[]>, void>({
-      query: () => '/semesters',
+      query: () => '/semester',
       providesTags: ['Semester'],
     }),
 
     getSemesterById: builder.query<ApiResponse<Semester>, string>({
-      query: (id) => `/semesters/${id}`,
+      query: (id) => `/semester/${id}`,
       providesTags: (result, error, id) => [{ type: 'Semester', id }],
     }),
 
     createSemester: builder.mutation<ApiResponse<Semester>, CreateSemesterRequest>({
       query: (data) => ({
-        url: '/semesters',
+        url: '/semester',
         method: 'POST',
         body: data,
       }),
@@ -763,7 +1105,7 @@ export const adminApi = createApi({
 
     updateSemester: builder.mutation<ApiResponse<Semester>, { id: string; data: Partial<CreateSemesterRequest> }>({
       query: ({ id, data }) => ({
-        url: `/semesters/${id}`,
+        url: `/semester/${id}`,
         method: 'PUT',
         body: data,
       }),
@@ -772,7 +1114,7 @@ export const adminApi = createApi({
 
     deleteSemester: builder.mutation<ApiResponse<void>, string>({
       query: (id) => ({
-        url: `/semesters/${id}`,
+        url: `/semester/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Semester'],
@@ -784,7 +1126,7 @@ export const adminApi = createApi({
 export const {
   // Dashboard
   useGetDashboardStatsQuery,
-  
+
   // Faculty hooks
   useGetFacultiesQuery,
   useGetFacultyByIdQuery,
@@ -792,7 +1134,7 @@ export const {
   useUpdateFacultyMutation,
   useDeleteFacultyMutation,
   useGetFacultyAnalyticsQuery,
-  
+
   // Department hooks
   useGetDepartmentsQuery,
   useGetDepartmentByIdQuery,
@@ -801,21 +1143,21 @@ export const {
   useUpdateDepartmentMutation,
   useDeleteDepartmentMutation,
   useGetDepartmentAnalyticsQuery,
-  
+
   // User hooks
   useGetUsersQuery,
   useGetUserByIdQuery,
   useUpdateUserMutation,
   useDeleteUserMutation,
   useToggleUserStatusMutation,
-  
+
   // Grade hooks
   useGetGradesQuery,
   useGetGradeByIdQuery,
   useCreateGradeMutation,
   useUpdateGradeMutation,
   useDeleteGradeMutation,
-  
+
   // Course hooks
   useGetCoursesQuery,
   useGetCourseByIdQuery,
@@ -823,7 +1165,7 @@ export const {
   useCreateCourseMutation,
   useUpdateCourseMutation,
   useDeleteCourseMutation,
-  
+
   // Class hooks
   useGetClassesQuery,
   useGetClassByIdQuery,
@@ -831,7 +1173,7 @@ export const {
   useCreateClassMutation,
   useUpdateClassMutation,
   useDeleteClassMutation,
-  
+
   // Student hooks
   useGetStudentsQuery,
   useGetAllStudentsQuery,
@@ -843,7 +1185,7 @@ export const {
   useRejectStudentMutation,
   useGetStudentDetailsQuery,
   useDeleteStudentFromUsersMutation,
-  
+
   // Lecturer hooks
   useGetLecturersQuery,
   useGetAllLecturersQuery,
@@ -855,15 +1197,16 @@ export const {
   useRejectLecturerMutation,
   useGetLecturerDetailsQuery,
   useDeleteLecturerFromUsersMutation,
-  
+
   // Grade statistics hooks
   useGetGradeStatisticsQuery,
   useCreateBulkGradesMutation,
-  
+
   // Semester management hooks
   useGetSemestersQuery,
   useGetSemesterByIdQuery,
   useCreateSemesterMutation,
   useUpdateSemesterMutation,
   useDeleteSemesterMutation,
+  useGetLevelsQuery,
 } = adminApi;

@@ -2,8 +2,7 @@
 // This is for development/testing purposes only
 
 export const setMockAdminToken = () => {
-  // This is a mock token for testing - replace with actual admin token
-  const mockAdminToken = "mock-admin-token-for-testing";
+  // Intentionally avoid writing a fake JWT token: backend rejects malformed tokens.
   const mockAdminUser = {
     id: "admin-1",
     firstName: "Admin",
@@ -13,21 +12,22 @@ export const setMockAdminToken = () => {
     isActive: true
   };
   
-  localStorage.setItem('authToken', mockAdminToken);
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('accessToken');
   localStorage.setItem('user', JSON.stringify(mockAdminUser));
   
-  console.log('Mock admin token set:', mockAdminToken);
-  console.log('Mock admin user set:', mockAdminUser);
+  console.log('Mock admin user set without token. Please login to get a valid JWT.');
 };
 
 export const clearAuthTokens = () => {
   localStorage.removeItem('authToken');
+  localStorage.removeItem('accessToken');
   localStorage.removeItem('user');
   console.log('Auth tokens cleared');
 };
 
 export const getStoredAuthInfo = () => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem('authToken') || localStorage.getItem('accessToken');
   const user = localStorage.getItem('user');
   
   return {

@@ -1,117 +1,187 @@
-import { ChevronLeft, ChevronRight, Plus, MoreHorizontal } from "lucide-react"
+'use client'
+
+import { ChevronLeft, ChevronRight, Plus, MoreHorizontal, Calendar as CalendarIcon, Filter, Layers, CheckCircle2 } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
+import { TextGenerateEffect } from "@/components/aceternity/text-generate-effect"
+import { cn } from "@/lib/utils"
 
 export default function CalendarPage() {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Calendar</h1>
-          <p className="text-gray-500">Manage your schedules and events</p>
+          <div className="inline-flex items-center px-3 py-1 mb-2 rounded-full bg-primary-100/10 border border-primary-100/20">
+            <span className="text-primary-100 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5">
+              <CalendarIcon className="w-3 h-3" />
+              Institutional Schedule
+            </span>
+          </div>
+          <TextGenerateEffect
+            words="Academic Calendar"
+            className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent"
+          />
+          <p className="text-muted-foreground font-medium mt-1">Manage institutional events, deadlines, and schedules</p>
         </div>
-        <button className="bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2">
-          <Plus size={16} />
-          Add Event
-        </button>
+        <Button variant="premium" className="rounded-xl px-6 py-5 shadow-neon-primary group">
+          <Plus className="mr-2 h-4 w-4 group-hover:rotate-90 transition-transform duration-300" />
+          Add New Event
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-3">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <button className="p-1 rounded-md hover:bg-gray-100">
-                <ChevronLeft size={20} />
-              </button>
-              <button className="p-1 rounded-md hover:bg-gray-100">
-                <ChevronRight size={20} />
-              </button>
-              <h2 className="text-lg font-medium">May 2023</h2>
-            </div>
-            <div>
-              <select className="px-3 py-1 rounded-md border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <option>Month</option>
-                <option>Week</option>
-                <option>Day</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="grid grid-cols-7 border-b">
-              <div className="px-2 py-3 text-center text-sm font-medium text-gray-500">SUN</div>
-              <div className="px-2 py-3 text-center text-sm font-medium text-gray-500">MON</div>
-              <div className="px-2 py-3 text-center text-sm font-medium text-gray-500">TUE</div>
-              <div className="px-2 py-3 text-center text-sm font-medium text-gray-500">WED</div>
-              <div className="px-2 py-3 text-center text-sm font-medium text-gray-500">THU</div>
-              <div className="px-2 py-3 text-center text-sm font-medium text-gray-500">FRI</div>
-              <div className="px-2 py-3 text-center text-sm font-medium text-gray-500">SAT</div>
-            </div>
-
-            <div className="grid grid-cols-7 grid-rows-5 divide-x divide-y">
-              {generateCalendarDays().map((day, index) => (
-                <div key={index} className="min-h-[100px] p-2 relative">
-                  <div className={`text-sm ${day.isCurrentMonth ? "font-medium" : "text-gray-400"}`}>{day.date}</div>
-                  {day.events.map((event, eventIndex) => (
-                    <div key={eventIndex} className={`mt-1 p-1 text-xs rounded text-white ${event.color}`}>
-                      {event.title}
-                    </div>
-                  ))}
+        <div className="lg:col-span-3 space-y-6">
+          <Card className="border-white/20 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl overflow-hidden shadow-2xl">
+            <CardHeader className="p-6 border-b border-white/10 dark:border-slate-800/50 flex flex-row items-center justify-between bg-white/10 dark:bg-slate-900/10">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center bg-white/20 dark:bg-slate-800/50 rounded-xl p-1 border border-white/20">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-white/30">
+                    <ChevronLeft size={18} />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-white/30">
+                    <ChevronRight size={18} />
+                  </Button>
                 </div>
-              ))}
-            </div>
-          </div>
+                <h2 className="text-xl font-bold tracking-tight text-primary-100">May 2023</h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="glass" className="px-3 py-1 font-bold">Today: May 23</Badge>
+                <select className="bg-white/50 dark:bg-slate-800 text-xs font-bold uppercase tracking-widest px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-primary-100 transition-all cursor-pointer">
+                  <option>Month View</option>
+                  <option>Week View</option>
+                  <option>Day View</option>
+                </select>
+              </div>
+            </CardHeader>
+
+            <CardContent className="p-0">
+              <div className="grid grid-cols-7 border-b border-white/10 dark:border-slate-800/50 bg-white/10 dark:bg-slate-900/10">
+                {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((day) => (
+                  <div key={day} className="px-2 py-4 text-center text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-7 grid-rows-5 divide-x divide-y divide-white/10 dark:divide-slate-800/50">
+                {generateCalendarDays().map((day, index) => (
+                  <div
+                    key={index}
+                    className={cn(
+                      "min-h-[120px] p-2 relative transition-colors duration-300 group",
+                      day.isCurrentMonth ? "bg-transparent" : "bg-gray-50/10 dark:bg-slate-900/20 opacity-40"
+                    )}
+                  >
+                    <div className={cn(
+                      "text-xs font-bold mb-2 flex items-center justify-center w-6 h-6 rounded-lg transition-all",
+                      day.date === 23 && day.isCurrentMonth ? "bg-primary-100 text-white shadow-neon-primary scale-110" : "text-muted-foreground group-hover:text-primary-100"
+                    )}>
+                      {day.date}
+                    </div>
+                    <div className="space-y-1.5">
+                      {day.events.map((event, eventIndex) => (
+                        <div
+                          key={eventIndex}
+                          className={cn(
+                            "px-2 py-1.5 text-[10px] font-bold rounded-lg shadow-sm border border-white/20 backdrop-blur-sm cursor-pointer transition-transform hover:scale-105 active:scale-95",
+                            event.color
+                          )}
+                        >
+                          {event.title}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="absolute inset-0 bg-primary-100/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white border rounded-lg p-4">
-            <h3 className="font-medium mb-4">Calendar</h3>
-            <MiniCalendar />
-          </div>
+          {/* Mini Calendar Widget */}
+          <Card className="border-white/20 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl overflow-hidden shadow-xl">
+            <CardHeader className="p-4 border-b border-white/10 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-black uppercase tracking-widest text-primary-100">Mini Calendar</CardTitle>
+              <div className="flex gap-1">
+                <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md hover:bg-white/20">
+                  <ChevronLeft size={14} />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md hover:bg-white/20">
+                  <ChevronRight size={14} />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4">
+              <MiniCalendar />
+            </CardContent>
+          </Card>
 
-          <div className="bg-white border rounded-lg p-4">
-            <h3 className="font-medium mb-4">Event Types</h3>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <input type="checkbox" id="academic" className="rounded text-blue-500 focus:ring-blue-500" checked />
-                <label htmlFor="academic" className="text-sm">
-                  Academic
-                </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="administrative"
-                  className="rounded text-blue-500 focus:ring-blue-500"
-                  checked
-                />
-                <label htmlFor="administrative" className="text-sm">
-                  Administrative
-                </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input type="checkbox" id="events" className="rounded text-blue-500 focus:ring-blue-500" checked />
-                <label htmlFor="events" className="text-sm">
-                  Events
-                </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <input type="checkbox" id="holidays" className="rounded text-blue-500 focus:ring-blue-500" checked />
-                <label htmlFor="holidays" className="text-sm">
-                  Holidays
-                </label>
-              </div>
-            </div>
-          </div>
+          {/* Filters Widget */}
+          <Card className="border-white/20 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl overflow-hidden shadow-xl">
+            <CardHeader className="p-4 border-b border-white/10">
+              <CardTitle className="text-sm font-black uppercase tracking-widest text-primary-100 flex items-center gap-2">
+                <Filter className="w-4 h-4" />
+                Event Filters
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              {[
+                { id: 'academic', label: 'Academic Events', color: 'bg-primary-100' },
+                { id: 'admin', label: 'Administrative', color: 'bg-green-500' },
+                { id: 'social', label: 'Social & Campus', color: 'bg-purple-500' },
+                { id: 'holidays', label: 'Holidays', color: 'bg-red-500' }
+              ].map((item) => (
+                <div key={item.id} className="flex items-center justify-between group cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <div className={cn("w-3 h-3 rounded-full shadow-sm", item.color)} />
+                    <span className="text-xs font-bold text-gray-700 dark:text-gray-300 group-hover:text-primary-100 transition-colors uppercase tracking-tight">{item.label}</span>
+                  </div>
+                  <Checkbox
+                    defaultChecked
+                    className="border-white/40 dark:border-slate-600 data-[state=checked]:bg-primary-100 data-[state=checked]:border-primary-100"
+                  />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
 
-          <div className="bg-white border rounded-lg p-4">
-            <h3 className="font-medium mb-4">Labels</h3>
-            <div className="space-y-2">
-              <LabelItem color="bg-blue-100 text-blue-800" name="Faculty Meetings" />
-              <LabelItem color="bg-green-100 text-green-800" name="Administrative" />
-              <LabelItem color="bg-red-100 text-red-800" name="Deadlines" />
-              <LabelItem color="bg-amber-100 text-amber-800" name="Events" />
-              <LabelItem color="bg-purple-100 text-purple-800" name="Academic Calendar" />
+          {/* Quick Labels Widget */}
+          <Card className="border-white/20 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl overflow-hidden shadow-xl">
+            <CardHeader className="p-4 border-b border-white/10">
+              <CardTitle className="text-sm font-black uppercase tracking-widest text-primary-100 flex items-center gap-2">
+                <Layers className="w-4 h-4" />
+                Quick Labels
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              <LabelItem color="bg-blue-100 text-blue-800 border-blue-200" name="Faculty Meetings" />
+              <LabelItem color="bg-green-100 text-green-800 border-green-200" name="Administrative" />
+              <LabelItem color="bg-red-100 text-red-800 border-red-200" name="Exams & Deadlines" />
+              <LabelItem color="bg-amber-100 text-amber-800 border-amber-200" name="Guest Lectures" />
+              <LabelItem color="bg-purple-100 text-purple-800 border-purple-200" name="Seminars" />
+            </CardContent>
+          </Card>
+
+          {/* Upcoming Card */}
+          <Card className="bg-gradient-to-br from-primary-100 to-primary-100/90 border-none shadow-neon-primary text-white overflow-hidden group relative">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-150 transition-transform duration-700">
+              <CalendarIcon size={120} />
             </div>
-          </div>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-black uppercase tracking-widest">Next Major Event</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <h3 className="text-xl font-black mb-1">Graduation Day</h3>
+              <p className="text-xs font-bold text-white/80 uppercase tracking-widest">May 19, 2023 • 09:00 AM</p>
+              <Button variant="outline" className="mt-4 w-full rounded-xl bg-white/10 border-white/30 hover:bg-white/20 text-white font-bold h-10">
+                View Details
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
@@ -130,18 +200,12 @@ function MiniCalendar() {
 
   return (
     <div className="text-sm">
-      <div className="flex items-center justify-between mb-2">
-        <button className="p-1 rounded-md hover:bg-gray-100">
-          <ChevronLeft size={16} />
-        </button>
-        <span className="text-sm font-medium">May 2023</span>
-        <button className="p-1 rounded-md hover:bg-gray-100">
-          <ChevronRight size={16} />
-        </button>
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-xs font-bold uppercase tracking-widest text-primary-100">May 2023</span>
       </div>
-      <div className="grid grid-cols-7 mb-2">
+      <div className="grid grid-cols-7 mb-2 border-b border-white/10 pb-2">
         {days.map((day) => (
-          <div key={day} className="text-center text-xs text-gray-500">
+          <div key={day} className="text-center text-[9px] font-black text-muted-foreground uppercase">
             {day}
           </div>
         ))}
@@ -155,10 +219,11 @@ function MiniCalendar() {
             return (
               <div
                 key={`${i}-${j}`}
-                className={`text-center p-1 text-xs rounded-sm
-                  ${isCurrentMonth ? "" : "text-gray-300"}
-                  ${isToday ? "bg-blue-600 text-white" : ""}
-                `}
+                className={cn(
+                  "text-center p-1.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer",
+                  isCurrentMonth ? "text-gray-700 dark:text-gray-300 hover:bg-white/30" : "text-gray-400 opacity-20",
+                  isToday ? "bg-primary-100 text-white shadow-neon-primary scale-110" : ""
+                )}
               >
                 {date}
               </div>
@@ -170,16 +235,16 @@ function MiniCalendar() {
   )
 }
 
-function LabelItem({ color, name }) {
+function LabelItem({ color, name }: { color: string; name: string }) {
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <div className={`w-2 h-2 rounded-full ${color.split(" ")[0]}`}></div>
-        <span className="text-sm">{name}</span>
+    <div className="flex items-center justify-between group cursor-pointer hover:translate-x-1 transition-transform">
+      <div className="flex items-center gap-3">
+        <div className={cn("w-2 h-2 rounded-full", color.split(" ")[0])}></div>
+        <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-tight opacity-80 group-hover:opacity-100">{name}</span>
       </div>
-      <button className="text-gray-400 hover:text-gray-600">
-        <MoreHorizontal size={16} />
-      </button>
+      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md opacity-0 group-hover:opacity-100 text-muted-foreground">
+        <MoreHorizontal size={14} />
+      </Button>
     </div>
   )
 }
@@ -205,7 +270,7 @@ function generateCalendarDays() {
   days.push({
     date: 11,
     isCurrentMonth: true,
-    events: [{ title: "Faculty Meeting", color: "bg-blue-500" }],
+    events: [{ title: "Faculty Meeting", color: "bg-primary-100 text-white" }],
   })
   days.push({ date: 12, isCurrentMonth: true, events: [] })
   days.push({ date: 13, isCurrentMonth: true, events: [] })
@@ -216,14 +281,14 @@ function generateCalendarDays() {
   days.push({
     date: 16,
     isCurrentMonth: true,
-    events: [{ title: "Board Meeting", color: "bg-green-600" }],
+    events: [{ title: "Board Meeting", color: "bg-green-600/80 text-white" }],
   })
   days.push({ date: 17, isCurrentMonth: true, events: [] })
   days.push({ date: 18, isCurrentMonth: true, events: [] })
   days.push({
     date: 19,
     isCurrentMonth: true,
-    events: [{ title: "Graduation Ceremony", color: "bg-purple-600" }],
+    events: [{ title: "Graduation Ceremony", color: "bg-purple-600/80 text-white" }],
   })
   days.push({ date: 20, isCurrentMonth: true, events: [] })
 
@@ -234,13 +299,13 @@ function generateCalendarDays() {
   days.push({
     date: 24,
     isCurrentMonth: true,
-    events: [{ title: "End of Semester", color: "bg-red-500" }],
+    events: [{ title: "End of Semester", color: "bg-red-500/80 text-white" }],
   })
   days.push({ date: 25, isCurrentMonth: true, events: [] })
   days.push({
     date: 26,
     isCurrentMonth: true,
-    events: [{ title: "Grade Submission Deadline", color: "bg-amber-600" }],
+    events: [{ title: "Grade Submission", color: "bg-amber-600/80 text-white" }],
   })
   days.push({ date: 27, isCurrentMonth: true, events: [] })
 

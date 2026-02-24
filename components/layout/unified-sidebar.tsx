@@ -48,10 +48,11 @@ type NavItem = {
 type UnifiedSidebarProps = {
   userRole: "ADMIN" | "STUDENT" | "LECTURER"
   logoSrc?: string
+  brandName?: string
   onToggle?: (collapsed: boolean) => void
 }
 
-export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.webp", onToggle }: UnifiedSidebarProps) {
+export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.webp", brandName = "Afrivas", onToggle }: UnifiedSidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
@@ -322,24 +323,37 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
       <aside
         ref={sidebarRef}
         className={cn(
-          "fixed top-0 left-0 z-40 h-screen transition-all duration-300 ease-in-out flex flex-col border-r shadow-sm",
-          "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800",
-          isCollapsed ? "w-[70px]" : "w-[240px]",
+          "fixed top-0 left-0 z-40 h-screen transition-all duration-500 ease-in-out flex flex-col border-r",
+          "bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border-white/20 dark:border-gray-800/50",
+          isCollapsed ? "w-[70px]" : "w-[260px]",
           isMobile && !isMobileOpen ? "-translate-x-full" : "translate-x-0",
         )}
       >
         {/* Logo and Toggle Section */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
-          <Link href={`/${userRole}/dashboard`} className={cn("flex items-center", isCollapsed && "justify-center")}>
-            <Image src={logoSrc || "/placeholder.svg"} width={32} height={32} alt="Logo" className="rounded-md" />
-            {!isCollapsed && <span className="ml-2 font-semibold text-gray-800 dark:text-white">Afrivas</span>}
+        <div className="flex items-center justify-between p-6 border-b border-white/10 dark:border-white/5">
+          <Link href={`/${userRole}/dashboard`} className={cn("flex items-center group", isCollapsed && "justify-center")}>
+            <div className="relative">
+              <div className="absolute -inset-1 rounded-lg bg-gradient-to-tr from-primary-100 to-secondary-100 opacity-70 blur group-hover:opacity-100 transition duration-300" />
+              <Image 
+                src={logoSrc || "/placeholder.svg"} 
+                width={36} 
+                height={36} 
+                alt="Logo" 
+                className="relative rounded-lg border border-white/20 shadow-lg"
+              />
+            </div>
+            {!isCollapsed && (
+              <span className="ml-3 font-bold text-xl tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+                {brandName}
+              </span>
+            )}
           </Link>
           {!isMobile && (
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleSidebar}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className="text-gray-500 hover:text-primary-100 dark:text-gray-400 dark:hover:text-primary-100 hover:bg-primary-100/10 transition-all rounded-full h-8 w-8"
               aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
@@ -348,37 +362,52 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
         </div>
 
         {/* Navigation Items */}
-        <ScrollArea className="flex-1 py-2">
+        <ScrollArea className="flex-1 py-4">
           <TooltipProvider delayDuration={0}>
-            <div className="px-3 space-y-6">
+            <div className="px-4 space-y-8">
               {Object.entries(navItems).map(([section, items]) => (
                 <div key={section}>
                   {!isCollapsed && (
-                    <h3 className="mb-2 px-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <h3 className="mb-3 px-2 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">
                       {section}
                     </h3>
                   )}
-                  <ul className="space-y-1">
-                    {items.map((item) => (
-                      <li key={item.href}>
+                  <ul className="space-y-1.5">
+                    {items.map((item, index) => (
+                      <li key={`${section}-${item.href ?? item.label}-${index}`}>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Link
                               href={item.href || "#"}
                               onClick={item.onClick}
                               className={cn(
-                                "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                                "flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-300 group relative overflow-hidden",
                                 isActive(item.href)
-                                  ? "bg-blue-600 text-white"
-                                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800",
+                                  ? "text-white shadow-neon-primary"
+                                  : "text-gray-600 dark:text-gray-400 hover:text-primary-100 dark:hover:text-primary-100 hover:bg-primary-100/5",
                                 isCollapsed && "justify-center",
                               )}
                             >
-                              <span className="text-current">{item.icon}</span>
-                              {!isCollapsed && <span className="ml-3">{item.label}</span>}
+                              {isActive(item.href) && (
+                                <div className="absolute inset-0 bg-gradient-to-r from-primary-100 to-primary-100/80 z-0" />
+                              )}
+                              <span className={cn(
+                                "relative z-10 transition-transform duration-300 group-hover:scale-110",
+                                isActive(item.href) ? "text-white" : "text-current"
+                              )}>
+                                {item.icon}
+                              </span>
+                              {!isCollapsed && (
+                                <span className="relative z-10 ml-3 truncate font-medium">
+                                  {item.label}
+                                </span>
+                              )}
+                              {!isActive(item.href) && !isCollapsed && (
+                                <div className="absolute left-0 w-1 h-0 bg-primary-100 group-hover:h-1/2 transition-all duration-300" />
+                              )}
                             </Link>
                           </TooltipTrigger>
-                          {isCollapsed && <TooltipContent side="right">{item.label}</TooltipContent>}
+                          {isCollapsed && <TooltipContent side="right" className="font-semibold">{item.label}</TooltipContent>}
                         </Tooltip>
                       </li>
                     ))}
@@ -392,11 +421,16 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
         {/* Version Info */}
         <div
           className={cn(
-            "p-4 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800",
+            "p-6 text-xs font-semibold text-gray-400 dark:text-gray-500 border-t border-white/10 dark:border-white/5",
             isCollapsed && "text-center",
           )}
         >
-          {isCollapsed ? "v1.0" : "Afrivas Platform v1.0"}
+          {isCollapsed ? "v1.0" : (
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-sm shadow-green-500/50" />
+              <span>{brandName} Platform v1.0</span>
+            </div>
+          )}
         </div>
       </aside>
     </>
