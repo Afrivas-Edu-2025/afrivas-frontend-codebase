@@ -30,6 +30,27 @@ export function AuthForm() {
 
   const [loginUser, { isLoading, error }] = useLoginUserMutation();
 
+  const parseLoginError = (err: any): { statusCode?: number; message: string; fieldErrors: Record<string, string> } => {
+    const statusCode = err?.status ?? err?.originalStatus;
+    const payload = err?.data ?? err;
+    const message =
+      payload?.error?.message ||
+      payload?.message ||
+      err?.error ||
+      err?.message ||
+      "An unexpected error occurred.";
+
+    const detailsErrors = payload?.error?.details?.errors || payload?.details?.errors || [];
+    const fieldErrors = Array.isArray(detailsErrors)
+      ? detailsErrors.reduce((acc: Record<string, string>, item: { field?: string; message?: string }) => {
+          if (item?.field && item?.message) acc[item.field] = item.message;
+          return acc;
+        }, {})
+      : {};
+
+    return { statusCode, message, fieldErrors };
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -98,35 +119,13 @@ export function AuthForm() {
           : "/admin/dashboard";
       setTimeout(() => router.push(dashboardRoute), 2000);
     } catch (err: any) {
-      const statusCode = err?.status ?? err?.originalStatus;
-      console.error("Login error details:", {
-        statusCode,
-        data: err?.data,
-        error: err?.error,
-        message: err?.message,
-      });
-      const apiError = err?.data?.error || err?.data || {};
-      const errorMessage = apiError.message || err.message || "An unexpected error occurred.";
-      const errorDetails = apiError.details?.errors
-        ? apiError.details.errors
-            .map((e: { field: string; message: string }) => `${e.field}: ${e.message}`)
-            .join(", ")
-        : "";
-
-      if (apiError.details?.errors) {
-        setFieldErrors(
-          apiError.details.errors.reduce((acc: Record<string, string>, e: { field: string; message: string }) => {
-            acc[e.field] = e.message;
-            return acc;
-          }, {})
-        );
-      } else {
-        setFieldErrors({});
-      }
+      const normalized = parseLoginError(err);
+      console.error("Login error details:", normalized, "raw:", err);
+      setFieldErrors(normalized.fieldErrors);
       toast({
         variant: "destructive",
-        title: statusCode ? `Error (${statusCode})` : "Error",
-        description: errorDetails ? `${errorMessage} (${errorDetails})` : errorMessage,
+        title: normalized.statusCode ? `Error (${normalized.statusCode})` : "Error",
+        description: normalized.message,
       });
     }
   };
@@ -251,9 +250,7 @@ export function AuthForm() {
             {/* Error Display */}
             {error && (
               <div className="text-center mt-4 text-sm text-red-600">
-                {((error as any).data as { error?: { message?: string }; message?: string })?.error?.message ||
-                  ((error as any).data as { message?: string })?.message ||
-                  "An error occurred during login."}
+                {parseLoginError(error).message}
               </div>
             )}
 

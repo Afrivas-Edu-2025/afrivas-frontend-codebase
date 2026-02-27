@@ -9,6 +9,7 @@ import UnifiedSidebar from "@/components/layout/unified-sidebar"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/components/auth-context"
 import { getUniversityOnboardingProfile } from "@/lib/universityOnboarding"
+import DashboardRealtimeBridge from "@/components/realtime/dashboard-realtime-bridge"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,7 +21,7 @@ import { Home } from "lucide-react"
 
 type DashboardLayoutProps = {
   children: ReactNode
-  userRole: "ADMIN" | "STUDENT" | "LECTURER"
+  userRole: "ADMIN" | "STUDENT" | "LECTURER" | "admin" | "student" | "lecturer"
 }
 
 export default function DashboardLayout({ children, userRole }: DashboardLayoutProps) {
@@ -28,10 +29,12 @@ export default function DashboardLayout({ children, userRole }: DashboardLayoutP
   const [isMobile, setIsMobile] = useState(false)
   const pathname = usePathname()
   const { user } = useAuth()
+  const normalizedRole = String(userRole).toUpperCase() as "ADMIN" | "STUDENT" | "LECTURER"
+  const roleSegment = normalizedRole.toLowerCase()
 
-  const onboardingProfile = userRole === "ADMIN" ? getUniversityOnboardingProfile(user?.id) : null
-  const sidebarLogo = onboardingProfile?.logoDataUrl || user?.universityLogoUrl || "/images/logo.webp"
-  const sidebarBrand = onboardingProfile?.universityName || user?.universityName || "Afrivas"
+  const onboardingProfile = normalizedRole === "ADMIN" ? getUniversityOnboardingProfile(user?.id) : null
+  const sidebarLogo = onboardingProfile?.logoDataUrl || user?.universityLogoUrl || user?.school?.schoolLogo || "/images/logo.webp"
+  const sidebarBrand = onboardingProfile?.universityName || user?.universityName || user?.school?.schoolName || "Afrivas"
 
   // Generate breadcrumbs from pathname
   const generateBreadcrumbs = () => {
@@ -45,8 +48,8 @@ export default function DashboardLayout({ children, userRole }: DashboardLayoutP
     return (
       <Breadcrumb className="mb-4">
         <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href={`/${userRole}/dashboard`}>
+            <BreadcrumbItem>
+            <BreadcrumbLink href={`/${roleSegment}/dashboard`}>
               <Home className="h-4 w-4 mr-1" />
               <span className="hidden sm:inline">Dashboard</span>
             </BreadcrumbLink>
@@ -101,13 +104,15 @@ export default function DashboardLayout({ children, userRole }: DashboardLayoutP
 
   return (
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-slate-50 overflow-hidden relative">
+      <DashboardRealtimeBridge />
+
       {/* Decorative background elements like the landing page */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary-100/5 blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-secondary-100/5 blur-[120px]" />
       </div>
 
-      <UnifiedSidebar userRole={userRole} logoSrc={sidebarLogo} brandName={sidebarBrand} onToggle={handleSidebarToggle} />
+      <UnifiedSidebar userRole={normalizedRole} logoSrc={sidebarLogo} brandName={sidebarBrand} onToggle={handleSidebarToggle} />
 
       <div
         className={cn(

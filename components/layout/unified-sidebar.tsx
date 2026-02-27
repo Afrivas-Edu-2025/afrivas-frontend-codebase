@@ -42,6 +42,7 @@ type NavItem = {
   label: string
   section?: string
   onClick?: () => void
+  disabled?: boolean
 }
 
 // Define the props for the UnifiedSidebar component
@@ -60,6 +61,8 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
   const router = useRouter()
   const { logout } = useAuth()
   const sidebarRef = useRef<HTMLElement>(null)
+  const normalizedRole = String(userRole).toUpperCase() as "ADMIN" | "STUDENT" | "LECTURER"
+  const roleSegment = normalizedRole.toLowerCase()
 
   // Check if the current path matches the nav item href
   const isActive = (href: string) => {
@@ -110,13 +113,13 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
   const getNavItems = (): { [key: string]: NavItem[] } => {
     const commonItems: NavItem[] = [
       {
-        href: `/${userRole}/dashboard/settings`,
+        href: `/${roleSegment}/dashboard/settings`,
         icon: <Settings size={20} />,
         label: "Settings",
         section: "Common",
       },
       {
-        href: `/${userRole}/dashboard/notifications`,
+        href: `/${roleSegment}/dashboard/notifications`,
         icon: <Bell size={20} />,
         label: "Notifications",
         section: "Common",
@@ -132,7 +135,7 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
       },
     ]
 
-    switch (userRole) {
+    switch (normalizedRole) {
       case "ADMIN":
         return {
           Main: [
@@ -154,20 +157,22 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
     
           ],
           Management: [
-              {
-              href: "/admin/courses",
+            {
+              href: "/admin/module",
               icon: <BookOpen size={20} />,
-              label: "Courses",
+              label: "Module",
             },
             {
               href: "/admin/classes",
               icon: <Layers size={20} />,
               label: "Classes",
+              disabled: true,
             },
             {
               href: "/admin/grades",
               icon: <ChartBar size={20} />,
               label: "Grades",
+              disabled: true,
             },
             {
               href: "/admin/faculty",
@@ -331,7 +336,7 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
       >
         {/* Logo and Toggle Section */}
         <div className="flex items-center justify-between p-6 border-b border-white/10 dark:border-white/5">
-          <Link href={`/${userRole}/dashboard`} className={cn("flex items-center group", isCollapsed && "justify-center")}>
+          <Link href={`/${roleSegment}/dashboard`} className={cn("flex items-center group", isCollapsed && "justify-center")}>
             <div className="relative">
               <div className="absolute -inset-1 rounded-lg bg-gradient-to-tr from-primary-100 to-secondary-100 opacity-70 blur group-hover:opacity-100 transition duration-300" />
               <Image 
@@ -377,37 +382,61 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
                       <li key={`${section}-${item.href ?? item.label}-${index}`}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Link
-                              href={item.href || "#"}
-                              onClick={item.onClick}
-                              className={cn(
-                                "flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-300 group relative overflow-hidden",
-                                isActive(item.href)
-                                  ? "text-white shadow-neon-primary"
-                                  : "text-gray-600 dark:text-gray-400 hover:text-primary-100 dark:hover:text-primary-100 hover:bg-primary-100/5",
-                                isCollapsed && "justify-center",
-                              )}
-                            >
-                              {isActive(item.href) && (
-                                <div className="absolute inset-0 bg-gradient-to-r from-primary-100 to-primary-100/80 z-0" />
-                              )}
-                              <span className={cn(
-                                "relative z-10 transition-transform duration-300 group-hover:scale-110",
-                                isActive(item.href) ? "text-white" : "text-current"
-                              )}>
-                                {item.icon}
-                              </span>
-                              {!isCollapsed && (
-                                <span className="relative z-10 ml-3 truncate font-medium">
-                                  {item.label}
+                            {item.disabled ? (
+                              <div
+                                className={cn(
+                                  "flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold relative overflow-hidden cursor-not-allowed select-none",
+                                  "text-gray-400 dark:text-gray-600 opacity-60",
+                                  isCollapsed && "justify-center",
+                                )}
+                                aria-disabled="true"
+                              >
+                                <span className="relative z-10">
+                                  {item.icon}
                                 </span>
-                              )}
-                              {!isActive(item.href) && !isCollapsed && (
-                                <div className="absolute left-0 w-1 h-0 bg-primary-100 group-hover:h-1/2 transition-all duration-300" />
-                              )}
-                            </Link>
+                                {!isCollapsed && (
+                                  <span className="relative z-10 ml-3 truncate font-medium">
+                                    {item.label}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <Link
+                                href={item.href || "#"}
+                                onClick={item.onClick}
+                                className={cn(
+                                  "flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-300 group relative overflow-hidden",
+                                  isActive(item.href)
+                                    ? "text-white shadow-neon-primary"
+                                    : "text-gray-600 dark:text-gray-400 hover:text-primary-100 dark:hover:text-primary-100 hover:bg-primary-100/5",
+                                  isCollapsed && "justify-center",
+                                )}
+                              >
+                                {isActive(item.href) && (
+                                  <div className="absolute inset-0 bg-gradient-to-r from-primary-100 to-primary-100/80 z-0" />
+                                )}
+                                <span className={cn(
+                                  "relative z-10 transition-transform duration-300 group-hover:scale-110",
+                                  isActive(item.href) ? "text-white" : "text-current"
+                                )}>
+                                  {item.icon}
+                                </span>
+                                {!isCollapsed && (
+                                  <span className="relative z-10 ml-3 truncate font-medium">
+                                    {item.label}
+                                  </span>
+                                )}
+                                {!isActive(item.href) && !isCollapsed && (
+                                  <div className="absolute left-0 w-1 h-0 bg-primary-100 group-hover:h-1/2 transition-all duration-300" />
+                                )}
+                              </Link>
+                            )}
                           </TooltipTrigger>
-                          {isCollapsed && <TooltipContent side="right" className="font-semibold">{item.label}</TooltipContent>}
+                          {isCollapsed && (
+                            <TooltipContent side="right" className="font-semibold">
+                              {item.disabled ? `${item.label} (Coming Soon)` : item.label}
+                            </TooltipContent>
+                          )}
                         </Tooltip>
                       </li>
                     ))}

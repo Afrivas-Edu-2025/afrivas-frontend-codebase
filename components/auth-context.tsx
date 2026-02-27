@@ -1,7 +1,9 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { store } from '../store/store';
+import { store } from '@/lib/store';
+import { adminApi } from '@/services/adminApi';
+import { disconnectRealtimeSocket } from '@/lib/socket/realtime-client';
 
 interface AuthContextType {
   user: any | null;
@@ -56,14 +58,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('authToken', token);
     localStorage.setItem('accessToken', token);
     localStorage.setItem('user', JSON.stringify(user));
-
-    // Trigger prefetching of core data upon login
-    try {
-      const { prefetchAllData } = await import('@/services/prefetch-service');
-      await prefetchAllData();
-    } catch (error) {
-      console.error('Failed to prefetch data:', error);
-    }
   };
 
   const updateUser = (updates: Record<string, unknown>) => {
@@ -77,18 +71,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     setToken(null);
+    disconnectRealtimeSocket();
     localStorage.removeItem('authToken');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
 
-    // Clear RTK Query cache on logout to ensure data security
-    try {
-      import('../store/api/mainApi').then(({ mainApi }) => {
-        store.dispatch(mainApi.util.resetApiState());
-      });
-    } catch (error) {
-      console.error('Failed to reset API state:', error);
-    }
+    // Clear active RTK Query cache on logout to ensure data security
+    store.dispatch(adminApi.util.resetApiState());
   };
 
   return (

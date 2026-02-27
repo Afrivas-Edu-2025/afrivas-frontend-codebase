@@ -2,7 +2,7 @@
 
 import { useAuth } from './auth-context';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export default function PrivateRoute({
   children,
@@ -14,21 +14,21 @@ export default function PrivateRoute({
   const { user, token, loading } = useAuth();
   const router = useRouter();
   const [isAuthChecked, setIsAuthChecked] = useState(false);
+  const normalizedUserRole = String(user?.role || "").toUpperCase();
+  const normalizedAllowedRoles = useMemo(
+    () => allowedRoles.map((role) => role.toUpperCase()),
+    [allowedRoles],
+  );
 
   useEffect(() => {
-    console.log('User Role:', user);
-    console.log('Token:', token);
-    console.log('Allowed Roles:', allowedRoles);
-    console.log('Loading:', loading);
-
     // Wait until loading is complete
     if (!loading) {
       setIsAuthChecked(true);
       if (!token || !user) {
         router.push('/login');
-      } else if (!allowedRoles.includes(user.role)) {
+      } else if (!normalizedAllowedRoles.includes(normalizedUserRole)) {
         // If an admin hits a non-admin route, always send them back to the admin dashboard
-        if (user.role === 'ADMIN') {
+        if (normalizedUserRole === 'ADMIN') {
           router.replace('/admin/dashboard');
         } else {
           // For other roles, send them to the public home page
@@ -36,10 +36,10 @@ export default function PrivateRoute({
         }
       }
     }
-  }, [user, token, loading, router, allowedRoles]);
+  }, [user, token, loading, router, normalizedAllowedRoles, normalizedUserRole]);
 
   // Return null while auth is still loading or if auth check fails
-  if (loading || !isAuthChecked || !token || !user || !allowedRoles.includes(user.role)) {
+  if (loading || !isAuthChecked || !token || !user || !normalizedAllowedRoles.includes(normalizedUserRole)) {
     return null;
   }
 

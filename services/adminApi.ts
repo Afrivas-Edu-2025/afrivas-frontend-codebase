@@ -114,6 +114,10 @@ const mapLecturer = (lecturer: any) => {
 const mapStudent = (student: any) => {
   const user = student?.user ?? {};
   const profile = user?.userProfile ?? {};
+  const facultyId = student?.facultyId ?? user?.facultyId ?? user?.faculty?.id;
+  const departmentId = student?.deptId ?? student?.departmentId ?? user?.deptId ?? user?.department?.id;
+  const levelId = student?.levelId ?? student?.level?.id;
+  const semesterId = student?.semesterId ?? student?.semester?.id;
   return {
     id: String(student?.id ?? user?.id ?? ''),
     userId: String(user?.id ?? student?.userId ?? ''),
@@ -129,9 +133,13 @@ const mapStudent = (student: any) => {
     phoneNumber: profile?.phoneNumber ?? '',
     address: profile?.address ?? '',
     studentId: String(student?.studentId ?? ''),
+    facultyId: facultyId !== undefined && facultyId !== null ? String(facultyId) : '',
+    departmentId: departmentId !== undefined && departmentId !== null ? String(departmentId) : '',
+    levelId: levelId !== undefined && levelId !== null ? String(levelId) : '',
+    semesterId: semesterId !== undefined && semesterId !== null ? String(semesterId) : '',
     program: user?.department?.deptName ?? '',
-    yearOfStudy: student?.levelId ?? 1,
-    semester: student?.semester ?? '',
+    yearOfStudy: levelId ?? 1,
+    semester: student?.semester?.semesterName ?? student?.semester ?? '',
     gpa: student?.gpa ?? 0,
     credits: student?.credits ?? 0,
     guardianName: student?.guardianName ?? '',
@@ -228,6 +236,11 @@ export type UpdateUserRequest = {
 export type Student = User & {
   studentId: string;
   departmentId: string;
+  facultyId?: string;
+  levelId?: string;
+  semesterId?: string;
+  yearOfStudy?: number | string;
+  semester?: string;
   department?: Department;
   enrollmentDate: string;
   status: string;
@@ -366,10 +379,12 @@ export type Class = {
   name: string;
   code: string;
   courseId: string;
+  moduleId?: string;
   course?: Course;
-  lecturerId: string;
+  lecturerId?: string;
   lecturer?: Lecturer;
   academicYear: string;
+  semesterId?: string;
   semester: string;
   room?: string;
   schedule?: string;
@@ -383,12 +398,16 @@ export type Class = {
 export type CreateClassRequest = {
   name: string;
   code: string;
-  courseId: string;
-  lecturerId: string;
+  courseId?: string;
+  moduleId?: string;
+  lecturerId?: string;
   academicYear: string;
-  semester: string;
+  semester?: string;
+  semesterId?: string;
   room?: string;
   schedule?: string;
+  day?: string;
+  time?: string;
   capacity: number;
 };
 
@@ -409,6 +428,63 @@ export type DepartmentAnalytics = {
   facultyName: string;
 };
 
+// Communication Types
+export type MessageRecipient = {
+  userId: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: 'STUDENT' | 'LECTURER';
+  studentRecordId: number | null;
+  lecturerRecordId: number | null;
+};
+
+export type AdminMessage = {
+  id: string;
+  senderAdminId: number;
+  recipientUserId: number;
+  recipientEmail: string;
+  recipientRole: 'STUDENT' | 'LECTURER';
+  subject?: string | null;
+  body: string;
+  createdAt: string;
+};
+
+export type CalendarEvent = {
+  id: string;
+  createdByAdminId: number;
+  title: string;
+  description?: string | null;
+  startAt: string;
+  endAt?: string | null;
+  reminderAt?: string | null;
+  visibility: 'ALL' | 'STUDENT' | 'LECTURER' | 'CUSTOM';
+  isActive: boolean;
+  targetUserIds: number[];
+  targetRoles: Array<'ADMIN' | 'STUDENT' | 'LECTURER'>;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SendAdminMessageRequest = {
+  recipientId?: number | string;
+  recipientEmail?: string;
+  subject?: string;
+  body: string;
+};
+
+export type CreateCalendarEventRequest = {
+  title: string;
+  description?: string;
+  startAt: string;
+  endAt?: string;
+  reminderAt?: string;
+  visibility?: 'ALL' | 'STUDENT' | 'LECTURER' | 'CUSTOM';
+  isActive?: boolean;
+  targetUserIds?: Array<number | string>;
+  targetRoles?: Array<'ADMIN' | 'STUDENT' | 'LECTURER'>;
+};
+
 // Create the Admin API slice
 export const adminApi = createApi({
   reducerPath: 'adminApi',
@@ -423,7 +499,7 @@ export const adminApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ['Faculty', 'Department', 'User', 'Stats', 'Grade', 'Course', 'Class', 'Student', 'Lecturer', 'Semester'],
+  tagTypes: ['Faculty', 'Department', 'User', 'Stats', 'Grade', 'Course', 'Class', 'Student', 'Lecturer', 'Semester', 'Message', 'CalendarEvent'],
   endpoints: (builder) => ({
     // Dashboard Stats
     getDashboardStats: builder.query<ApiResponse<DashboardStats>, void>({
@@ -723,6 +799,36 @@ export const adminApi = createApi({
     // Class Management
     getClasses: builder.query<ApiResponse<Class[]>, void>({
       query: () => '/classes',
+      transformResponse: (response: any): ApiResponse<Class[]> => {
+        const rawData = safeArray(response?.data);
+        return {
+          success: true,
+          message: 'Classes fetched successfully',
+          data: rawData.map((item: any) => {
+            const moduleData = item?.module ?? {};
+            const semesterData = item?.semester ?? {};
+            return {
+              id: String(item?.id ?? ''),
+              name: moduleData?.moduleName
+                ? `${moduleData.moduleName} - Class ${item?.id ?? ''}`
+                : `Class ${item?.id ?? ''}`,
+              code: moduleData?.moduleCode ?? '',
+              courseId: String(item?.moduleId ?? ''),
+              lecturerId: moduleData?.lecturerId ? String(moduleData.lecturerId) : '',
+              semesterId: String(item?.semesterId ?? ''),
+              semester: semesterData?.semesterName ?? '',
+              academicYear: semesterData?.year ? String(semesterData.year) : '',
+              schedule: item?.day
+                ? `${item.day}${item?.time ? ` ${new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}`
+                : '',
+              room: '',
+              capacity: 50,
+              createdAt: item?.createdAt ?? new Date().toISOString(),
+              updatedAt: item?.updatedAt ?? item?.createdAt ?? new Date().toISOString(),
+            };
+          }),
+        };
+      },
       providesTags: ['Class'],
     }),
 
@@ -740,7 +846,13 @@ export const adminApi = createApi({
       query: (data) => ({
         url: '/classes',
         method: 'POST',
-        body: data,
+        body: {
+          courseId: toNumber((data as any).courseId ?? (data as any).moduleId),
+          semesterId: toNumber((data as any).semesterId ?? (data as any).semester),
+          schedule: (data as any).schedule,
+          day: (data as any).day,
+          time: (data as any).time,
+        },
       }),
       invalidatesTags: ['Class'],
     }),
@@ -749,7 +861,21 @@ export const adminApi = createApi({
       query: ({ id, data }) => ({
         url: `/classes/${id}`,
         method: 'PUT',
-        body: data,
+        body: {
+          courseId: (data as any).courseId
+            ? toNumber((data as any).courseId)
+            : (data as any).moduleId
+            ? toNumber((data as any).moduleId)
+            : undefined,
+          semesterId: (data as any).semesterId
+            ? toNumber((data as any).semesterId)
+            : (data as any).semester
+            ? toNumber((data as any).semester)
+            : undefined,
+          schedule: (data as any).schedule,
+          day: (data as any).day,
+          time: (data as any).time,
+        },
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Class', id }, 'Class'],
     }),
@@ -1119,6 +1245,85 @@ export const adminApi = createApi({
       }),
       invalidatesTags: ['Semester'],
     }),
+
+    // Communication: Messages
+    getMessageRecipients: builder.query<ApiResponse<MessageRecipient[]>, { query?: string } | void>({
+      query: (params) => {
+        const query = params?.query?.trim();
+        return query
+          ? `/communication/admin/messages/recipients?query=${encodeURIComponent(query)}`
+          : '/communication/admin/messages/recipients';
+      },
+      transformResponse: (response: any): ApiResponse<MessageRecipient[]> => ({
+        success: true,
+        message: 'Recipients fetched successfully',
+        data: safeArray(response?.data),
+      }),
+      providesTags: ['Message'],
+    }),
+
+    getAdminMessages: builder.query<ApiResponse<AdminMessage[]>, { recipientUserId?: number | string } | void>({
+      query: (params) => {
+        const recipientUserId = params?.recipientUserId;
+        return recipientUserId !== undefined && recipientUserId !== null && String(recipientUserId) !== ''
+          ? `/communication/admin/messages?recipientUserId=${encodeURIComponent(String(recipientUserId))}`
+          : '/communication/admin/messages';
+      },
+      transformResponse: (response: any): ApiResponse<AdminMessage[]> => ({
+        success: true,
+        message: 'Messages fetched successfully',
+        data: safeArray(response?.data),
+      }),
+      providesTags: ['Message'],
+    }),
+
+    sendAdminMessage: builder.mutation<ApiResponse<AdminMessage>, SendAdminMessageRequest>({
+      query: (data) => ({
+        url: '/communication/admin/messages',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Message'],
+    }),
+
+    // Communication: Calendar Events
+    getAdminCalendarEvents: builder.query<ApiResponse<CalendarEvent[]>, void>({
+      query: () => '/communication/admin/events',
+      transformResponse: (response: any): ApiResponse<CalendarEvent[]> => ({
+        success: true,
+        message: 'Calendar events fetched successfully',
+        data: safeArray(response?.data),
+      }),
+      providesTags: ['CalendarEvent'],
+    }),
+
+    createAdminCalendarEvent: builder.mutation<ApiResponse<CalendarEvent>, CreateCalendarEventRequest>({
+      query: (data) => ({
+        url: '/communication/admin/events',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['CalendarEvent'],
+    }),
+
+    updateAdminCalendarEvent: builder.mutation<ApiResponse<CalendarEvent>, { id: string; data: Partial<CreateCalendarEventRequest> }>({
+      query: ({ id, data }) => ({
+        url: `/communication/admin/events/${id}`,
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: ['CalendarEvent'],
+    }),
+
+    getVisibleCalendarEvents: builder.query<ApiResponse<CalendarEvent[]>, void>({
+      query: () => '/communication/events/me',
+      transformResponse: (response: any): ApiResponse<CalendarEvent[]> => ({
+        success: true,
+        message: 'Visible events fetched successfully',
+        data: safeArray(response?.data),
+      }),
+      providesTags: ['CalendarEvent'],
+    }),
   }),
 });
 
@@ -1209,4 +1414,13 @@ export const {
   useUpdateSemesterMutation,
   useDeleteSemesterMutation,
   useGetLevelsQuery,
+
+  // Communication hooks
+  useGetMessageRecipientsQuery,
+  useGetAdminMessagesQuery,
+  useSendAdminMessageMutation,
+  useGetAdminCalendarEventsQuery,
+  useCreateAdminCalendarEventMutation,
+  useUpdateAdminCalendarEventMutation,
+  useGetVisibleCalendarEventsQuery,
 } = adminApi;

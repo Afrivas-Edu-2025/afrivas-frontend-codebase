@@ -1,6 +1,5 @@
 // app/layout.tsx
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import ReduxProvider from '@/components/ReduxProvider';
 import { AuthProvider } from '@/components/auth-context';
@@ -10,8 +9,6 @@ import BootstrapQueries from './_components/BootstrapQueries';
 import OfflineBanner from './_components/OfflineBanner';
 import Navbar from "@/components/Navbar"
 import Footer from "@/components/footer"
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Afrivas Learning Platform',
@@ -30,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head />
-      <body className={inter.className} suppressHydrationWarning>
+      <body className="font-sans" suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

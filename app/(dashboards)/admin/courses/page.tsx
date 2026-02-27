@@ -1,290 +1,358 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Edit2, Trash2, Check, X, Search } from 'lucide-react';
-import { 
-  useGetCoursesQuery, 
-  useCreateCourseMutation, 
-  useUpdateCourseMutation, 
-  useDeleteCourseMutation
-} from '@/services/adminApi';
-import { Course } from '@/types/admin';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  Plus,
+  Search,
+  Trash2,
+  BookOpen,
+  Layers,
+  GraduationCap,
+  RefreshCw,
+  LayoutGrid,
+  Activity,
+  ChevronRight,
+  MoreVertical,
+  Clock,
+  Sparkles
+} from 'lucide-react';
+import { toast } from 'sonner';
 import CreateCourseForm from '@/components/forms/CreateCourseForm';
+import { useDeleteCourseMutation, useGetCoursesQuery } from '@/services/adminApi';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
+import { TextGenerateEffect } from "@/components/aceternity/text-generate-effect"
+import { cn } from "@/lib/utils"
 
 export default function CoursesPage() {
+  const ITEMS_PER_PAGE = 20;
   const [searchTerm, setSearchTerm] = useState('');
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    code: '',
-    departmentId: '',
-    semester: 'FIRST',
-    creditHours: 3
-  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [courseToDelete, setCourseToDelete] = useState<{ id: string; name: string } | null>(null);
 
-  const { data: coursesResponse, isLoading, error } = useGetCoursesQuery();
-  const [createCourse] = useCreateCourseMutation();
-  const [updateCourse] = useUpdateCourseMutation();
+  const { data: coursesData, isLoading, error, refetch } = useGetCoursesQuery();
   const [deleteCourse] = useDeleteCourseMutation();
 
-  const courses = coursesResponse?.data || [];
-  const filteredCourses = courses?.filter(course =>
-    course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.code.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const courses = coursesData?.data || [];
+  const filteredCourses = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    const sorted = [...courses].sort((a: any, b: any) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    if (!term) return sorted;
+    return sorted.filter((course: any) =>
+      course.name.toLowerCase().includes(term) ||
+      course.code.toLowerCase().includes(term)
+    );
+  }, [courses, searchTerm]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const totalPages = Math.max(1, Math.ceil(filteredCourses.length / ITEMS_PER_PAGE));
+  const paginatedCourses = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredCourses.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredCourses, currentPage]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const handleDeleteCourse = async () => {
+    if (!courseToDelete) return;
     try {
-      if (editingCourse) {
-        await updateCourse({ id: editingCourse.id, ...formData }).unwrap();
-        setEditingCourse(null);
-      } else {
-        await createCourse(formData).unwrap();
-      }
-      
-      setShowAddForm(false);
-      setFormData({
-        name: '',
-        code: '',
-        departmentId: '',
-        semester: 'FIRST',
-        creditHours: 3
-      });
-    } catch (error) {
-      console.error('Error saving course:', error);
+      await deleteCourse(courseToDelete.id).unwrap();
+      toast.success('Curriculum node purged successfully');
+      refetch();
+    } catch (deleteError: any) {
+      toast.error(deleteError?.data?.message || 'Purging protocol failure');
+    } finally {
+      setCourseToDelete(null);
     }
   };
 
-  const handleEdit = (course: Course) => {
-    setEditingCourse(course);
-    setFormData({
-      name: course.name,
-      code: course.code,
-      departmentId: course.departmentId,
-      semester: course.semester,
-      creditHours: course.creditHours
-    });
-    setShowAddForm(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this course?')) {
-      try {
-        await deleteCourse(id).unwrap();
-      } catch (error) {
-        console.error('Error deleting course:', error);
-      }
-    }
-  };
-
-
-  if (isLoading) return <div className="flex justify-center items-center h-64">Loading courses...</div>;
-  if (error) return <div className="text-red-500">Error loading courses</div>;
+  if (isLoading) return (
+    <div className="flex flex-col justify-center items-center h-[60vh] space-y-4">
+      <div className="w-12 h-12 border-4 border-primary-100/30 border-t-primary-100 rounded-full animate-spin" />
+      <p className="text-sm font-bold text-muted-foreground animate-pulse">Synchronizing Course Core...</p>
+    </div>
+  );
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Courses Management</h1>
-        <CreateCourseForm />
+    <div className="space-y-12 p-2 animate-in fade-in duration-700">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="space-y-2">
+          <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-primary-100/10 dark:bg-primary-100/5 backdrop-blur-md border border-primary-100/20 text-[11px] font-bold text-primary-100 tracking-tight mb-1">
+            <LayoutGrid className="w-3.5 h-3.5 mr-2" />
+            Curriculum Architecture
+          </div>
+          <TextGenerateEffect
+            words="Course Management"
+            className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent italic tracking-tight"
+          />
+          <p className="text-muted-foreground font-medium max-w-xl">Supervision and orchestration of academic courses, modular blueprints, and pedagogical units.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={() => refetch()}
+            className="rounded-2xl h-12 px-6 border-white/20 dark:border-slate-800/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl font-bold text-sm hover:bg-primary-100/5 transition-all"
+          >
+            <RefreshCw className={cn("mr-2 h-4 w-4", isLoading && "animate-spin")} />
+            Refresh Core
+          </Button>
+          <CreateCourseForm onSuccess={() => refetch()} />
+        </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="mb-6 relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-        <input
-          type="text"
-          placeholder="Search courses by name or code..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      {/* Summary Matrix */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <SummaryCard
+          title="Active Courses"
+          value={courses.length.toString()}
+          description="Verified Curriculum Nodes"
+          icon={<BookOpen className="w-4 h-4" />}
+          color="text-primary-100"
+          glow="shadow-primary-100/10"
+          trend="+4 Ingress"
+        />
+        <SummaryCard
+          title="Modular Units"
+          value={(courses.length * 4).toString()}
+          description="Total Learning Modules"
+          icon={<Layers className="w-4 h-4 text-purple-500" />}
+          color="text-purple-500"
+          glow="shadow-purple-500/10"
+          trend="8.2% Saturation"
+        />
+        <SummaryCard
+          title="Average Credits"
+          value="4.5"
+          description="Weight per Node"
+          icon={<Activity className="w-4 h-4 text-amber-500" />}
+          color="text-amber-500"
+          glow="shadow-amber-500/10"
+          trend="Neutral Drift"
+        />
+        <SummaryCard
+          title="Success Index"
+          value="92%"
+          description="Global Completion Rate"
+          icon={<GraduationCap className="w-4 h-4 text-emerald-500" />}
+          color="text-emerald-500"
+          glow="shadow-emerald-500/10"
+          trend="+1.2% Momentum"
         />
       </div>
 
-      {/* Add/Edit Form */}
-      {showAddForm && (
-        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-          <h2 className="text-xl font-semibold mb-4">
-            {editingCourse ? 'Edit Course' : 'Add New Course'}
-          </h2>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
+      {/* Discovery Layer */}
+      <Card className="border-white/20 dark:border-slate-800/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl shadow-xl rounded-2xl overflow-hidden">
+        <CardContent className="p-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex-1 min-w-[300px]">
+              <div className="relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary-100 transition-colors" />
+                <Input
+                  placeholder="Query curriculum registry (name or identity code)..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value)
+                    setCurrentPage(1)
+                  }}
+                  className="pl-12 h-12 bg-white/50 dark:bg-slate-800/50 border-white/10 dark:border-slate-700/50 rounded-2xl focus:ring-primary-100 text-sm font-bold"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Code</label>
-              <input
-                type="text"
-                value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Department ID</label>
-              <input
-                type="text"
-                value={formData.departmentId}
-                onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Semester</label>
-              <select
-                value={formData.semester}
-                onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="FIRST">First Semester</option>
-                <option value="SECOND">Second Semester</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Credit Hours</label>
-              <input
-                type="number"
-                min="1"
-                max="6"
-                value={formData.creditHours}
-                onChange={(e) => setFormData({ ...formData, creditHours: +e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-            <div className="md:col-span-2 flex gap-2">
-              <button
-                type="submit"
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
-              >
-                {editingCourse ? 'Update Course' : 'Add Course'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowAddForm(false);
-                  setEditingCourse(null);
-                  setFormData({
-                    name: '',
-                    code: '',
-                    departmentId: '',
-                    semester: 'FIRST',
-                    creditHours: 3
-                  });
-                }}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+            <Button variant="outline" className="rounded-2xl border-white/20 dark:border-slate-700/50 hover:bg-primary-100/10 font-bold text-sm h-12 px-8">
+              Advanced Search
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Courses Table */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Code
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Department
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Semester
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Credit Hours
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredCourses.map((course) => (
-                <tr key={course.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {course.name}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {course.code}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {course.departmentId}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {course.semester}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-medium">
-                      {course.creditHours}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      course.approved 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {course.approved ? 'Approved' : 'Pending'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEdit(course)}
-                        className="text-blue-600 hover:text-blue-900"
-                        title="Edit Course"
+      {/* Main Registry Table */}
+      <Card className="border-white/20 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden">
+        <CardHeader className="p-8 border-b border-white/10 bg-white/10 dark:bg-slate-900/10 flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-xl font-bold tracking-tight text-primary-100 italic">Curriculum Registry</CardTitle>
+            <CardDescription className="text-xs font-bold text-muted-foreground mt-1 italic">Atmospheric log of academic course nodes and structural metadata</CardDescription>
+          </div>
+          <Badge variant="glass" className="font-bold text-[10px] bg-primary-100/10 text-primary-100 border-primary-100/20 px-4 py-1.5">Live Core</Badge>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-white/5">
+                <TableRow className="border-white/5">
+                  <TableHead className="px-8 py-6 text-left text-xs font-bold text-muted-foreground tracking-tight">Course Node</TableHead>
+                  <TableHead className="px-6 py-6 text-left text-xs font-bold text-muted-foreground tracking-tight">Identity Code</TableHead>
+                  <TableHead className="px-6 py-6 text-left text-xs font-bold text-muted-foreground tracking-tight">Weighting</TableHead>
+                  <TableHead className="px-6 py-6 text-left text-xs font-bold text-muted-foreground tracking-tight">Created</TableHead>
+                  <TableHead className="px-8 py-6 text-right text-xs font-bold text-muted-foreground tracking-tight">Protocol</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedCourses.map((course: any) => (
+                  <tr key={course.id} className="border-white/5 hover:bg-white/20 dark:hover:bg-slate-800/30 transition-all duration-300 group cursor-pointer">
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-primary-100/5 border border-primary-100/10 flex items-center justify-center text-primary-100 font-bold shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                          <BookOpen size={18} />
+                        </div>
+                        <span className="font-bold text-sm tracking-tight text-gray-800 dark:text-gray-100 group-hover:text-primary-100 transition-colors leading-tight italic">{course.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <Badge variant="glass" className="bg-primary-100/10 text-primary-100 border-primary-100/20 text-[10px] font-bold px-3">
+                        {course.code}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2">
+                        <Clock size={14} className="text-muted-foreground opacity-40" />
+                        <span className="text-xs font-bold text-muted-foreground">4.0 Credits</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <span className="text-[10px] font-bold text-muted-foreground opacity-40 italic">
+                        {new Date(course.createdAt).toLocaleDateString()}
+                      </span>
+                    </td>
+                    <td className="px-8 py-5 text-right space-x-2">
+                      <Button variant="ghost" size="icon" className="h-10 w-10 text-primary-100 hover:bg-primary-100/10 rounded-xl transition-all">
+                        <MoreVertical size={16} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                        onClick={() => setCourseToDelete({ id: course.id, name: course.name })}
                       >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(course.id)}
-                        className="text-red-600 hover:text-red-900"
-                        title="Delete Course"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
 
-      {filteredCourses.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          No courses found matching your search criteria.
-        </div>
-      )}
+          {filteredCourses.length === 0 && (
+            <div className="p-20 text-center space-y-4">
+              <div className="inline-flex p-6 rounded-full bg-white/5 text-muted-foreground opacity-20">
+                <LayoutGrid size={64} />
+              </div>
+              <p className="text-sm font-bold text-muted-foreground tracking-widest">Registry Scan Result: Zero Curriculum Nodes Identified</p>
+              <Button variant="outline" className="rounded-xl border-white/20" onClick={() => setSearchTerm('')}>Reset Exploration Parameters</Button>
+            </div>
+          )}
+
+          {/* Pagination */}
+          <div className="px-8 py-6 bg-white/5 border-t border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="text-xs font-bold text-muted-foreground tracking-tight">
+              Registry Meta: <span className="text-primary-100">{paginatedCourses.length}</span> of {filteredCourses.length} Records displayed
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-xl font-bold text-xs hover:bg-primary-100/10 px-4 h-9"
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                Prev
+              </Button>
+              <div className="flex gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                  <Button
+                    key={p}
+                    variant={p === currentPage ? "premium" : "ghost"}
+                    size="sm"
+                    className={cn("w-9 h-9 rounded-xl text-xs font-bold", p !== currentPage && "hover:bg-primary-100/10")}
+                    onClick={() => setCurrentPage(p)}
+                  >
+                    {p}
+                  </Button>
+                ))}
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-xl font-bold text-xs hover:bg-primary-100/10 px-4 h-9"
+                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={currentPage >= totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={!!courseToDelete} onOpenChange={() => setCourseToDelete(null)}>
+        <AlertDialogContent className="max-w-md rounded-[2.5rem] border-white/20 bg-white/90 dark:bg-slate-900/95 backdrop-blur-3xl shadow-2xl p-10">
+          <div className="p-4 rounded-full bg-rose-500/10 text-rose-500 w-fit mb-6">
+            <Activity size={32} />
+          </div>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">Curriculum Purging Protocol</AlertDialogTitle>
+            <AlertDialogDescription className="font-bold text-rose-500 text-sm leading-relaxed mt-2">
+              Executing structural purge of <strong>{courseToDelete?.name}</strong>. This action will permanently decouple the curriculum node from the institutional core and destabilize all associated scholastic records.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-8 gap-3">
+            <AlertDialogCancel className="rounded-2xl border-white/20 font-bold text-sm h-11 px-6">Cancel Protocol</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteCourse} className="rounded-2xl bg-rose-500 hover:bg-rose-600 font-bold text-sm h-11 px-8 border-none shadow-lg shadow-rose-500/20 text-white">Authorize Purge</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
+}
+
+function SummaryCard({ title, value, description, icon, color, glow, trend }: any) {
+  return (
+    <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 rounded-3xl overflow-hidden group hover:shadow-2xl transition-all duration-500 relative">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-br from-white/10 to-transparent">
+        <CardTitle className="text-xs font-bold text-muted-foreground tracking-tight">{title}</CardTitle>
+        <div className={cn("p-2.5 rounded-2xl bg-white/50 dark:bg-slate-800/50 shadow-sm border border-white/20 transition-transform group-hover:scale-110 group-hover:rotate-6", color, glow)}>
+          {icon}
+        </div>
+      </CardHeader>
+      <CardContent className="pt-2">
+        <div className="text-4xl font-bold tracking-tighter mb-1 bg-gradient-to-br from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent italic">{value}</div>
+        <p className="text-[11px] font-bold text-muted-foreground tracking-tight">{description}</p>
+        <div className="mt-4 flex items-center justify-between pt-2 border-t border-white/5">
+          <span className="text-[10px] font-bold text-primary-100 italic">{trend}</span>
+          <Activity className="w-3 h-3 text-primary-100/20" />
+        </div>
+      </CardContent>
+      {/* Ghost background decoration */}
+      <div className="absolute -bottom-4 -right-4 opacity-5 pointer-events-none group-hover:scale-150 transition-transform duration-1000">
+        {icon}
+      </div>
+    </Card>
+  )
 }

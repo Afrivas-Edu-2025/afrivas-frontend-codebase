@@ -24,7 +24,7 @@ export default function CreateClassForm({ onSuccess }: CreateClassFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     code: '',
-    courseId: '',
+    moduleId: '',
     lecturerId: '',
     academicYear: new Date().getFullYear().toString(),
     semesterId: '',
@@ -47,7 +47,7 @@ export default function CreateClassForm({ onSuccess }: CreateClassFormProps) {
     const newErrors: Record<string, string> = {}
     if (!formData.name.trim()) newErrors.name = 'Class name is required'
     if (!formData.code.trim()) newErrors.code = 'Class code is required'
-    if (!formData.courseId) newErrors.courseId = 'Course is required'
+    if (!formData.moduleId) newErrors.moduleId = 'Module is required'
     if (!formData.lecturerId) newErrors.lecturerId = 'Lecturer is required'
     if (!formData.semesterId) newErrors.semesterId = 'Semester is required'
     if (formData.capacity < 1 || formData.capacity > 200) newErrors.capacity = 'Capacity must be between 1 and 200'
@@ -65,7 +65,7 @@ export default function CreateClassForm({ onSuccess }: CreateClassFormProps) {
       setFormData({
         name: '',
         code: '',
-        courseId: '',
+        moduleId: '',
         lecturerId: '',
         academicYear: new Date().getFullYear().toString(),
         semesterId: '',
@@ -81,8 +81,9 @@ export default function CreateClassForm({ onSuccess }: CreateClassFormProps) {
     }
   }
 
-  const courses = coursesData?.data || []
+  const modules = coursesData?.data || []
   const lecturers = lecturersData?.data || []
+  const semesters = semestersData?.data || []
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -124,20 +125,20 @@ export default function CreateClassForm({ onSuccess }: CreateClassFormProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="courseId">Course</Label>
-              <Select value={formData.courseId} onValueChange={(value) => handleInputChange('courseId', value)}>
-                <SelectTrigger className={errors.courseId ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Select course" />
+              <Label htmlFor="moduleId">Module</Label>
+              <Select value={formData.moduleId} onValueChange={(value) => handleInputChange('moduleId', value)}>
+                <SelectTrigger className={errors.moduleId ? 'border-red-500' : ''}>
+                  <SelectValue placeholder="Select module" />
                 </SelectTrigger>
                 <SelectContent>
-                  {courses.map((course) => (
-                    <SelectItem key={course.id} value={course.id}>
-                      {course.code} - {course.name}
+                  {modules.map((module) => (
+                    <SelectItem key={module.id} value={module.id}>
+                      {module.code} - {module.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.courseId && <p className="text-red-500 text-sm mt-1">{errors.courseId}</p>}
+              {errors.moduleId && <p className="text-red-500 text-sm mt-1">{errors.moduleId}</p>}
             </div>
             <div>
               <Label htmlFor="lecturerId">Lecturer</Label>
