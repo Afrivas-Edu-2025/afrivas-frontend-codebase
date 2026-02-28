@@ -489,7 +489,7 @@ export type CreateCalendarEventRequest = {
 export const adminApi = createApi({
   reducerPath: 'adminApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5050/api/v1'}`,
+    baseUrl: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5050/api/v1'}`,
     prepareHeaders: (headers) => {
       const token = getStoredToken();
       if (token) {
@@ -823,6 +823,8 @@ export const adminApi = createApi({
                 : '',
               room: '',
               capacity: 50,
+              enrolledCount: 0,
+              isActive: true,
               createdAt: item?.createdAt ?? new Date().toISOString(),
               updatedAt: item?.updatedAt ?? item?.createdAt ?? new Date().toISOString(),
             };
@@ -865,13 +867,13 @@ export const adminApi = createApi({
           courseId: (data as any).courseId
             ? toNumber((data as any).courseId)
             : (data as any).moduleId
-            ? toNumber((data as any).moduleId)
-            : undefined,
+              ? toNumber((data as any).moduleId)
+              : undefined,
           semesterId: (data as any).semesterId
             ? toNumber((data as any).semesterId)
             : (data as any).semester
-            ? toNumber((data as any).semester)
-            : undefined,
+              ? toNumber((data as any).semester)
+              : undefined,
           schedule: (data as any).schedule,
           day: (data as any).day,
           time: (data as any).time,

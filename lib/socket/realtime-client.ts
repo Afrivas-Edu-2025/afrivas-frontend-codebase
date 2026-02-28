@@ -25,7 +25,7 @@ const SOCKET_SCRIPT_ID = "afrivas-socketio-client-script";
 
 const resolveApiOrigin = (): string => {
   const fallback = "http://localhost:5050/api/v1";
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || fallback;
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || fallback;
 
   try {
     return new URL(apiBaseUrl).origin;

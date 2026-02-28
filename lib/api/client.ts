@@ -8,7 +8,7 @@
  * - JSON parsing
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5050/api/v1';
 
 // Default timeout for requests (30 seconds - generous for slow networks)
 const DEFAULT_TIMEOUT = 30000;
@@ -78,7 +78,7 @@ export async function apiRequest<T>(
 
     // Handle empty responses
     const text = await response.text();
-    return text ? JSON.parse(text) : null;
+    return text ? JSON.parse(text) : (null as unknown as T);
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;

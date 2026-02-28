@@ -111,9 +111,7 @@ export default function DashboardLayout({ children, userRole }: DashboardLayoutP
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary-100/5 blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-secondary-100/5 blur-[120px]" />
       </div>
-
       <UnifiedSidebar userRole={normalizedRole} logoSrc={sidebarLogo} brandName={sidebarBrand} onToggle={handleSidebarToggle} />
-
       <div
         className={cn(
           "min-h-screen transition-all duration-500 ease-in-out relative z-10",
@@ -124,7 +122,6 @@ export default function DashboardLayout({ children, userRole }: DashboardLayoutP
           <div className="min-h-[calc(100vh-3rem)] bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-[2rem] border border-white/20 dark:border-slate-800/50 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden flex flex-col">
             <div className="flex-1 p-6 md:p-8 overflow-y-auto custom-scrollbar">
               {generateBreadcrumbs()}
-
               <main className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                 {children}
               </main>
