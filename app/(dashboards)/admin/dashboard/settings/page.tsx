@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Save, Settings } from 'lucide-react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { Save, Settings, Upload, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -24,6 +24,7 @@ import {
 export default function AdminSettingsPage() {
   const { user, updateUser } = useAuth()
   const [settings, setSettings] = useState<AdminDashboardSettings>(() => getDefaultAdminSettings())
+  const [logoDataUrl, setLogoDataUrl] = useState<string | undefined>(undefined)
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
@@ -32,6 +33,8 @@ export default function AdminSettingsPage() {
       institutionDescription: user?.motto || '',
       fromEmail: user?.email || 'noreply@afrivas.com',
     }
+    const onboardingProfile = getUniversityOnboardingProfile(user?.id)
+    setLogoDataUrl(onboardingProfile?.logoDataUrl || user?.universityLogoUrl)
 
     const stored = getAdminDashboardSettings(user?.id, defaults)
     if (stored) {
@@ -46,7 +49,32 @@ export default function AdminSettingsPage() {
     setSettings((prev) => ({ ...prev, [key]: value }))
   }
 
-  const handleSave = () => {
+  const handleLogoFileChange = (file: File | null) => {
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Logo file size must be 2MB or less')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setLogoDataUrl(reader.result)
+      }
+    }
+    reader.onerror = () => {
+      toast.error('Failed to read selected logo file')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleSave = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
     if (!user?.id) {
       toast.error('Unable to save settings: user session not found')
       return
@@ -74,7 +102,7 @@ export default function AdminSettingsPage() {
       saveUniversityOnboardingProfile(user.id, {
         universityName: normalized.institutionName,
         description: normalized.institutionDescription,
-        logoDataUrl: existingProfile?.logoDataUrl || user?.universityLogoUrl,
+        logoDataUrl,
         termsAccepted: existingProfile?.termsAccepted ?? true,
         completedAt: existingProfile?.completedAt || new Date().toISOString(),
       })
@@ -82,6 +110,7 @@ export default function AdminSettingsPage() {
       updateUser({
         universityName: normalized.institutionName,
         motto: normalized.institutionDescription,
+        universityLogoUrl: logoDataUrl,
       })
 
       setSettings(normalized)
@@ -94,7 +123,7 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <form onSubmit={handleSave} className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-gray-500 dark:text-gray-400">Manage institution profile and dashboard preferences.</p>
@@ -145,6 +174,34 @@ export default function AdminSettingsPage() {
               onChange={(event) => updateField('institutionDescription', event.target.value)}
               placeholder="Add a short institution description"
             />
+          </div>
+
+          <div className="space-y-3">
+            <Label htmlFor="logo">University Logo</Label>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-xl overflow-hidden border border-input bg-muted/30 flex items-center justify-center">
+                {logoDataUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logoDataUrl} alt="University logo preview" className="w-full h-full object-cover" />
+                ) : (
+                  <Upload className="w-5 h-5 text-muted-foreground" />
+                )}
+              </div>
+              <div className="flex-1 space-y-2">
+                <Input
+                  id="logo"
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => handleLogoFileChange(event.target.files?.[0] || null)}
+                />
+                <p className="text-xs text-muted-foreground">PNG or JPG, maximum 2MB.</p>
+              </div>
+              {logoDataUrl && (
+                <Button type="button" variant="outline" size="icon" onClick={() => setLogoDataUrl(undefined)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -205,12 +262,12 @@ export default function AdminSettingsPage() {
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={isSaving} className="rounded-xl">
+        <Button type="submit" disabled={isSaving} className="rounded-xl">
           <Save className="h-4 w-4 mr-2" />
           {isSaving ? 'Saving...' : 'Save Settings'}
         </Button>
       </div>
-    </div>
+    </form>
   )
 }
 
