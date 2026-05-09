@@ -8,7 +8,7 @@ import { Eye, EyeOff, CheckCircle, Users, Shield, Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { useLoginUserMutation } from "@/services/authServices";
 import { useAuth } from "@/components/auth-context";
-import { isUniversityOnboardingComplete } from "@/lib/universityOnboarding";
+import { collectClientDeviceContext } from "@/lib/security/device-context";
 import {
   Dialog,
   DialogContent,
@@ -90,6 +90,7 @@ export function AuthForm() {
       const loginData = {
         email: formData.email,
         password: formData.password,
+        clientContext: collectClientDeviceContext(),
       };
 
       console.log("Sending loginData:", JSON.stringify(loginData, null, 2));
@@ -100,7 +101,11 @@ export function AuthForm() {
       }
 
       // Store user and token in AuthContext and localStorage
-      login(result.data.user, result.data.tokens.accessToken);
+      login(
+        result.data.user,
+        result.data.tokens.accessToken,
+        result.data.tokens.refreshToken,
+      );
 
       toast({
         title: "Login Successful",
@@ -114,7 +119,7 @@ export function AuthForm() {
           ? "/student/dashboard"
           : role === "LECTURER"
           ? "/lecturer/dashboard"
-          : !isUniversityOnboardingComplete(result.data.user.id)
+          : !Boolean((result.data.user as any)?.onboardingCompletedAt)
           ? "/admin/onboarding"
           : "/admin/dashboard";
       setTimeout(() => router.push(dashboardRoute), 2000);
@@ -225,7 +230,7 @@ export function AuthForm() {
               </div>
               {fieldErrors.password && <span className="text-red-600 text-sm mt-1">{fieldErrors.password}</span>}
               <div className="text-right mt-2">
-                <a href="/auth/reset-password" className="text-sm text-primary-100 dark:text-lemon-100 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+                <a href="/forgot-password" className="text-sm text-primary-100 dark:text-lemon-100 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
                   Forgot password?
                 </a>
               </div>

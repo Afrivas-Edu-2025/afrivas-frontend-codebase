@@ -1,14 +1,11 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { useAuth } from '../components/auth-context';
 
-// Define types for API responses
 type ApiResponse = {
   success: boolean;
   message: string;
   data?: any;
 };
 
-// Define types for request payloads
 export type SignupUserRequest = {
   firstName: string;
   lastName: string;
@@ -27,29 +24,23 @@ export type SignupUserRequest = {
 export type LoginUserRequest = {
   email: string;
   password: string;
+  clientContext?: Record<string, unknown>;
 };
 
-// Create the API slice
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5050/api/v1',
-    prepareHeaders: (headers, { getState }) => {
+    prepareHeaders: (headers) => {
       const token = localStorage.getItem('authToken') || localStorage.getItem('accessToken');
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
+      if (token) headers.set('Authorization', `Bearer ${token}`);
       headers.set('Content-Type', 'application/json');
       return headers;
     },
   }),
   endpoints: (builder) => ({
     signupUser: builder.mutation<ApiResponse, SignupUserRequest>({
-      query: (data) => ({
-        url: '/auth/signup',
-        method: 'POST',
-        body: data,
-      }),
+      query: (data) => ({ url: '/auth/signup', method: 'POST', body: data }),
       transformResponse: (response: any): ApiResponse => ({
         success: response.success,
         message: response.message || 'User registration successful',
@@ -61,25 +52,54 @@ export const authApi = createApi({
         data: response.data?.errors || [],
       }),
     }),
+
     loginUser: builder.mutation<ApiResponse, LoginUserRequest>({
-      query: (data) => ({
-        url: '/auth/login',
-        method: 'POST',
-        body: data,
-      }),
+      query: (data) => ({ url: '/auth/login', method: 'POST', body: data }),
       transformResponse: (response: any): ApiResponse => ({
-        success: response.success,
+        success: response.status === 'success',
         message: response.message || 'Login successful',
         data: response.data,
       }),
       transformErrorResponse: (response: any): ApiResponse => ({
         success: false,
-        // Backend sends { error: { message, details } }
         message: response.data?.error?.message || response.data?.message || 'Login failed',
         data: response.data?.error?.details || response.data?.errors || [],
+      }),
+    }),
+
+    forgotPassword: builder.mutation<ApiResponse, { email: string }>({
+      query: (data) => ({ url: '/auth/forgot-password', method: 'POST', body: data }),
+      transformResponse: (response: any): ApiResponse => ({
+        success: response.status === 'success',
+        message: response.message || 'Reset link sent',
+        data: null,
+      }),
+      transformErrorResponse: (response: any): ApiResponse => ({
+        success: false,
+        message: response.data?.error?.message || response.data?.message || 'Failed to send reset link',
+        data: [],
+      }),
+    }),
+
+    resetPassword: builder.mutation<ApiResponse, { token: string; newPassword: string }>({
+      query: (data) => ({ url: '/auth/reset-password', method: 'POST', body: data }),
+      transformResponse: (response: any): ApiResponse => ({
+        success: response.status === 'success',
+        message: response.message || 'Password updated',
+        data: null,
+      }),
+      transformErrorResponse: (response: any): ApiResponse => ({
+        success: false,
+        message: response.data?.error?.message || response.data?.message || 'Failed to reset password',
+        data: [],
       }),
     }),
   }),
 });
 
-export const { useSignupUserMutation, useLoginUserMutation } = authApi;
+export const {
+  useSignupUserMutation,
+  useLoginUserMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
+} = authApi;
