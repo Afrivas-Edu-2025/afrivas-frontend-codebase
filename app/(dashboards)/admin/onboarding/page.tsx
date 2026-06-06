@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -12,29 +12,47 @@ import { useAuth } from '@/components/auth-context'
 import { TextGenerateEffect } from '@/components/aceternity/text-generate-effect'
 import { LiquidGlass } from '@/components/aceternity/liquid-glass'
 import { FloatingElements } from '@/components/aceternity/floating-elements'
-import {
-  getUniversityOnboardingProfile,
-  saveUniversityOnboardingProfile,
-  UniversityOnboardingProfile,
-} from '@/lib/universityOnboarding'
+import { useUniversityOnboardingProfile, useUpdateUniversityOnboardingProfile } from '@/hooks/useUniversityOnboarding'
+import ThemeToggle from '@/components/theme-toggle'
 
 export default function UniversityOnboardingPage() {
   const router = useRouter()
   const { user, updateUser } = useAuth()
 
-  const existing = useMemo(() => getUniversityOnboardingProfile(user?.id), [user?.id])
+  const { data: onboardingData, isLoading: onboardingLoading } = useUniversityOnboardingProfile()
+  const { mutateAsync: saveOnboarding, isPending: isSaving } = useUpdateUniversityOnboardingProfile()
+
+  const [hydrated, setHydrated] = useState(false)
   const [step, setStep] = useState(1)
-  const [universityName, setUniversityName] = useState(
-    existing?.universityName || user?.universityName || user?.username || 'My University',
-  )
-  const [description, setDescription] = useState(existing?.description || user?.motto || '')
-  const [logoDataUrl, setLogoDataUrl] = useState<string | undefined>(existing?.logoDataUrl || user?.universityLogoUrl)
-  const [termsAccepted, setTermsAccepted] = useState(existing?.termsAccepted || false)
+  const [universityName, setUniversityName] = useState('My University')
+  const [description, setDescription] = useState('')
+  const [logoDataUrl, setLogoDataUrl] = useState<string | undefined>(undefined)
+  const [logoFileName, setLogoFileName] = useState<string | null>(null)
+  const [termsAccepted, setTermsAccepted] = useState(false)
 
   const totalSteps = 3
 
+  useEffect(() => {
+    if (hydrated) return
+    if (!user) return
+    if (onboardingLoading) return
+
+    const existing = onboardingData?.profile
+    setUniversityName(existing?.universityName || user?.universityName || user?.username || 'My University')
+    setDescription(existing?.description || user?.motto || '')
+    setLogoDataUrl(existing?.logoDataUrl || existing?.logoUrl || (user as any)?.universityLogoDataUrl || user?.universityLogoUrl)
+    setTermsAccepted(existing?.termsAccepted || false)
+    setHydrated(true)
+  }, [hydrated, onboardingLoading, onboardingData?.profile, user])
+
   const handleLogoFileChange = (file: File | null) => {
-    if (!file) return
+    if (!file) {
+      setLogoFileName(null)
+      return
+    }
+    if (!file.type.startsWith('image/')) return
+    if (file.size > 2 * 1024 * 1024) return
+    setLogoFileName(file.name)
     const reader = new FileReader()
     reader.onload = () => {
       if (typeof reader.result === 'string') {
@@ -57,22 +75,28 @@ export default function UniversityOnboardingPage() {
   const handleFinish = () => {
     if (!user?.id || !termsAccepted) return
 
-    const profile: UniversityOnboardingProfile = {
-      universityName: universityName.trim(),
-      description: description.trim(),
-      logoDataUrl,
-      termsAccepted: true,
-      completedAt: new Date().toISOString(),
-    }
+    void (async () => {
+      const input: any = {
+        universityName: universityName.trim(),
+        description: description.trim(),
+        termsAccepted: true,
+      }
+      if (logoDataUrl !== undefined) input.logoDataUrl = logoDataUrl
 
-    saveUniversityOnboardingProfile(user.id, profile)
-    updateUser({
-      universityName: profile.universityName,
-      motto: profile.description,
-      universityLogoUrl: profile.logoDataUrl,
-    })
-
-    router.replace('/admin/dashboard')
+      const result = await saveOnboarding(input)
+      const profile = result?.profile
+      if (profile) {
+        updateUser({
+          universityName: profile.universityName,
+          motto: profile.description,
+          universityLogoUrl: profile.logoUrl,
+          universityLogoDataUrl: profile.logoDataUrl,
+          onboardingTermsAccepted: profile.termsAccepted,
+          onboardingCompletedAt: profile.completedAt,
+        })
+      }
+      router.replace('/admin/dashboard')
+    })()
   }
 
   return (
@@ -80,6 +104,10 @@ export default function UniversityOnboardingPage() {
       <LiquidGlass className="absolute inset-0">
         <FloatingElements />
       </LiquidGlass>
+
+      <div className="absolute top-6 right-6 z-50">
+        <ThemeToggle />
+      </div>
 
       <Card className="w-full max-w-2xl relative z-20 overflow-hidden border-white/20 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl shadow-2xl animate-in fade-in zoom-in duration-500">
         <CardHeader className="relative">
@@ -160,14 +188,27 @@ export default function UniversityOnboardingPage() {
                       </div>
                     </div>
                     <div className="flex-1">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                        <Button asChild variant="outline" className="cursor-pointer h-10 border-white/20 bg-white/10 dark:bg-slate-800/20 hover:bg-white/30 dark:hover:bg-slate-800/40 font-medium">
+                          <label htmlFor="logo">
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            Choose File
+                          </label>
+                        </Button>
+                        <span className="text-sm font-medium text-muted-foreground truncate max-w-[200px]">
+                          {logoFileName ? logoFileName : "No file chosen"}
+                        </span>
+                      </div>
                       <Input
                         id="logo"
                         type="file"
                         accept="image/*"
                         onChange={(e) => handleLogoFileChange(e.target.files?.[0] || null)}
-                        className="h-10 text-xs bg-transparent border-white/10 dark:border-slate-800 cursor-pointer hover:bg-white/5"
+                        className="hidden"
                       />
-                      <p className="text-[10px] text-muted-foreground mt-2">Recommended: Square PNG or JPG, max 2MB.</p>
+                      <p className="text-[10px] text-muted-foreground mt-3">Recommended: Square PNG or JPG, max 2MB.</p>
                     </div>
                   </div>
                 </div>
@@ -217,10 +258,10 @@ export default function UniversityOnboardingPage() {
               <Button
                 variant="premium"
                 onClick={handleFinish}
-                disabled={!termsAccepted}
+                disabled={!termsAccepted || isSaving}
                 className="rounded-xl px-10 h-12 font-bold"
               >
-                Finish Setup
+                {isSaving ? 'Saving...' : 'Finish Setup'}
               </Button>
             )}
           </div>
@@ -229,4 +270,3 @@ export default function UniversityOnboardingPage() {
     </div>
   )
 }
-

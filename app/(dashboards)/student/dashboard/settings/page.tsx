@@ -23,6 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { SecurityDevicesPanel } from "@/components/security/security-devices-panel"
 import { TextGenerateEffect } from "@/components/aceternity/text-generate-effect"
 import { cn } from "@/lib/utils"
 
@@ -299,6 +300,8 @@ export default function StudentSettingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          <SecurityDevicesPanel variant="glass" />
         </div>
       </div>
     </div>

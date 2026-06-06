@@ -41,11 +41,17 @@ async function fetchWithTimeout(
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
+    const authToken =
+      typeof window !== 'undefined'
+        ? localStorage.getItem('authToken') || localStorage.getItem('accessToken')
+        : null;
+
     const response = await fetch(url, {
       ...fetchOptions,
       signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         ...fetchOptions.headers,
       },
     });
@@ -136,7 +142,11 @@ export interface AppConfig {
 }
 
 export async function fetchAppConfig(): Promise<AppConfig> {
-  return apiRequest<AppConfig>('/config');
+  return {
+    maintenanceMode: false,
+    features: { courses: true, assessments: true, community: true, certificates: true },
+    version: '1.0.0',
+  };
 }
 
 /**

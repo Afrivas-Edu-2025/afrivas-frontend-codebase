@@ -1,4 +1,5 @@
 import { User, Bell, Lock, Globe, Palette, Save } from "lucide-react"
+import { SecurityDevicesPanel } from "@/components/security/security-devices-panel"
 
 export default function SettingsPage() {
   return (
@@ -182,6 +183,8 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+
+          <SecurityDevicesPanel />
 
           {/* Save Button */}
           <div className="flex justify-end">

@@ -2,29 +2,30 @@
 
 import { useEffect, useState, type FormEvent } from 'react'
 import { Save, Settings, Upload, X } from 'lucide-react'
-import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+import { toast } from '@/components/ui/use-toast'
 import { useAuth } from '@/components/auth-context'
+import { SecurityDevicesPanel } from '@/components/security/security-devices-panel'
 import {
   getAdminDashboardSettings,
   getDefaultAdminSettings,
   saveAdminDashboardSettings,
   type AdminDashboardSettings,
 } from '@/lib/admin-dashboard-settings'
-import {
-  getUniversityOnboardingProfile,
-  saveUniversityOnboardingProfile,
-} from '@/lib/universityOnboarding'
+import { useUniversityOnboardingProfile, useUpdateUniversityOnboardingProfile } from '@/hooks/useUniversityOnboarding'
 
 export default function AdminSettingsPage() {
   const { user, updateUser } = useAuth()
+  const { data: onboardingData } = useUniversityOnboardingProfile()
+  const { mutateAsync: saveOnboarding } = useUpdateUniversityOnboardingProfile()
   const [settings, setSettings] = useState<AdminDashboardSettings>(() => getDefaultAdminSettings())
   const [logoDataUrl, setLogoDataUrl] = useState<string | undefined>(undefined)
+  const [logoCleared, setLogoCleared] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
@@ -33,8 +34,8 @@ export default function AdminSettingsPage() {
       institutionDescription: user?.motto || '',
       fromEmail: user?.email || 'noreply@afrivas.com',
     }
-    const onboardingProfile = getUniversityOnboardingProfile(user?.id)
-    setLogoDataUrl(onboardingProfile?.logoDataUrl || user?.universityLogoUrl)
+    const onboardingProfile = onboardingData?.profile
+    setLogoDataUrl(onboardingProfile?.logoDataUrl || onboardingProfile?.logoUrl || (user as any)?.universityLogoDataUrl || user?.universityLogoUrl)
 
     const stored = getAdminDashboardSettings(user?.id, defaults)
     if (stored) {
@@ -43,8 +44,7 @@ export default function AdminSettingsPage() {
     }
 
     setSettings(getDefaultAdminSettings(defaults))
-  }, [user?.id, user?.email, user?.motto, user?.universityName, user?.username])
-
+  }, [onboardingData?.profile, user?.id, user?.email, user?.motto, user?.universityName, user?.username])
   const updateField = <K extends keyof AdminDashboardSettings>(key: K, value: AdminDashboardSettings[K]) => {
     setSettings((prev) => ({ ...prev, [key]: value }))
   }
@@ -52,11 +52,11 @@ export default function AdminSettingsPage() {
   const handleLogoFileChange = (file: File | null) => {
     if (!file) return
     if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file')
+      toast({ variant: 'destructive', title: 'Invalid file', description: 'Please select an image file' })
       return
     }
     if (file.size > 2 * 1024 * 1024) {
-      toast.error('Logo file size must be 2MB or less')
+      toast({ variant: 'destructive', title: 'File too large', description: 'Logo file size must be 2MB or less' })
       return
     }
 
@@ -64,24 +64,25 @@ export default function AdminSettingsPage() {
     reader.onload = () => {
       if (typeof reader.result === 'string') {
         setLogoDataUrl(reader.result)
+        setLogoCleared(false)
       }
     }
     reader.onerror = () => {
-      toast.error('Failed to read selected logo file')
+      toast({ variant: 'destructive', title: 'Upload failed', description: 'Failed to read selected logo file' })
     }
     reader.readAsDataURL(file)
   }
 
-  const handleSave = (event: FormEvent<HTMLFormElement>) => {
+  const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     if (!user?.id) {
-      toast.error('Unable to save settings: user session not found')
+      toast({ variant: 'destructive', title: 'Unable to save', description: 'User session not found' })
       return
     }
 
     if (!settings.institutionName.trim()) {
-      toast.error('Institution name is required')
+      toast({ variant: 'destructive', title: 'Validation error', description: 'Institution name is required' })
       return
     }
 
@@ -98,14 +99,17 @@ export default function AdminSettingsPage() {
 
       saveAdminDashboardSettings(user.id, normalized)
 
-      const existingProfile = getUniversityOnboardingProfile(user.id)
-      saveUniversityOnboardingProfile(user.id, {
+      const onboardingPayload: any = {
         universityName: normalized.institutionName,
         description: normalized.institutionDescription,
-        logoDataUrl,
-        termsAccepted: existingProfile?.termsAccepted ?? true,
-        completedAt: existingProfile?.completedAt || new Date().toISOString(),
-      })
+      }
+      if (logoCleared) {
+        onboardingPayload.logoDataUrl = ''
+      } else if (logoDataUrl !== undefined) {
+        onboardingPayload.logoDataUrl = logoDataUrl
+      }
+
+      await saveOnboarding(onboardingPayload)
 
       updateUser({
         universityName: normalized.institutionName,
@@ -114,9 +118,9 @@ export default function AdminSettingsPage() {
       })
 
       setSettings(normalized)
-      toast.success('Settings saved successfully')
+      toast({ title: 'Saved', description: 'Settings saved successfully' })
     } catch {
-      toast.error('Failed to save settings')
+      toast({ variant: 'destructive', title: 'Save failed', description: 'Failed to save settings' })
     } finally {
       setIsSaving(false)
     }
@@ -197,7 +201,15 @@ export default function AdminSettingsPage() {
                 <p className="text-xs text-muted-foreground">PNG or JPG, maximum 2MB.</p>
               </div>
               {logoDataUrl && (
-                <Button type="button" variant="outline" size="icon" onClick={() => setLogoDataUrl(undefined)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    setLogoDataUrl(undefined)
+                    setLogoCleared(true)
+                  }}
+                >
                   <X className="h-4 w-4" />
                 </Button>
               )}
@@ -260,6 +272,8 @@ export default function AdminSettingsPage() {
           />
         </CardContent>
       </Card>
+
+      <SecurityDevicesPanel />
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isSaving} className="rounded-xl">

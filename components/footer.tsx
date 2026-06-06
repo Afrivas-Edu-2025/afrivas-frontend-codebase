@@ -1,3 +1,4 @@
+"use client"
 import Image from "next/image"
 import Link from "next/link"
 import {
@@ -8,6 +9,7 @@ import {
     Twitter,
     Youtube,
   } from "lucide-react"
+import { usePathname } from "next/navigation"
 
 const INSTAGRAM_URL = "https://www.instagram.com/afrivas_llc?igsh=MXhhZzFjZXh4aGc2Nw==&utm_source=ig_contact_invite"
 const FACEBOOK_URL = "https://www.facebook.com/share/15QcvDt8ew/?mibextid=wwXIfr"
@@ -17,6 +19,17 @@ const LINKEDIN_URL = "https://www.linkedin.com/company/afrivas-llc"
 const WHATSAPP_URL = "https://whatsapp.com/channel/0029Vb64oKD2phHMG5ZoHF3s"
 
 export default function Footer(){
+    const pathname = usePathname()
+    
+    // Hide the public footer on all dashboard route trees.
+    const isDashboardRoute =
+      pathname.startsWith("/admin") ||
+      pathname.startsWith("/lecturer") ||
+      pathname.startsWith("/student")
+
+    if (isDashboardRoute) {
+      return null
+    }
 
     return(
         <>

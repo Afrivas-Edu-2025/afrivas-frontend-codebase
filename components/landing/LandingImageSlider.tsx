@@ -6,12 +6,20 @@ import { cn } from "@/lib/utils"
 
 const SLIDER_IMAGES = [
   {
-    src: "/landing -page-slider-imgs/img1.png",
-    alt: "Afrivas dashboard view",
+    src: "/landing -page-slider-imgs/magnific_black-sierra-leonean-coll_2901328592.png",
+    alt: "Afrivas diverse Sierra Leonean professionals collaboration",
   },
   {
-    src: "/landing -page-slider-imgs/img2.png",
-    alt: "Afrivas student experience",
+    src: "/landing -page-slider-imgs/magnific_diverse-group-of-black-si_2901328587.png",
+    alt: "Afrivas diverse group of black Sierra Leonean professionals",
+  },
+  {
+    src: "/landing -page-slider-imgs/magnific_group-of-black-sierra-leo_2901328602.png",
+    alt: "Afrivas group of black Sierra Leonean professionals",
+  },
+  {
+    src: "/landing -page-slider-imgs/magnific_black-sierra-leonean-coll_2901328600.png",
+    alt: "Afrivas black Sierra Leonean professionals collaboration",
   },
 ]
 
@@ -36,14 +44,16 @@ export function LandingImageSlider() {
   if (SLIDER_IMAGES.length === 0) return null
 
   return (
-    <div className="relative w-full max-w-md mx-auto">
-      <div className="overflow-hidden rounded-[32px] border border-white/15 bg-black/40 shadow-2xl">
+    <div className="relative w-[768px] mx-auto p-4   rounded-xl shadow-lg
+    backdrop-blur-xl p-4 shadow-glass border transition-all duration-500 bg-white/60 dark:bg-gray-900/60 border-white/20 dark:border-gray-700/20 shadow-glass
+    ">
+      <div className="overflow-hidden rounded-lg border border-gray-300 shadow-inner">
         <div
           className="flex transition-transform duration-500 ease-out"
           style={{ transform: `translateX(-${current * 100}%)` }}
         >
           {SLIDER_IMAGES.map((image, index) => (
-            <div key={image.src} className="min-w-full flex items-center justify-center bg-black">
+            <div key={image.src} className="min-w-full flex items-center justify-center">
               <div className="relative w-full aspect-[4/3] max-h-[360px]">
                 <Image
                   src={image.src}
@@ -51,7 +61,7 @@ export function LandingImageSlider() {
                   fill
                   priority={index === 0}
                   sizes="(min-width: 1024px) 420px, 100vw"
-                  className="object-contain"
+                  className="object-cover"
                 />
               </div>
             </div>
@@ -63,7 +73,7 @@ export function LandingImageSlider() {
       <button
         type="button"
         onClick={prev}
-        className="absolute left-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/70 text-white hover:bg-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="absolute left-2 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-transparent text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
         aria-label="Previous slide"
       >
         <span className="sr-only">Previous</span>
@@ -74,7 +84,7 @@ export function LandingImageSlider() {
       <button
         type="button"
         onClick={next}
-        className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/70 text-white hover:bg-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-transparent text-white hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
         aria-label="Next slide"
       >
         <span className="sr-only">Next</span>

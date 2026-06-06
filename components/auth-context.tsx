@@ -4,12 +4,13 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { store } from '@/lib/store';
 import { adminApi } from '@/services/adminApi';
 import { disconnectRealtimeSocket } from '@/lib/socket/realtime-client';
+import { getPersister, getQueryClient } from '@/lib/react-query/queryClient';
 
 interface AuthContextType {
   user: any | null;
   token: string | null;
   loading: boolean;
-  login: (user: any, token: string) => void;
+  login: (user: any, accessToken: string, refreshToken?: string) => void;
   updateUser: (updates: Record<string, unknown>) => void;
   logout: () => void;
 }
@@ -52,11 +53,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false); // Set loading to false after checking localStorage
   }, []);
 
-  const login = async (user: any, token: string) => {
+  const login = async (user: any, accessToken: string, refreshToken?: string) => {
     setUser(user);
-    setToken(token);
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('accessToken', token);
+    setToken(accessToken);
+    localStorage.setItem('authToken', accessToken);
+    localStorage.setItem('accessToken', accessToken);
+    if (refreshToken) {
+      localStorage.setItem('refreshToken', refreshToken);
+    }
     localStorage.setItem('user', JSON.stringify(user));
   };
 
@@ -69,15 +73,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    const accessToken = localStorage.getItem('authToken') || localStorage.getItem('accessToken');
+    const refreshToken = localStorage.getItem('refreshToken');
+
+    if (accessToken && refreshToken) {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5050/api/v1'}/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ refreshToken }),
+      }).catch(() => {
+        // Local logout should still complete even if the network request fails.
+      });
+    }
+
     setUser(null);
     setToken(null);
     disconnectRealtimeSocket();
     localStorage.removeItem('authToken');
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
 
     // Clear active RTK Query cache on logout to ensure data security
     store.dispatch(adminApi.util.resetApiState());
+
+    // Clear TanStack Query cache (and persisted IndexedDB) on logout to avoid cross-account leakage.
+    try {
+      getQueryClient().clear();
+      void getPersister().removeClient();
+    } catch {
+      // Ignore cache clear failures; local logout should still complete.
+    }
   };
 
   return (

@@ -11,6 +11,7 @@ import { useAuth } from "@/components/auth-context"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import ThemeToggle from "@/components/theme-toggle"
 import {
   ChevronLeft,
   ChevronRight,
@@ -33,6 +34,7 @@ import {
   Layers,
   Download,
   ChartBar,
+  CheckCircle,
 } from "lucide-react"
 
 // Define the navigation item type
@@ -183,6 +185,21 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
               href: "/admin/departments",
               icon: <Building2 size={20} />,
               label: "Departments",
+            },
+            {
+              href: "/admin/attendance",
+              icon: <CheckCircle size={20} />,
+              label: "Attendance",
+            },
+            {
+              href: "/admin/assignments",
+              icon: <FileText size={20} />,
+              label: "Assignments",
+            },
+            {
+              href: "/admin/notices",
+              icon: <Bell size={20} />,
+              label: "Notices",
             },
             {
               href: "/admin/messages",
@@ -339,13 +356,24 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
           <Link href={`/${roleSegment}/dashboard`} className={cn("flex items-center group", isCollapsed && "justify-center")}>
             <div className="relative">
               <div className="absolute -inset-1 rounded-lg bg-gradient-to-tr from-primary-100 to-secondary-100 opacity-70 blur group-hover:opacity-100 transition duration-300" />
-              <Image 
-                src={logoSrc || "/placeholder.svg"} 
-                width={36} 
-                height={36} 
-                alt="Logo" 
-                className="relative rounded-lg border border-white/20 shadow-lg"
-              />
+              {typeof logoSrc === "string" && logoSrc.startsWith("data:") ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={logoSrc}
+                  width={36}
+                  height={36}
+                  alt="Logo"
+                  className="relative rounded-lg border border-white/20 shadow-lg"
+                />
+              ) : (
+                <Image 
+                  src={logoSrc || "/placeholder.svg"} 
+                  width={36} 
+                  height={36} 
+                  alt="Logo" 
+                  className="relative rounded-lg border border-white/20 shadow-lg"
+                />
+              )}
             </div>
             {!isCollapsed && (
               <span className="ml-3 font-bold text-xl tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
@@ -406,18 +434,18 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
                                 onClick={item.onClick}
                                 className={cn(
                                   "flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-300 group relative overflow-hidden",
-                                  isActive(item.href)
+                                  isActive(item.href || "")
                                     ? "text-white shadow-neon-primary"
                                     : "text-gray-600 dark:text-gray-400 hover:text-primary-100 dark:hover:text-primary-100 hover:bg-primary-100/5",
                                   isCollapsed && "justify-center",
                                 )}
                               >
-                                {isActive(item.href) && (
+                                {isActive(item.href || "") && (
                                   <div className="absolute inset-0 bg-gradient-to-r from-primary-100 to-primary-100/80 z-0" />
                                 )}
                                 <span className={cn(
                                   "relative z-10 transition-transform duration-300 group-hover:scale-110",
-                                  isActive(item.href) ? "text-white" : "text-current"
+                                  isActive(item.href || "") ? "text-white" : "text-current"
                                 )}>
                                   {item.icon}
                                 </span>
@@ -426,7 +454,7 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
                                     {item.label}
                                   </span>
                                 )}
-                                {!isActive(item.href) && !isCollapsed && (
+                                {!isActive(item.href || "") && !isCollapsed && (
                                   <div className="absolute left-0 w-1 h-0 bg-primary-100 group-hover:h-1/2 transition-all duration-300" />
                                 )}
                               </Link>
@@ -446,6 +474,19 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
             </div>
           </TooltipProvider>
         </ScrollArea>
+
+
+        {/* Theme Toggle Section */}
+        <div className={cn("px-6 py-4 border-t border-white/10 dark:border-white/5", isCollapsed && "px-0 flex justify-center")}>
+          <div className={cn("flex items-center gap-3", isCollapsed && "justify-center")}>
+            <ThemeToggle />
+            {!isCollapsed && (
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Theme Mode
+              </span>
+            )}
+          </div>
+        </div>
 
         {/* Version Info */}
         <div

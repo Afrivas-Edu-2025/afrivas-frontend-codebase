@@ -5,7 +5,7 @@ import { useEffect } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import DashboardLayout from "@/components/layout/dashboard-layout"
 import { useAuth } from "@/components/auth-context"
-import { isUniversityOnboardingComplete } from "@/lib/universityOnboarding"
+import { useUniversityOnboardingProfile } from "@/hooks/useUniversityOnboarding"
 
 export default function AdminOnboardingGuard({ children }: { children: ReactNode }) {
   const pathname = usePathname()
@@ -13,10 +13,13 @@ export default function AdminOnboardingGuard({ children }: { children: ReactNode
   const { user, loading } = useAuth()
 
   const isOnboardingRoute = pathname.startsWith("/admin/onboarding")
-  const onboardingDone = isUniversityOnboardingComplete(user?.id)
+
+  // Always check the database — never use localStorage as the authority here.
+  const { data: onboardingData, isLoading: onboardingLoading } = useUniversityOnboardingProfile()
+  const onboardingDone = Boolean(onboardingData?.isComplete)
 
   useEffect(() => {
-    if (loading || !user) return
+    if (loading || onboardingLoading || !user) return
 
     if (!onboardingDone && !isOnboardingRoute) {
       router.replace("/admin/onboarding")
@@ -26,9 +29,20 @@ export default function AdminOnboardingGuard({ children }: { children: ReactNode
     if (onboardingDone && isOnboardingRoute) {
       router.replace("/admin/dashboard")
     }
-  }, [loading, user, onboardingDone, isOnboardingRoute, router])
+  }, [loading, user, onboardingDone, isOnboardingRoute, onboardingLoading, router])
 
+  // Show nothing while we're waiting for auth or the DB check to resolve.
   if (loading || !user) return null
+
+  // While fetching onboarding status from DB, show a minimal spinner so
+  // the user isn't briefly redirected to the wrong page.
+  if (onboardingLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <div className="w-8 h-8 border-4 border-primary-100/30 border-t-primary-100 rounded-full animate-spin" />
+      </div>
+    )
+  }
 
   if (!onboardingDone && !isOnboardingRoute) return null
   if (onboardingDone && isOnboardingRoute) return null
@@ -39,4 +53,3 @@ export default function AdminOnboardingGuard({ children }: { children: ReactNode
 
   return <DashboardLayout userRole="ADMIN">{children}</DashboardLayout>
 }
-

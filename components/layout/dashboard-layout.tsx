@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 import UnifiedSidebar from "@/components/layout/unified-sidebar"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/components/auth-context"
-import { getUniversityOnboardingProfile } from "@/lib/universityOnboarding"
+import { useUniversityOnboardingProfile } from "@/hooks/useUniversityOnboarding"
 import DashboardRealtimeBridge from "@/components/realtime/dashboard-realtime-bridge"
 import {
   Breadcrumb,
@@ -32,9 +32,20 @@ export default function DashboardLayout({ children, userRole }: DashboardLayoutP
   const normalizedRole = String(userRole).toUpperCase() as "ADMIN" | "STUDENT" | "LECTURER"
   const roleSegment = normalizedRole.toLowerCase()
 
-  const onboardingProfile = normalizedRole === "ADMIN" ? getUniversityOnboardingProfile(user?.id) : null
-  const sidebarLogo = onboardingProfile?.logoDataUrl || user?.universityLogoUrl || user?.school?.schoolLogo || "/images/logo.webp"
-  const sidebarBrand = onboardingProfile?.universityName || user?.universityName || user?.school?.schoolName || "Afrivas"
+  const { data: onboardingData } = useUniversityOnboardingProfile({ enabled: normalizedRole === "ADMIN" })
+  const onboardingProfile = normalizedRole === "ADMIN" ? onboardingData?.profile : null
+  const sidebarLogo =
+    onboardingProfile?.logoDataUrl ||
+    onboardingProfile?.logoUrl ||
+    (user as any)?.universityLogoDataUrl ||
+    user?.universityLogoUrl ||
+    user?.school?.schoolLogo ||
+    "/images/logo.webp"
+  const sidebarBrand =
+    onboardingProfile?.universityName ||
+    user?.universityName ||
+    user?.school?.schoolName ||
+    "Afrivas"
 
   // Generate breadcrumbs from pathname
   const generateBreadcrumbs = () => {

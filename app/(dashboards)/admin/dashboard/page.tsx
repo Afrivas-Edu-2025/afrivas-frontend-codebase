@@ -2,6 +2,7 @@
 'use client';
 
 import type React from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -19,14 +20,14 @@ import {
   Zap,
   TrendingUp,
   Sparkles,
-  Search,
   ChevronRight,
   Target,
   Layers,
   ShieldCheck,
-  LayoutGrid
+  LayoutGrid,
+  RefreshCw,
 } from "lucide-react";
-import { AdminDashboardSkeleton, StatsCardSkeleton } from "@/components/skeletons/admin-dashboard-skeleton";
+import { AdminDashboardSkeleton } from "@/components/skeletons/admin-dashboard-skeleton";
 import { AuthDebugPanel } from "@/components/debug/auth-debug-panel";
 import { useGetDashboardStatsQuery } from "@/services/adminApi";
 import { TextGenerateEffect } from "@/components/aceternity/text-generate-effect";
@@ -34,8 +35,43 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
+const POLL_INTERVAL = 30_000;
+
 export default function AdminDashboard() {
-  const { data: dashboardData, isLoading, error } = useGetDashboardStatsQuery();
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const {
+    data: dashboardData,
+    isLoading,
+    error,
+    refetch,
+    isFetching,
+  } = useGetDashboardStatsQuery(undefined, {
+    pollingInterval: POLL_INTERVAL,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+  });
+
+  // Track last successful update time
+  useEffect(() => {
+    if (dashboardData && !isFetching) {
+      setLastUpdated(new Date());
+    }
+  }, [dashboardData, isFetching]);
+
+  const handleManualRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await refetch();
+    setIsRefreshing(false);
+  }, [refetch]);
+
+  const formatLastUpdated = (date: Date) => {
+    const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (diff < 5) return "just now";
+    if (diff < 60) return `${diff}s ago`;
+    return `${Math.floor(diff / 60)}m ago`;
+  };
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat().format(num);
@@ -102,12 +138,26 @@ export default function AdminDashboard() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="rounded-2xl border-white/20 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl font-bold h-12 px-6">
-            Full Diagnostics
-          </Button>
-          <Button variant="premium" className="rounded-2xl px-6 h-12 shadow-neon-primary group">
-            <Sparkles className="mr-2 h-4 w-4 group-hover:animate-pulse" />
-            Generate Prediction
+          {/* Live indicator */}
+          <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-slate-800">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+            </span>
+            <span className="text-[11px] font-bold text-emerald-500 uppercase tracking-wide">Live</span>
+            {lastUpdated && (
+              <span className="text-[10px] text-muted-foreground font-medium">
+                · {formatLastUpdated(lastUpdated)}
+              </span>
+            )}
+          </div>
+          <Button
+            variant="outline"
+            onClick={handleManualRefresh}
+            disabled={isRefreshing || isFetching}
+            className="rounded-2xl border-white/20 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl font-bold h-12 px-5"
+          >
+            <RefreshCw className={cn("h-4 w-4", (isRefreshing || isFetching) && "animate-spin")} />
           </Button>
         </div>
       </div>
@@ -144,7 +194,10 @@ export default function AdminDashboard() {
                     <CardTitle className="text-xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent italic">Enrollment Heuristics</CardTitle>
                     <CardDescription className="text-xs font-bold mt-1">Temporal analysis of structural ingress (12 months)</CardDescription>
                   </div>
-                  <Badge variant="glass" className="bg-primary-100/10 text-primary-100 border-primary-100/20 px-3 font-bold text-[10px]">Live Feed</Badge>
+                  <Badge variant="glass" className={cn("bg-primary-100/10 text-primary-100 border-primary-100/20 px-3 font-bold text-[10px] flex items-center gap-1.5", isFetching && "opacity-70")}>
+                    {isFetching ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" />}
+                    {isFetching ? "Syncing" : "Live Feed"}
+                  </Badge>
                 </div>
               </CardHeader>
               <CardContent className="p-8">
@@ -185,7 +238,10 @@ export default function AdminDashboard() {
                   <CardTitle className="text-xl font-bold tracking-tight text-primary-100">Temporal Logs</CardTitle>
                   <CardDescription className="text-xs font-bold mt-1 italic">Real-time institutional activity</CardDescription>
                 </div>
-                <Activity size={20} className="text-primary-100 opacity-20 animate-pulse" />
+                {isFetching
+                  ? <Loader2 size={18} className="text-primary-100 opacity-60 animate-spin" />
+                  : <Activity size={20} className="text-primary-100 opacity-20 animate-pulse" />
+                }
               </CardHeader>
               <CardContent className="p-8">
                 <div className="space-y-8">

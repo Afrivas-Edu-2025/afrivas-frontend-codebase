@@ -1288,6 +1288,96 @@ export const adminApi = createApi({
       invalidatesTags: ['Message'],
     }),
 
+    // ---- Attendance Management ----
+    markAttendance: builder.mutation<ApiResponse<any[]>, { classId: number; date: string; records: Array<{ studentId: number; status: string; note?: string }> }>({
+      query: (data) => ({ url: '/attendance', method: 'POST', body: data }),
+      invalidatesTags: ['Student'],
+    }),
+
+    getAllAttendance: builder.query<ApiResponse<any[]>, { classId?: number; studentId?: number; date?: string } | void>({
+      query: (params) => {
+        const p = new URLSearchParams();
+        if (params?.classId) p.set('classId', String(params.classId));
+        if (params?.studentId) p.set('studentId', String(params.studentId));
+        if (params?.date) p.set('date', params.date);
+        const qs = p.toString();
+        return `/attendance${qs ? `?${qs}` : ''}`;
+      },
+      providesTags: ['Student'],
+    }),
+
+    getAttendanceByClass: builder.query<ApiResponse<any[]>, { classId: number; date?: string }>({
+      query: ({ classId, date }) => `/attendance/class/${classId}${date ? `?date=${date}` : ''}`,
+      providesTags: ['Student'],
+    }),
+
+    getClassStudentsForAttendance: builder.query<ApiResponse<any[]>, number>({
+      query: (classId) => `/attendance/class/${classId}/students`,
+      providesTags: ['Student'],
+    }),
+
+    getStudentAttendance: builder.query<ApiResponse<any[]>, number>({
+      query: (studentId) => `/attendance/student/${studentId}`,
+      providesTags: ['Student'],
+    }),
+
+    updateAttendanceRecord: builder.mutation<ApiResponse<any>, { id: number; status: string; note?: string }>({
+      query: ({ id, ...data }) => ({ url: `/attendance/${id}`, method: 'PATCH', body: data }),
+      invalidatesTags: ['Student'],
+    }),
+
+    // ---- Assignment Management ----
+    createAssignment: builder.mutation<ApiResponse<any>, { moduleId: number; title: string; description?: string; dueDate: string; maxScore?: number }>({
+      query: (data) => ({ url: '/assignment', method: 'POST', body: data }),
+      invalidatesTags: ['Course'],
+    }),
+
+    getAdminAssignments: builder.query<ApiResponse<any[]>, void>({
+      query: () => '/assignment',
+      providesTags: ['Course'],
+    }),
+
+    getAssignmentsByModule: builder.query<ApiResponse<any[]>, number>({
+      query: (moduleId) => `/assignment/module/${moduleId}`,
+      providesTags: ['Course'],
+    }),
+
+    updateAssignment: builder.mutation<ApiResponse<any>, { id: number; data: any }>({
+      query: ({ id, data }) => ({ url: `/assignment/${id}`, method: 'PUT', body: data }),
+      invalidatesTags: ['Course'],
+    }),
+
+    deleteAssignment: builder.mutation<ApiResponse<void>, number>({
+      query: (id) => ({ url: `/assignment/${id}`, method: 'DELETE' }),
+      invalidatesTags: ['Course'],
+    }),
+
+    // ---- Notice Management ----
+    createNotice: builder.mutation<ApiResponse<any>, { title: string; body: string; moduleId?: number; visibility?: string }>({
+      query: (data) => ({ url: '/notice', method: 'POST', body: data }),
+      invalidatesTags: ['Stats'],
+    }),
+
+    getAdminNotices: builder.query<ApiResponse<any[]>, void>({
+      query: () => '/notice',
+      providesTags: ['Stats'],
+    }),
+
+    getNoticesByModule: builder.query<ApiResponse<any[]>, number>({
+      query: (moduleId) => `/notice/module/${moduleId}`,
+      providesTags: ['Stats'],
+    }),
+
+    updateNotice: builder.mutation<ApiResponse<any>, { id: number; data: any }>({
+      query: ({ id, data }) => ({ url: `/notice/${id}`, method: 'PUT', body: data }),
+      invalidatesTags: ['Stats'],
+    }),
+
+    deleteNotice: builder.mutation<ApiResponse<void>, number>({
+      query: (id) => ({ url: `/notice/${id}`, method: 'DELETE' }),
+      invalidatesTags: ['Stats'],
+    }),
+
     // Communication: Calendar Events
     getAdminCalendarEvents: builder.query<ApiResponse<CalendarEvent[]>, void>({
       query: () => '/communication/admin/events',
@@ -1425,4 +1515,26 @@ export const {
   useCreateAdminCalendarEventMutation,
   useUpdateAdminCalendarEventMutation,
   useGetVisibleCalendarEventsQuery,
+
+  // Attendance hooks
+  useMarkAttendanceMutation,
+  useGetAllAttendanceQuery,
+  useGetAttendanceByClassQuery,
+  useGetClassStudentsForAttendanceQuery,
+  useGetStudentAttendanceQuery,
+  useUpdateAttendanceRecordMutation,
+
+  // Assignment hooks
+  useCreateAssignmentMutation,
+  useGetAdminAssignmentsQuery,
+  useGetAssignmentsByModuleQuery,
+  useUpdateAssignmentMutation,
+  useDeleteAssignmentMutation,
+
+  // Notice hooks
+  useCreateNoticeMutation,
+  useGetAdminNoticesQuery,
+  useGetNoticesByModuleQuery,
+  useUpdateNoticeMutation,
+  useDeleteNoticeMutation,
 } = adminApi;

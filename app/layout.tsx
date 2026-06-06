@@ -9,6 +9,7 @@ import BootstrapQueries from './_components/BootstrapQueries';
 import OfflineBanner from './_components/OfflineBanner';
 import Navbar from "@/components/Navbar"
 import Footer from "@/components/footer"
+import VisitTracker from "@/components/visit-tracker";
 
 export const metadata: Metadata = {
   title: 'Afrivas Learning Platform',
@@ -37,6 +38,7 @@ export default function RootLayout({
           <ReactQueryProvider>
             <ReduxProvider>
               <AuthProvider>
+                <VisitTracker />
                 <OfflineBanner />
                 <BootstrapQueries />
                 <div className="navbar">
