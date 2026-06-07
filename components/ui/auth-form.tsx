@@ -24,7 +24,7 @@ export function AuthForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     password: "",
   });
 
@@ -34,7 +34,6 @@ export function AuthForm() {
     const statusCode = err?.status ?? err?.originalStatus;
     const payload = err?.data ?? err;
     const message =
-      payload?.error?.message ||
       payload?.message ||
       err?.error ||
       err?.message ||
@@ -63,9 +62,9 @@ export function AuthForm() {
     const errors: string[] = [];
     const newFieldErrors: Record<string, string> = {};
 
-    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.push("Valid email is required");
-      newFieldErrors.email = "Valid email is required";
+    if (!formData.username || formData.username.trim().length < 3) {
+      errors.push("Username must be at least 3 characters");
+      newFieldErrors.username = "Username must be at least 3 characters";
     }
     if (!formData.password) {
       errors.push("Password is required");
@@ -88,12 +87,10 @@ export function AuthForm() {
       localStorage.removeItem("accessToken");
 
       const loginData = {
-        email: formData.email,
+        username: formData.username,
         password: formData.password,
         clientContext: collectClientDeviceContext(),
       };
-
-      console.log("Sending loginData:", JSON.stringify(loginData, null, 2));
 
       const result = await loginUser(loginData).unwrap();
       if (!result.success) {
@@ -191,19 +188,19 @@ export function AuthForm() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email Input */}
+            {/* Username Input */}
             <div>
-              <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
+              <label htmlFor="username" className="text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
               <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="your.email@afrivas.edu"
-                value={formData.email}
+                id="username"
+                name="username"
+                type="text"
+                placeholder="Enter your username"
+                value={formData.username}
                 onChange={handleChange}
                 className="mt-1.5 h-11 bg-background-gray-50 dark:bg-gray-900/50 border-border-gray-200 dark:border-gray-700 focus:border-gray-600 dark:focus:border-secondary-300"
               />
-              {fieldErrors.email && <span className="text-red-600 text-sm mt-1">{fieldErrors.email}</span>}
+              {fieldErrors.username && <span className="text-red-600 text-sm mt-1">{fieldErrors.username}</span>}
             </div>
 
             {/* Password Input */}
@@ -240,7 +237,7 @@ export function AuthForm() {
             <Button
               type="submit"
               className="w-full h-11 bg-secondary-100 hover:bg-secondary-100/90 dark:bg-lemon-100 dark:hover:bg-lemon-200 text-white dark:text-secondary-100 font-medium transition-all duration-200"
-              disabled={isLoading || !formData.email || !formData.password}
+              disabled={isLoading || !formData.username || !formData.password}
             >
               {isLoading ? (
                 <>

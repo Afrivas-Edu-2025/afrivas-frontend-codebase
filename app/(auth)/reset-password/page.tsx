@@ -8,26 +8,35 @@ import { Loader2, Eye, EyeOff, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { useResetPasswordMutation } from "@/services/authServices";
 
+type Role = 'STUDENT' | 'LECTURER' | 'ADMIN';
+
+const ROLES: { value: Role; label: string }[] = [
+  { value: 'STUDENT', label: 'Student' },
+  { value: 'LECTURER', label: 'Lecturer' },
+  { value: 'ADMIN', label: 'Admin' },
+];
+
 function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const code = searchParams.get("code");
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [role, setRole] = useState<Role>('STUDENT');
   const [done, setDone] = useState(false);
   const [resetPassword, { isLoading }] = useResetPasswordMutation();
 
   useEffect(() => {
-    if (!token) {
-      toast({ variant: "destructive", title: "Invalid link", description: "No reset token found. Please request a new link." });
+    if (!code) {
+      toast({ variant: "destructive", title: "Invalid link", description: "No reset code found. Please request a new link." });
     }
-  }, [token]);
+  }, [code]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
+    if (!code) return;
 
     if (newPassword.length < 8) {
       toast({ variant: "destructive", title: "Weak password", description: "Password must be at least 8 characters." });
@@ -39,20 +48,20 @@ function ResetPasswordForm() {
     }
 
     try {
-      await resetPassword({ token, newPassword }).unwrap();
+      await resetPassword({ code, password: newPassword, role }).unwrap();
       setDone(true);
     } catch (err: any) {
-      const message = err?.data?.message || "Reset failed. The link may have expired.";
+      const message = err?.data?.message || "Reset failed. The code may have expired.";
       toast({ variant: "destructive", title: "Error", description: message });
     }
   };
 
-  if (!token) {
+  if (!code) {
     return (
       <div className="w-full bg-white dark:bg-gray-800/95 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 text-center space-y-4">
         <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Invalid reset link</h2>
-        <p className="text-gray-600 dark:text-gray-300 text-sm">This link is missing a token. Please request a new password reset.</p>
+        <p className="text-gray-600 dark:text-gray-300 text-sm">This link is missing a reset code. Please request a new password reset.</p>
         <Button className="w-full" onClick={() => router.push("/forgot-password")}>Request new link</Button>
       </div>
     );
@@ -83,6 +92,26 @@ function ResetPasswordForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Account type</label>
+          <div className="flex gap-2 mt-1.5">
+            {ROLES.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setRole(value)}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium border transition-colors ${
+                  role === value
+                    ? 'bg-secondary-100 text-white border-secondary-100 dark:bg-lemon-100 dark:text-secondary-100 dark:border-lemon-100'
+                    : 'bg-white dark:bg-gray-900/50 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-secondary-100 dark:hover:border-lemon-100'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div>
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">New Password</label>
           <div className="relative mt-1.5">

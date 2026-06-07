@@ -21,10 +21,24 @@ export type SignupUserRequest = {
   institutionId: string;
 };
 
+// login now uses username, not email
 export type LoginUserRequest = {
-  email: string;
+  username: string;
   password: string;
   clientContext?: Record<string, unknown>;
+};
+
+// forgot password requires username + role
+export type ForgotPasswordRequest = {
+  username: string;
+  role: 'ADMIN' | 'LECTURER' | 'STUDENT';
+};
+
+// reset password requires code (from email link), password, and role
+export type ResetPasswordRequest = {
+  code: string;
+  password: string;
+  role: 'ADMIN' | 'LECTURER' | 'STUDENT';
 };
 
 export const authApi = createApi({
@@ -62,35 +76,39 @@ export const authApi = createApi({
       }),
       transformErrorResponse: (response: any): ApiResponse => ({
         success: false,
-        message: response.data?.error?.message || response.data?.message || 'Login failed',
-        data: response.data?.error?.details || response.data?.errors || [],
-      }),
-    }),
-
-    forgotPassword: builder.mutation<ApiResponse, { email: string }>({
-      query: (data) => ({ url: '/auth/forgot-password', method: 'POST', body: data }),
-      transformResponse: (response: any): ApiResponse => ({
-        success: response.status === 'success',
-        message: response.message || 'Reset link sent',
-        data: null,
-      }),
-      transformErrorResponse: (response: any): ApiResponse => ({
-        success: false,
-        message: response.data?.error?.message || response.data?.message || 'Failed to send reset link',
+        message: response.data?.message || 'Login failed',
         data: [],
       }),
     }),
 
-    resetPassword: builder.mutation<ApiResponse, { token: string; newPassword: string }>({
-      query: (data) => ({ url: '/auth/reset-password', method: 'POST', body: data }),
+    // endpoint changed: /auth/forgot-password → /password/forget-password
+    // body changed: { email } → { username, role }
+    forgotPassword: builder.mutation<ApiResponse, ForgotPasswordRequest>({
+      query: (data) => ({ url: '/password/forget-password', method: 'POST', body: data }),
       transformResponse: (response: any): ApiResponse => ({
-        success: response.status === 'success',
+        success: true,
+        message: response.message || 'Reset code sent',
+        data: null,
+      }),
+      transformErrorResponse: (response: any): ApiResponse => ({
+        success: false,
+        message: response.data?.message || 'Failed to send reset code',
+        data: [],
+      }),
+    }),
+
+    // endpoint changed: /auth/reset-password → /password/update-password
+    // body changed: { token, newPassword } → { code, password, role }
+    resetPassword: builder.mutation<ApiResponse, ResetPasswordRequest>({
+      query: (data) => ({ url: '/password/update-password', method: 'POST', body: data }),
+      transformResponse: (response: any): ApiResponse => ({
+        success: true,
         message: response.message || 'Password updated',
         data: null,
       }),
       transformErrorResponse: (response: any): ApiResponse => ({
         success: false,
-        message: response.data?.error?.message || response.data?.message || 'Failed to reset password',
+        message: response.data?.message || 'Failed to reset password',
         data: [],
       }),
     }),
