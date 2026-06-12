@@ -239,7 +239,6 @@ export default function CreateCourseForm({ onSuccess }: CreateCourseFormProps) {
                 <SelectValue placeholder="Assign Lead" />
               </SelectTrigger>
               <SelectContent className="bg-slate-900/90 backdrop-blur-3xl border-white/10 rounded-2xl text-white">
-                <SelectItem value="" className="text-xs font-bold p-3 focus:bg-primary-100/20">Unassigned</SelectItem>
                 {lecturers.map((lecturer: any) => (
                   <SelectItem key={lecturer.id} value={lecturer.id} className="text-xs font-bold p-3 focus:bg-primary-100/20">
                     {lecturer.firstName} {lecturer.lastName}

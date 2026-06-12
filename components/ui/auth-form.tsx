@@ -39,7 +39,10 @@ export function AuthForm() {
       err?.message ||
       "An unexpected error occurred.";
 
-    const detailsErrors = payload?.error?.details?.errors || payload?.details?.errors || [];
+    const detailsErrors =
+      payload?.error?.details?.errors ||
+      payload?.details?.errors ||
+      (Array.isArray(payload?.data) ? payload.data : []);
     const fieldErrors = Array.isArray(detailsErrors)
       ? detailsErrors.reduce((acc: Record<string, string>, item: { field?: string; message?: string }) => {
           if (item?.field && item?.message) acc[item.field] = item.message;
@@ -87,7 +90,7 @@ export function AuthForm() {
       localStorage.removeItem("accessToken");
 
       const loginData = {
-        username: formData.username,
+        username: formData.username.toLowerCase().trim(),
         password: formData.password,
         clientContext: collectClientDeviceContext(),
       };
@@ -126,7 +129,6 @@ export function AuthForm() {
       setTimeout(() => router.push(dashboardRoute), 2000);
     } catch (err: any) {
       const normalized = parseLoginError(err);
-      console.error("Login error details:", normalized, "raw:", err);
       setFieldErrors(normalized.fieldErrors);
       toast({
         variant: "destructive",

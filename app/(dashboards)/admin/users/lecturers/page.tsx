@@ -60,6 +60,7 @@ interface Lecturer {
   userId?: string;
   firstName: string;
   lastName: string;
+  username: string;
   email: string;
   role: string;
   phoneNumber: string;
@@ -458,6 +459,10 @@ const LecturersPage = () => {
                     <div className="flex justify-between border-b border-primary-100/5 pb-2">
                       <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Email</span>
                       <span className="text-sm font-bold">{selectedLecturer.email}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-primary-100/5 pb-2">
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Username</span>
+                      <span className="text-sm font-bold">{selectedLecturer.username}</span>
                     </div>
                     <div className="flex justify-between border-b border-primary-100/5 pb-2">
                       <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Phone</span>

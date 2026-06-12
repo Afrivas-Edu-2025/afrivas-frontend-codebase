@@ -89,6 +89,7 @@ const mapLecturer = (lecturer: any) => {
     userId: String(user?.id ?? lecturer?.userId ?? ''),
     firstName: user?.firstName ?? '',
     lastName: user?.lastName ?? '',
+    username: user?.username ?? '',
     email: user?.email ?? '',
     role: user?.role ?? 'LECTURER',
     isActive: user?.isApproved ?? true,
@@ -123,6 +124,7 @@ const mapStudent = (student: any) => {
     userId: String(user?.id ?? student?.userId ?? ''),
     firstName: user?.firstName ?? '',
     lastName: user?.lastName ?? '',
+    username: user?.username ?? '',
     email: user?.email ?? '',
     role: user?.role ?? 'STUDENT',
     isActive: user?.isApproved ?? true,
@@ -1184,6 +1186,26 @@ export const adminApi = createApi({
       invalidatesTags: ['Lecturer', 'Stats'],
     }),
 
+    // Get lecturer's students (students enrolled in modules they teach)
+    getMyStudents: builder.query<ApiResponse<{ students: any[]; classes: any[] }>, void>({
+      query: () => '/users/lecturer/my-students',
+      transformResponse: (response: any) => ({
+        success: true,
+        message: response?.message || 'Students fetched successfully',
+        data: response?.data || { students: [], classes: [] },
+      }),
+    }),
+
+    // Get lecturer's classes (classes for modules they teach)
+    getMyClasses: builder.query<ApiResponse<any[]>, void>({
+      query: () => '/users/lecturer/my-classes',
+      transformResponse: (response: any) => ({
+        success: true,
+        message: response?.message || 'Classes fetched successfully',
+        data: response?.data || [],
+      }),
+    }),
+
     // Level Management
     getLevels: builder.query<ApiResponse<Array<{ id: number; levelName: string }>>, void>({
       query: () => '/level',
@@ -1493,6 +1515,8 @@ export const {
   useApproveLecturerMutation,
   useRejectLecturerMutation,
   useGetLecturerDetailsQuery,
+  useGetMyStudentsQuery,
+  useGetMyClassesQuery,
   useDeleteLecturerFromUsersMutation,
 
   // Grade statistics hooks

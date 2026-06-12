@@ -73,7 +73,7 @@ export default function CreateStudentForm({ onSuccess }: CreateStudentFormProps)
         user: {
           firstName: formData.firstName,
           lastName: formData.lastName,
-          username: formData.email.split('@')[0],
+          username: formData.email.split('@')[0].toLowerCase(),
           email: formData.email,
           password: formData.password,
           role: 'STUDENT',

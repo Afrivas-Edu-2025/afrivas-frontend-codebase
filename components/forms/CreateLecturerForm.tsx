@@ -71,7 +71,7 @@ export default function CreateLecturerForm({ onSuccess }: CreateLecturerFormProp
         user: {
           firstName: formData.firstName,
           lastName: formData.lastName,
-          username: formData.email.split('@')[0],
+          username: formData.email.split('@')[0].toLowerCase(),
           email: formData.email,
           password: formData.password,
           role: 'LECTURER',
@@ -167,6 +167,19 @@ export default function CreateLecturerForm({ onSuccess }: CreateLecturerFormProp
               className={errors.email ? 'border-red-500' : ''}
             />
             {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+          </div>
+
+          <div>
+            <Label htmlFor="username">Generated Username</Label>
+            <Input
+              id="username"
+              value={formData.email ? formData.email.split('@')[0].toLowerCase() : ''}
+              readOnly
+              className="bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Auto-generated from email. Lecturer will use this to sign in.
+            </p>
           </div>
 
           <div>

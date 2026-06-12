@@ -61,6 +61,7 @@ interface Student {
   userId?: string
   firstName: string
   lastName: string
+  username: string
   email: string
   role: string
   phoneNumber: string
@@ -511,6 +512,10 @@ const StudentsPage = () => {
                     <div className="flex justify-between border-b border-primary-100/5 pb-2">
                       <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Email</span>
                       <span className="text-sm font-bold">{selectedStudent.email}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-primary-100/5 pb-2">
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Username</span>
+                      <span className="text-sm font-bold">{selectedStudent.username}</span>
                     </div>
                     <div className="flex justify-between border-b border-primary-100/5 pb-2">
                       <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Phone</span>
