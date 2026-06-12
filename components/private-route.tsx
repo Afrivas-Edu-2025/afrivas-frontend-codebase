@@ -27,9 +27,13 @@ export default function PrivateRoute({
       if (!token || !user) {
         router.push('/login');
       } else if (!normalizedAllowedRoles.includes(normalizedUserRole)) {
-        // If an admin hits a non-admin route, always send them back to the admin dashboard
+        // Redirect to the correct dashboard based on role
         if (normalizedUserRole === 'ADMIN') {
           router.replace('/admin/dashboard');
+        } else if (normalizedUserRole === 'SUPER_ADMIN') {
+          router.replace('/super-admin/dashboard');
+        } else if (normalizedUserRole === 'STAFF') {
+          router.replace('/staff/dashboard');
         } else {
           // For other roles, send them to the public home page
           router.replace('/');

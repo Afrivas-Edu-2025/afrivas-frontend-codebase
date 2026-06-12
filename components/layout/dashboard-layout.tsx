@@ -21,7 +21,7 @@ import { Home } from "lucide-react"
 
 type DashboardLayoutProps = {
   children: ReactNode
-  userRole: "ADMIN" | "STUDENT" | "LECTURER" | "admin" | "student" | "lecturer"
+  userRole: "ADMIN" | "STUDENT" | "LECTURER" | "SUPER_ADMIN" | "STAFF" | "admin" | "student" | "lecturer" | "super_admin" | "staff"
 }
 
 export default function DashboardLayout({ children, userRole }: DashboardLayoutProps) {
@@ -29,7 +29,7 @@ export default function DashboardLayout({ children, userRole }: DashboardLayoutP
   const [isMobile, setIsMobile] = useState(false)
   const pathname = usePathname()
   const { user } = useAuth()
-  const normalizedRole = String(userRole).toUpperCase() as "ADMIN" | "STUDENT" | "LECTURER"
+  const normalizedRole = String(userRole).toUpperCase() as "ADMIN" | "STUDENT" | "LECTURER" | "SUPER_ADMIN" | "STAFF"
   const roleSegment = normalizedRole.toLowerCase()
 
   const { data: onboardingData } = useUniversityOnboardingProfile({ enabled: normalizedRole === "ADMIN" })

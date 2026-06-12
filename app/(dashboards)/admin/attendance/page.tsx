@@ -3,7 +3,8 @@
 import { useState, useMemo } from 'react';
 import {
   CheckCircle, XCircle, Clock, AlertCircle, Users, BookOpen,
-  Calendar, Search, ChevronDown, Save, RotateCcw, TrendingUp, Filter
+  Calendar, Search, ChevronDown, Save, RotateCcw, TrendingUp, Filter,
+  History, Eye, Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,8 +19,12 @@ import {
   useGetClassesQuery,
   useGetClassStudentsForAttendanceQuery,
   useGetAttendanceByClassQuery,
+  useGetStudentAttendanceQuery,
   useMarkAttendanceMutation,
 } from '@/services/adminApi';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
 
 const STATUS_OPTIONS = [
   { value: 'PRESENT', label: 'Present', icon: CheckCircle, color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
@@ -33,6 +38,12 @@ export default function AdminAttendancePage() {
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [search, setSearch] = useState('');
   const [attendanceMap, setAttendanceMap] = useState<Record<number, string>>({});
+  const [trailStudent, setTrailStudent] = useState<any | null>(null);
+
+  const { data: trailData, isLoading: trailLoading } = useGetStudentAttendanceQuery(
+    trailStudent?.id, { skip: !trailStudent }
+  );
+  const trailRecords: any[] = trailData?.data || [];
 
   const { data: classesData, isLoading: classesLoading } = useGetClassesQuery();
   const classes = classesData?.data || [];
@@ -237,14 +248,14 @@ export default function AdminAttendancePage() {
                       return (
                         <TableRow key={student.id} className="border-white/5 hover:bg-white/5 transition-colors">
                           <TableCell>
-                            <div className="flex items-center gap-3">
+                            <button onClick={() => setTrailStudent(student)} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                               <div className="w-8 h-8 rounded-full bg-primary-100/20 flex items-center justify-center text-primary-100 font-bold text-xs">
                                 {student.user?.firstName?.[0]}{student.user?.lastName?.[0]}
                               </div>
                               <span className="font-semibold text-sm">
                                 {student.user?.firstName} {student.user?.lastName}
                               </span>
-                            </div>
+                            </button>
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">{student.user?.email}</TableCell>
                           <TableCell>
@@ -282,6 +293,53 @@ export default function AdminAttendancePage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Student Attendance Trail Dialog */}
+      <Dialog open={!!trailStudent} onOpenChange={(open) => { if (!open) setTrailStudent(null); }}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <History className="w-5 h-5 text-primary-100" />
+              Attendance Trail — {trailStudent?.user?.firstName} {trailStudent?.user?.lastName}
+            </DialogTitle>
+          </DialogHeader>
+          {trailLoading ? (
+            <div className="flex items-center justify-center h-40">
+              <Loader2 className="w-8 h-8 animate-spin text-primary-100" />
+            </div>
+          ) : trailRecords.length === 0 ? (
+            <div className="text-center py-12 opacity-40">
+              <History className="w-12 h-12 mx-auto mb-3" />
+              <p className="font-bold text-sm">No attendance records found</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {trailRecords.map((record: any) => {
+                const statusOpt = STATUS_OPTIONS.find((s) => s.value === record.status) || STATUS_OPTIONS[0];
+                const StatusIcon = statusOpt.icon;
+                return (
+                  <div key={record.id} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10">
+                    <div className="flex items-center gap-4">
+                      <div className={cn("p-2 rounded-xl", statusOpt.color)}>
+                        <StatusIcon className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm">{record.class?.module?.moduleName || `Class #${record.classId}`}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(record.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className={cn('font-bold text-[10px] uppercase', statusOpt.color)}>
+                      {statusOpt.label}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

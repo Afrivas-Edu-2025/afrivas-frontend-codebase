@@ -28,7 +28,7 @@ import {
 } from '@/services/adminApi';
 
 type NoticeForm = { moduleId: string; title: string; body: string; visibility: string };
-const EMPTY_FORM: NoticeForm = { moduleId: '', title: '', body: '', visibility: 'ALL' };
+const EMPTY_FORM: NoticeForm = { moduleId: 'all', title: '', body: '', visibility: 'ALL' };
 
 const VISIBILITY_OPTS = [
   { value: 'ALL', label: 'Everyone', color: 'text-blue-500 bg-blue-500/10 border-blue-500/20' },
@@ -62,7 +62,7 @@ export default function AdminNoticesPage() {
 
   const openCreate = () => { setForm(EMPTY_FORM); setEditId(null); setShowForm(true); };
   const openEdit = (n: any) => {
-    setForm({ moduleId: n.moduleId ? String(n.moduleId) : '', title: n.title, body: n.body, visibility: n.visibility });
+    setForm({ moduleId: n.moduleId ? String(n.moduleId) : 'all', title: n.title, body: n.body, visibility: n.visibility });
     setEditId(n.id);
     setShowForm(true);
   };
@@ -73,7 +73,7 @@ export default function AdminNoticesPage() {
       title: form.title,
       body: form.body,
       visibility: form.visibility as any,
-      moduleId: form.moduleId ? Number(form.moduleId) : undefined,
+      moduleId: form.moduleId && form.moduleId !== 'all' ? Number(form.moduleId) : undefined,
     };
     try {
       if (editId) {
@@ -276,7 +276,7 @@ export default function AdminNoticesPage() {
                     <SelectValue placeholder="All modules" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All modules</SelectItem>
+                    <SelectItem value="all">All modules</SelectItem>
                     {courses.map((c) => (
                       <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
                     ))}

@@ -49,7 +49,7 @@ type NavItem = {
 
 // Define the props for the UnifiedSidebar component
 type UnifiedSidebarProps = {
-  userRole: "ADMIN" | "STUDENT" | "LECTURER"
+  userRole: "ADMIN" | "STUDENT" | "LECTURER" | "SUPER_ADMIN" | "STAFF"
   logoSrc?: string
   brandName?: string
   onToggle?: (collapsed: boolean) => void
@@ -63,7 +63,7 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
   const router = useRouter()
   const { logout } = useAuth()
   const sidebarRef = useRef<HTMLElement>(null)
-  const normalizedRole = String(userRole).toUpperCase() as "ADMIN" | "STUDENT" | "LECTURER"
+  const normalizedRole = String(userRole).toUpperCase() as "ADMIN" | "STUDENT" | "LECTURER" | "SUPER_ADMIN" | "STAFF"
   const roleSegment = normalizedRole.toLowerCase()
 
   // Check if the current path matches the nav item href
@@ -307,6 +307,40 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
               href: "/lecturer/dashboard/calendar",
               icon: <Calendar size={20} />,
               label: "Calendar",
+            },
+          ],
+          Common: commonItems,
+        }
+      case "SUPER_ADMIN":
+        return {
+          Main: [
+            {
+              href: "/super-admin/dashboard",
+              icon: <LayoutDashboard size={20} />,
+              label: "Dashboard",
+            },
+          ],
+          Management: [
+            {
+              href: "/super-admin/universities",
+              icon: <Building2 size={20} />,
+              label: "Universities",
+            },
+            {
+              href: "/super-admin/users",
+              icon: <Users size={20} />,
+              label: "All Users",
+            },
+          ],
+          Common: commonItems,
+        }
+      case "STAFF":
+        return {
+          Main: [
+            {
+              href: "/staff/dashboard",
+              icon: <LayoutDashboard size={20} />,
+              label: "Dashboard",
             },
           ],
           Common: commonItems,

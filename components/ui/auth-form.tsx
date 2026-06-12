@@ -116,6 +116,10 @@ export function AuthForm() {
           ? "/student/dashboard"
           : role === "LECTURER"
           ? "/lecturer/dashboard"
+          : role === "SUPER_ADMIN"
+          ? "/super-admin/dashboard"
+          : role === "STAFF"
+          ? "/staff/dashboard"
           : !Boolean((result.data.user as any)?.onboardingCompletedAt)
           ? "/admin/onboarding"
           : "/admin/dashboard";
