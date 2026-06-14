@@ -16,8 +16,8 @@ export default function StudentLayout({
 }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <PrivateRoute allowedRoles={['student']}>
-        <DashboardLayout userRole="student">{children}</DashboardLayout>
+      <PrivateRoute allowedRoles={["STUDENT"]}>
+        <DashboardLayout userRole="STUDENT">{children}</DashboardLayout>
       </PrivateRoute>
     </ThemeProvider>
   )

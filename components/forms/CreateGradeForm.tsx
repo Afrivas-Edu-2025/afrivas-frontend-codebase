@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useCreateGradeMutation, useGetStudentsQuery, useGetCoursesQuery, useGetClassesQuery } from '@/services/adminApi'
+import { useCreateGradeMutation } from '@/services/adminApi'
 
 interface CreateGradeFormProps {
   onSuccess?: () => void

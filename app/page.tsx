@@ -22,8 +22,17 @@ export default function Home() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && token && user?.role === "ADMIN") {
-      router.replace("/admin/dashboard")
+    if (!loading && token && user?.role) {
+      const role = String(user.role).toUpperCase();
+      const routeMap: Record<string, string> = {
+        ADMIN: "/admin/dashboard",
+        SUPER_ADMIN: "/super-admin/dashboard",
+        STAFF: "/staff/dashboard",
+        STUDENT: "/student/dashboard",
+        LECTURER: "/lecturer/dashboard",
+      };
+      const dest = routeMap[role];
+      if (dest) router.replace(dest);
     }
   }, [loading, token, user, router])
 

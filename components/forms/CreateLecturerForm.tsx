@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label"
 import { UserPlus, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useCreateLecturerMutation } from '@/services/adminApi'
+import { useCreateLecturerMutation, useGetDepartmentsQuery, useGetFacultiesQuery } from '@/services/adminApi'
 
 interface CreateLecturerFormProps {
   onSuccess?: () => void
@@ -17,6 +17,8 @@ interface CreateLecturerFormProps {
 export default function CreateLecturerForm({ onSuccess }: CreateLecturerFormProps) {
   const [open, setOpen] = useState(false)
   const [createLecturer, { isLoading }] = useCreateLecturerMutation()
+  const { data: facultiesData } = useGetFacultiesQuery()
+  const { data: departmentsData } = useGetDepartmentsQuery()
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -25,8 +27,9 @@ export default function CreateLecturerForm({ onSuccess }: CreateLecturerFormProp
     password: '',
     gender: '',
     dob: '',
-    faculty: '',
-    department: '',
+    facultyId: '',
+    departmentId: '',
+    position: 'LECTURER',
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -49,8 +52,9 @@ export default function CreateLecturerForm({ onSuccess }: CreateLecturerFormProp
     if (!formData.password || formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters'
     if (!formData.gender) newErrors.gender = 'Gender is required'
     if (!formData.dob) newErrors.dob = 'Date of birth is required'
-    if (!formData.faculty) newErrors.faculty = 'Faculty is required'
-    if (!formData.department) newErrors.department = 'Department is required'
+    if (!formData.facultyId) newErrors.facultyId = 'Faculty is required'
+    if (!formData.departmentId) newErrors.departmentId = 'Department is required'
+    if (!formData.position) newErrors.position = 'Position is required'
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -63,16 +67,32 @@ export default function CreateLecturerForm({ onSuccess }: CreateLecturerFormProp
 
     try {
       const lecturerData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password,
-        gender: formData.gender.toUpperCase(),
-        dob: new Date(formData.dob).toISOString(),
-        role: 'LECTURER',
-        faculty: formData.faculty,
-        department: formData.department,
-        institutionId: '550e8400-e29b-41d4-a716-446655440000',
+        appOrigin: window.location.origin,
+        user: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          username: formData.email.split('@')[0].toLowerCase(),
+          email: formData.email,
+          password: formData.password,
+          role: 'LECTURER',
+          facultyId: Number(formData.facultyId),
+          deptId: Number(formData.departmentId),
+        },
+        userProfile: {
+          gender: formData.gender.toUpperCase(),
+          bio: `Lecturer profile for ${formData.firstName} ${formData.lastName}`,
+          address: 'Not provided',
+          city: 'Not provided',
+          country: 'Not provided',
+          birthDate: new Date(formData.dob).toISOString(),
+          phoneNumber: 'N/A',
+          nationalId: `NID-${Date.now()}`,
+          passportNumber: `PASS-${Date.now()}`,
+          profilePicture: 'https://via.placeholder.com/150',
+        },
+        lecturer: {
+          position: formData.position,
+        },
       }
 
       await createLecturer(lecturerData).unwrap()
@@ -86,8 +106,9 @@ export default function CreateLecturerForm({ onSuccess }: CreateLecturerFormProp
         password: '',
         gender: '',
         dob: '',
-        faculty: '',
-        department: '',
+        facultyId: '',
+        departmentId: '',
+        position: 'LECTURER',
       })
       setErrors({})
       onSuccess?.()
@@ -149,6 +170,19 @@ export default function CreateLecturerForm({ onSuccess }: CreateLecturerFormProp
           </div>
 
           <div>
+            <Label htmlFor="username">Generated Username</Label>
+            <Input
+              id="username"
+              value={formData.email ? formData.email.split('@')[0].toLowerCase() : ''}
+              readOnly
+              className="bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Auto-generated from email. Lecturer will use this to sign in.
+            </p>
+          </div>
+
+          <div>
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
@@ -171,7 +205,6 @@ export default function CreateLecturerForm({ onSuccess }: CreateLecturerFormProp
                 <SelectContent>
                   <SelectItem value="male">Male</SelectItem>
                   <SelectItem value="female">Female</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
               {errors.gender && <p className="text-red-500 text-sm mt-1">{errors.gender}</p>}
@@ -190,27 +223,54 @@ export default function CreateLecturerForm({ onSuccess }: CreateLecturerFormProp
           </div>
 
           <div>
-            <Label htmlFor="faculty">Faculty</Label>
-            <Input
-              id="faculty"
-              value={formData.faculty}
-              onChange={(e) => handleInputChange('faculty', e.target.value)}
-              placeholder="Enter faculty"
-              className={errors.faculty ? 'border-red-500' : ''}
-            />
-            {errors.faculty && <p className="text-red-500 text-sm mt-1">{errors.faculty}</p>}
+            <Label htmlFor="facultyId">Faculty</Label>
+            <Select value={formData.facultyId} onValueChange={(value) => handleInputChange('facultyId', value)}>
+              <SelectTrigger className={errors.facultyId ? 'border-red-500' : ''}>
+                <SelectValue placeholder="Select faculty" />
+              </SelectTrigger>
+              <SelectContent>
+                {(facultiesData?.data || []).map((faculty) => (
+                  <SelectItem key={faculty.id} value={faculty.id}>
+                    {faculty.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.facultyId && <p className="text-red-500 text-sm mt-1">{errors.facultyId}</p>}
           </div>
 
           <div>
-            <Label htmlFor="department">Department</Label>
-            <Input
-              id="department"
-              value={formData.department}
-              onChange={(e) => handleInputChange('department', e.target.value)}
-              placeholder="Enter department"
-              className={errors.department ? 'border-red-500' : ''}
-            />
-            {errors.department && <p className="text-red-500 text-sm mt-1">{errors.department}</p>}
+            <Label htmlFor="departmentId">Department</Label>
+            <Select value={formData.departmentId} onValueChange={(value) => handleInputChange('departmentId', value)}>
+              <SelectTrigger className={errors.departmentId ? 'border-red-500' : ''}>
+                <SelectValue placeholder="Select department" />
+              </SelectTrigger>
+              <SelectContent>
+                {(departmentsData?.data || [])
+                  .filter((department) => !formData.facultyId || department.facultyId === formData.facultyId)
+                  .map((department) => (
+                    <SelectItem key={department.id} value={department.id}>
+                      {department.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            {errors.departmentId && <p className="text-red-500 text-sm mt-1">{errors.departmentId}</p>}
+          </div>
+
+          <div>
+            <Label htmlFor="position">Position</Label>
+            <Select value={formData.position} onValueChange={(value) => handleInputChange('position', value)}>
+              <SelectTrigger className={errors.position ? 'border-red-500' : ''}>
+                <SelectValue placeholder="Select position" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="LECTURER">Lecturer</SelectItem>
+                <SelectItem value="HEAD_OF_DEPARTMENT">Head of Department</SelectItem>
+                <SelectItem value="DEAN">Dean</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.position && <p className="text-red-500 text-sm mt-1">{errors.position}</p>}
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">

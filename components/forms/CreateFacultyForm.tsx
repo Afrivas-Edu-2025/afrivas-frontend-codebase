@@ -37,7 +37,7 @@ export default function CreateFacultyForm({ onSuccess }: CreateFacultyFormProps)
     const newErrors: Record<string, string> = {}
 
     if (!formData.name.trim()) newErrors.name = 'Faculty name is required'
-    if (formData.name.length < 3) newErrors.name = 'Faculty name must be at least 3 characters'
+    if (formData.name.length < 5) newErrors.name = 'Faculty name must be at least 5 characters'
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0

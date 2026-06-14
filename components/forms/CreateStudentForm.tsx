@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label"
 import { UserPlus, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useCreateStudentMutation } from '@/services/adminApi'
+import { useCreateStudentMutation, useGetDepartmentsQuery, useGetFacultiesQuery, useGetLevelsQuery } from '@/services/adminApi'
 
 interface CreateStudentFormProps {
   onSuccess?: () => void
@@ -17,6 +17,9 @@ interface CreateStudentFormProps {
 export default function CreateStudentForm({ onSuccess }: CreateStudentFormProps) {
   const [open, setOpen] = useState(false)
   const [createStudent, { isLoading }] = useCreateStudentMutation()
+  const { data: facultiesData } = useGetFacultiesQuery()
+  const { data: departmentsData } = useGetDepartmentsQuery()
+  const { data: levelsData } = useGetLevelsQuery()
   const [formError, setFormError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
@@ -26,10 +29,9 @@ export default function CreateStudentForm({ onSuccess }: CreateStudentFormProps)
     password: '',
     gender: '',
     dob: '',
-    year: '',
-    semester: '',
-    faculty: '',
-    department: '',
+    levelId: '',
+    facultyId: '',
+    departmentId: '',
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -52,10 +54,9 @@ export default function CreateStudentForm({ onSuccess }: CreateStudentFormProps)
     if (!formData.password || formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters'
     if (!formData.gender) newErrors.gender = 'Gender is required'
     if (!formData.dob) newErrors.dob = 'Date of birth is required'
-    if (!formData.year) newErrors.year = 'Year is required'
-    if (!formData.semester) newErrors.semester = 'Semester is required'
-    if (!formData.faculty) newErrors.faculty = 'Faculty is required'
-    if (!formData.department) newErrors.department = 'Department is required'
+    if (!formData.levelId) newErrors.levelId = 'Level is required'
+    if (!formData.facultyId) newErrors.facultyId = 'Faculty is required'
+    if (!formData.departmentId) newErrors.departmentId = 'Department is required'
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -68,18 +69,33 @@ export default function CreateStudentForm({ onSuccess }: CreateStudentFormProps)
 
     try {
       const studentData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password,
-        gender: formData.gender.toUpperCase(),
-        dob: new Date(formData.dob).toISOString(),
-        role: 'STUDENT',
-        year: formData.year,
-        semester: formData.semester,
-        faculty: formData.faculty,
-        department: formData.department,
-        institutionId: '550e8400-e29b-41d4-a716-446655440000',
+        appOrigin: window.location.origin,
+        user: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          username: formData.email.split('@')[0].toLowerCase(),
+          email: formData.email,
+          password: formData.password,
+          role: 'STUDENT',
+          facultyId: Number(formData.facultyId),
+          deptId: Number(formData.departmentId),
+        },
+        userProfile: {
+          gender: formData.gender.toUpperCase(),
+          bio: `Student profile for ${formData.firstName} ${formData.lastName}`,
+          address: 'Not provided',
+          city: 'Not provided',
+          country: 'Not provided',
+          birthDate: new Date(formData.dob).toISOString(),
+          phoneNumber: 'N/A',
+          nationalId: `NID-${Date.now()}`,
+          passportNumber: `PASS-${Date.now()}`,
+          profilePicture: 'https://via.placeholder.com/150',
+        },
+        student: {
+          studentId: Math.floor(100000 + Math.random() * 900000),
+          levelId: Number(formData.levelId),
+        },
       }
 
       await createStudent(studentData).unwrap()
@@ -93,10 +109,9 @@ export default function CreateStudentForm({ onSuccess }: CreateStudentFormProps)
         password: '',
         gender: '',
         dob: '',
-        year: '',
-        semester: '',
-        faculty: '',
-        department: '',
+        levelId: '',
+        facultyId: '',
+        departmentId: '',
       })
       setErrors({})
       onSuccess?.()
@@ -185,7 +200,6 @@ export default function CreateStudentForm({ onSuccess }: CreateStudentFormProps)
                 <SelectContent>
                   <SelectItem value="male">Male</SelectItem>
                   <SelectItem value="female">Female</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
               {errors.gender && <p className="text-red-500 text-sm mt-1">{errors.gender}</p>}
@@ -205,57 +219,57 @@ export default function CreateStudentForm({ onSuccess }: CreateStudentFormProps)
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="year">Year</Label>
-              <Select value={formData.year} onValueChange={(value) => handleInputChange('year', value)}>
-                <SelectTrigger className={errors.year ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Select year" />
+              <Label htmlFor="levelId">Level</Label>
+              <Select value={formData.levelId} onValueChange={(value) => handleInputChange('levelId', value)}>
+                <SelectTrigger className={errors.levelId ? 'border-red-500' : ''}>
+                  <SelectValue placeholder="Select level" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">Year 1</SelectItem>
-                  <SelectItem value="2">Year 2</SelectItem>
-                  <SelectItem value="3">Year 3</SelectItem>
-                  <SelectItem value="4">Year 4</SelectItem>
+                  {(levelsData?.data || []).map((level) => (
+                    <SelectItem key={level.id} value={String(level.id)}>
+                      {level.levelName}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-              {errors.year && <p className="text-red-500 text-sm mt-1">{errors.year}</p>}
-            </div>
-            <div>
-              <Label htmlFor="semester">Semester</Label>
-              <Select value={formData.semester} onValueChange={(value) => handleInputChange('semester', value)}>
-                <SelectTrigger className={errors.semester ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Select semester" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">Semester 1</SelectItem>
-                  <SelectItem value="2">Semester 2</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.semester && <p className="text-red-500 text-sm mt-1">{errors.semester}</p>}
+              {errors.levelId && <p className="text-red-500 text-sm mt-1">{errors.levelId}</p>}
             </div>
           </div>
 
           <div>
-            <Label htmlFor="faculty">Faculty</Label>
-            <Input
-              id="faculty"
-              value={formData.faculty}
-              onChange={(e) => handleInputChange('faculty', e.target.value)}
-              placeholder="Enter faculty"
-              className={errors.faculty ? 'border-red-500' : ''}
-            />
-            {errors.faculty && <p className="text-red-500 text-sm mt-1">{errors.faculty}</p>}
+            <Label htmlFor="facultyId">Faculty</Label>
+            <Select value={formData.facultyId} onValueChange={(value) => handleInputChange('facultyId', value)}>
+              <SelectTrigger className={errors.facultyId ? 'border-red-500' : ''}>
+                <SelectValue placeholder="Select faculty" />
+              </SelectTrigger>
+              <SelectContent>
+                {(facultiesData?.data || []).map((faculty) => (
+                  <SelectItem key={faculty.id} value={faculty.id}>
+                    {faculty.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.facultyId && <p className="text-red-500 text-sm mt-1">{errors.facultyId}</p>}
           </div>
 
           <div>
-            <Label htmlFor="department">Department</Label>
-            <Input
-              id="department"
-              value={formData.department}
-              onChange={(e) => handleInputChange('department', e.target.value)}
-              placeholder="Enter department"
-              className={errors.department ? 'border-red-500' : ''}
-            />
-            {errors.department && <p className="text-red-500 text-sm mt-1">{errors.department}</p>}
+            <Label htmlFor="departmentId">Department</Label>
+            <Select value={formData.departmentId} onValueChange={(value) => handleInputChange('departmentId', value)}>
+              <SelectTrigger className={errors.departmentId ? 'border-red-500' : ''}>
+                <SelectValue placeholder="Select department" />
+              </SelectTrigger>
+              <SelectContent>
+                {(departmentsData?.data || [])
+                  .filter((department) => !formData.facultyId || department.facultyId === formData.facultyId)
+                  .map((department) => (
+                    <SelectItem key={department.id} value={department.id}>
+                      {department.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            {errors.departmentId && <p className="text-red-500 text-sm mt-1">{errors.departmentId}</p>}
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">

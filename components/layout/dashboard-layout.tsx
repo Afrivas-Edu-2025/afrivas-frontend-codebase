@@ -7,6 +7,9 @@ import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import UnifiedSidebar from "@/components/layout/unified-sidebar"
 import { usePathname } from "next/navigation"
+import { useAuth } from "@/components/auth-context"
+import { useUniversityOnboardingProfile } from "@/hooks/useUniversityOnboarding"
+import DashboardRealtimeBridge from "@/components/realtime/dashboard-realtime-bridge"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -18,13 +21,31 @@ import { Home } from "lucide-react"
 
 type DashboardLayoutProps = {
   children: ReactNode
-  userRole: "ADMIN" | "STUDENT" | "LECTURER"
+  userRole: "ADMIN" | "STUDENT" | "LECTURER" | "SUPER_ADMIN" | "STAFF" | "admin" | "student" | "lecturer" | "super_admin" | "staff"
 }
 
 export default function DashboardLayout({ children, userRole }: DashboardLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const pathname = usePathname()
+  const { user } = useAuth()
+  const normalizedRole = String(userRole).toUpperCase() as "ADMIN" | "STUDENT" | "LECTURER" | "SUPER_ADMIN" | "STAFF"
+  const roleSegment = normalizedRole.toLowerCase()
+
+  const { data: onboardingData } = useUniversityOnboardingProfile({ enabled: normalizedRole === "ADMIN" })
+  const onboardingProfile = normalizedRole === "ADMIN" ? onboardingData?.profile : null
+  const sidebarLogo =
+    onboardingProfile?.logoDataUrl ||
+    onboardingProfile?.logoUrl ||
+    (user as any)?.universityLogoDataUrl ||
+    user?.universityLogoUrl ||
+    user?.school?.schoolLogo ||
+    "/images/logo.webp"
+  const sidebarBrand =
+    onboardingProfile?.universityName ||
+    user?.universityName ||
+    user?.school?.schoolName ||
+    "Afrivas"
 
   // Generate breadcrumbs from pathname
   const generateBreadcrumbs = () => {
@@ -38,8 +59,8 @@ export default function DashboardLayout({ children, userRole }: DashboardLayoutP
     return (
       <Breadcrumb className="mb-4">
         <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href={`/${userRole}/dashboard`}>
+            <BreadcrumbItem>
+            <BreadcrumbLink href={`/${roleSegment}/dashboard`}>
               <Home className="h-4 w-4 mr-1" />
               <span className="hidden sm:inline">Dashboard</span>
             </BreadcrumbLink>
@@ -93,22 +114,32 @@ export default function DashboardLayout({ children, userRole }: DashboardLayoutP
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <UnifiedSidebar userRole={userRole} onToggle={handleSidebarToggle} />
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#020617] text-slate-900 dark:text-slate-50 overflow-hidden relative">
+      <DashboardRealtimeBridge />
 
+      {/* Decorative background elements like the landing page */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary-100/5 blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-secondary-100/5 blur-[120px]" />
+      </div>
+      <UnifiedSidebar userRole={normalizedRole} logoSrc={sidebarLogo} brandName={sidebarBrand} onToggle={handleSidebarToggle} />
       <div
         className={cn(
-          "min-h-screen transition-all duration-300 ease-in-out",
-          sidebarCollapsed || isMobile ? "pl-0 lg:pl-[70px]" : "pl-0 lg:pl-[240px]",
+          "min-h-screen transition-all duration-500 ease-in-out relative z-10",
+          sidebarCollapsed || isMobile ? "pl-0 lg:pl-[70px]" : "pl-0 lg:pl-[260px]",
         )}
       >
-        <div className="min-h-screen bg-white dark:bg-gray-800 lg:rounded-tl-lg shadow-sm">
-          <div className="p-4 md:p-6">
-            {generateBreadcrumbs()}
-
-            <main className="mt-6">{children}</main>
+        <div className="min-h-screen p-4 md:p-6 lg:p-8">
+          <div className="min-h-[calc(100vh-3rem)] bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-[2rem] border border-white/20 dark:border-slate-800/50 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden flex flex-col">
+            <div className="flex-1 p-6 md:p-8 overflow-y-auto custom-scrollbar">
+              {generateBreadcrumbs()}
+              <main className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                {children}
+              </main>
+            </div>
           </div>
         </div>
+        
       </div>
     </div>
   )

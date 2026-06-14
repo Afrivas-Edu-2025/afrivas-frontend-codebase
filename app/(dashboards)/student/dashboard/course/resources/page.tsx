@@ -1,345 +1,192 @@
-import {
-  Search,
-  Filter,
-  FolderOpen,
-  FileText,
-  Download,
-  ChevronLeft,
-  ChevronRight,
-  BookOpen,
-  Video,
-  Music,
-  Image,
-  File,
-} from "lucide-react"
+'use client';
+
+import { useState, useMemo } from 'react';
+import { Search, FolderOpen, FileText, Download, BookOpen, File, Image, Play } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { TextGenerateEffect } from '@/components/aceternity/text-generate-effect';
+import { cn } from '@/lib/utils';
+import { useGetMyNotesQuery } from '@/services/studentApi';
+
+const FILE_ICON: Record<string, React.ReactNode> = {
+  pdf: <FileText className="w-5 h-5 text-rose-500" />,
+  doc: <FileText className="w-5 h-5 text-blue-500" />,
+  docx: <FileText className="w-5 h-5 text-blue-500" />,
+  ppt: <File className="w-5 h-5 text-orange-500" />,
+  pptx: <File className="w-5 h-5 text-orange-500" />,
+  jpg: <Image className="w-5 h-5 text-emerald-500" />,
+  png: <Image className="w-5 h-5 text-emerald-500" />,
+  mp4: <Play className="w-5 h-5 text-purple-500" />,
+};
+
+const getFileIcon = (fileType: string) => {
+  const ext = fileType.split('/').pop()?.toLowerCase() || fileType.toLowerCase();
+  return FILE_ICON[ext] || <File className="w-5 h-5 text-primary-100" />;
+};
+
+const formatSize = (bytes: number) => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
 
 export default function ResourcesPage() {
+  const [search, setSearch] = useState('');
+  const [filterModule, setFilterModule] = useState('all');
+  const { data, isLoading } = useGetMyNotesQuery();
+  const notes = data?.data || [];
+
+  const modules = useMemo(() => {
+    const seen = new Set<string>();
+    return notes.reduce<Array<{ id: string; name: string; code: string }>>((acc, n) => {
+      const key = String(n.moduleId);
+      if (!seen.has(key)) {
+        seen.add(key);
+        acc.push({ id: key, name: n.module.moduleName, code: n.module.moduleCode });
+      }
+      return acc;
+    }, []);
+  }, [notes]);
+
+  const filtered = useMemo(() =>
+    notes.filter((n) =>
+      (filterModule === 'all' || String(n.moduleId) === filterModule) &&
+      n.title.toLowerCase().includes(search.toLowerCase())
+    ), [notes, search, filterModule]);
+
+  const grouped = useMemo(() => {
+    const map: Record<string, typeof notes> = {};
+    filtered.forEach((n) => {
+      const key = n.module.moduleName;
+      if (!map[key]) map[key] = [];
+      map[key].push(n);
+    });
+    return map;
+  }, [filtered]);
+
+  if (isLoading) return (
+    <div className="flex items-center justify-center h-[60vh]">
+      <div className="w-10 h-10 border-4 border-primary-100/30 border-t-primary-100 rounded-full animate-spin" />
+    </div>
+  );
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Resources & Notes</h1>
-        <p className="text-gray-500">Access course materials and study resources</p>
+    <div className="space-y-8 animate-in fade-in duration-700">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="inline-flex items-center px-3 py-1 mb-2 rounded-full bg-primary-100/10 border border-primary-100/20">
+            <span className="text-primary-100 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5">
+              <FolderOpen className="w-3 h-3" /> Learning Resources
+            </span>
+          </div>
+          <TextGenerateEffect words="Course Materials"
+            className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent" />
+          <p className="text-muted-foreground font-medium mt-1">Notes, slides, and materials from your enrolled modules</p>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        {[
+          { label: 'Total Files', value: notes.length, color: 'text-primary-100' },
+          { label: 'Modules', value: modules.length, color: 'text-emerald-500' },
+          { label: 'This Month', value: notes.filter((n) => new Date(n.createdAt) > new Date(Date.now() - 30 * 86400000)).length, color: 'text-amber-500' },
+        ].map((s) => (
+          <Card key={s.label} className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 rounded-2xl">
+            <CardContent className="p-4 text-center">
+              <div className={cn('text-2xl font-black tracking-tight', s.color)}>{s.value}</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1">{s.label}</div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg border p-4 shadow-sm">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex-1 min-w-[200px]">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-              <input
-                type="text"
-                placeholder="Search resources..."
-                className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
-
-          <div className="flex-1 min-w-[200px]">
-            <select className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-              <option value="all">All Courses</option>
-              <option value="math">Mathematics</option>
-              <option value="cs">Computer Science</option>
-              <option value="physics">Physics</option>
-              <option value="english">English</option>
-            </select>
-          </div>
-
-          <div className="flex-1 min-w-[200px]">
-            <select className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-              <option value="all">All Types</option>
-              <option value="notes">Notes</option>
-              <option value="slides">Slides</option>
-              <option value="videos">Videos</option>
-              <option value="documents">Documents</option>
-            </select>
-          </div>
-
-          <div className="flex items-end">
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-md flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              Apply Filters
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search notes..." value={search} onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 rounded-xl bg-white/50 dark:bg-slate-800/50 border-white/20" />
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => setFilterModule('all')}
+            className={cn('px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wide border transition-all',
+              filterModule === 'all' ? 'bg-primary-100/20 text-primary-100 border-primary-100/30' : 'text-muted-foreground border-white/10 hover:border-white/30')}>
+            All Modules
+          </button>
+          {modules.map((m) => (
+            <button key={m.id}
+              onClick={() => setFilterModule(m.id)}
+              className={cn('px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wide border transition-all',
+                filterModule === m.id ? 'bg-primary-100/20 text-primary-100 border-primary-100/30' : 'text-muted-foreground border-white/10 hover:border-white/30')}>
+              {m.code}
             </button>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Resource Categories */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <ResourceCategory
-          title="Lecture Notes"
-          count="42 files"
-          icon={<BookOpen className="h-6 w-6 text-blue-500" />}
-          color="bg-blue-50"
-        />
-        <ResourceCategory
-          title="Video Lectures"
-          count="18 videos"
-          icon={<Video className="h-6 w-6 text-purple-500" />}
-          color="bg-purple-50"
-        />
-        <ResourceCategory
-          title="Audio Resources"
-          count="12 files"
-          icon={<Music className="h-6 w-6 text-amber-500" />}
-          color="bg-amber-50"
-        />
-        <ResourceCategory
-          title="Practice Materials"
-          count="35 files"
-          icon={<FileText className="h-6 w-6 text-green-500" />}
-          color="bg-green-50"
-        />
-      </div>
-
-      {/* Recent Resources */}
-      <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
-        <div className="p-4 border-b">
-          <h2 className="text-lg font-medium">Recent Resources</h2>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Name
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Course
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Type
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Size
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Uploaded
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {recentResources.map((resource) => (
-                <tr key={resource.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-8 w-8 rounded-md bg-gray-100 flex items-center justify-center">
-                        {getFileIcon(resource.type)}
+      {/* Grouped by Module */}
+      {Object.keys(grouped).length === 0 ? (
+        <Card className="bg-white/20 dark:bg-slate-900/20 border border-dashed border-white/20 rounded-3xl">
+          <CardContent className="py-16 text-center opacity-40">
+            <FolderOpen className="w-12 h-12 mx-auto mb-3" />
+            <p className="font-bold text-sm">No materials available yet</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          {Object.entries(grouped).map(([moduleName, moduleNotes]) => (
+            <div key={moduleName}>
+              <div className="flex items-center gap-3 mb-3">
+                <BookOpen className="w-4 h-4 text-primary-100" />
+                <h3 className="font-bold text-sm uppercase tracking-widest text-primary-100">{moduleName}</h3>
+                <div className="flex-1 h-px bg-white/10" />
+                <Badge variant="outline" className="text-primary-100 border-primary-100/20 text-[10px]">
+                  {moduleNotes.length} files
+                </Badge>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {moduleNotes.map((note) => (
+                  <Card key={note.id}
+                    className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 rounded-2xl group hover:shadow-lg transition-all duration-300">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2.5 rounded-xl bg-white/50 dark:bg-slate-800/50 border border-white/20 group-hover:scale-110 transition-transform shrink-0">
+                          {getFileIcon(note.fileType)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-semibold text-sm leading-tight line-clamp-2 group-hover:text-primary-100 transition-colors">
+                            {note.title}
+                          </div>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <span className="text-[10px] text-muted-foreground uppercase">{note.fileType.split('/').pop()}</span>
+                            <span className="text-[10px] text-muted-foreground">•</span>
+                            <span className="text-[10px] text-muted-foreground">{formatSize(note.fileSize)}</span>
+                          </div>
+                          <div className="text-[10px] text-muted-foreground mt-1">
+                            {new Date(note.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{resource.name}</div>
+                      <div className="mt-3 pt-3 border-t border-white/10">
+                        <a href={note.filePath} target="_blank" rel="noopener noreferrer">
+                          <Button variant="outline" size="sm" className="w-full rounded-lg text-xs gap-1.5 h-7 hover:bg-primary-100/10 hover:text-primary-100">
+                            <Download className="w-3 h-3" /> Download
+                          </Button>
+                        </a>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{resource.course}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{resource.type}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{resource.size}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{resource.uploaded}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 mr-3">
-                      <Download className="h-4 w-4" />
-                    </button>
-                    <button className="text-gray-600 hover:text-gray-900">
-                      <FileText className="h-4 w-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200">
-          <div className="text-sm text-gray-700">
-            Showing <span className="font-medium">1</span> to <span className="font-medium">5</span> of{" "}
-            <span className="font-medium">42</span> resources
-          </div>
-          <div className="flex items-center space-x-2">
-            <button className="p-1 rounded-md border border-gray-300 text-gray-500 hover:bg-gray-50">
-              <ChevronLeft size={16} />
-            </button>
-            <button className="px-3 py-1 rounded-md text-sm font-medium bg-blue-600 text-white">1</button>
-            <button className="px-3 py-1 rounded-md text-sm font-medium text-gray-500 hover:bg-gray-50">2</button>
-            <button className="px-3 py-1 rounded-md text-sm font-medium text-gray-500 hover:bg-gray-50">3</button>
-            <button className="p-1 rounded-md border border-gray-300 text-gray-500 hover:bg-gray-50">
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Course Folders */}
-      <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
-        <div className="p-4 border-b">
-          <h2 className="text-lg font-medium">Course Folders</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-          {courseFolders.map((folder) => (
-            <div key={folder.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-lg ${folder.color} flex items-center justify-center`}>
-                  <FolderOpen className="h-5 w-5 text-gray-700" />
-                </div>
-                <div>
-                  <h3 className="font-medium">{folder.name}</h3>
-                  <p className="text-sm text-gray-500">{folder.fileCount} files</p>
-                </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </div>
           ))}
         </div>
-      </div>
+      )}
     </div>
-  )
+  );
 }
-
-function ResourceCategory({ title, count, icon, color }) {
-  return (
-    <div className={`rounded-lg border p-6 shadow-sm ${color}`}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center">{icon}</div>
-      </div>
-      <h3 className="text-lg font-bold mt-4">{title}</h3>
-      <p className="text-sm text-gray-500 mt-1">{count}</p>
-    </div>
-  )
-}
-
-function getFileIcon(type) {
-  switch (type.toLowerCase()) {
-    case "pdf":
-      return <File className="h-5 w-5 text-red-500" />
-    case "ppt":
-    case "pptx":
-      return <File className="h-5 w-5 text-orange-500" />
-    case "doc":
-    case "docx":
-      return <File className="h-5 w-5 text-blue-500" />
-    case "mp4":
-    case "video":
-      return <Video className="h-5 w-5 text-purple-500" />
-    case "mp3":
-    case "audio":
-      return <Music className="h-5 w-5 text-amber-500" />
-    case "jpg":
-    case "png":
-    case "image":
-      return <Image className="h-5 w-5 text-green-500" />
-    default:
-      return <FileText className="h-5 w-5 text-gray-500" />
-  }
-}
-
-const recentResources = [
-  {
-    id: 1,
-    name: "Linear Algebra Lecture Notes",
-    course: "Mathematics",
-    type: "PDF",
-    size: "2.5 MB",
-    uploaded: "May 10, 2025",
-  },
-  {
-    id: 2,
-    name: "Data Structures Tutorial",
-    course: "Computer Science",
-    type: "Video",
-    size: "45 MB",
-    uploaded: "May 8, 2025",
-  },
-  {
-    id: 3,
-    name: "Physics Lab Manual",
-    course: "Physics",
-    type: "PDF",
-    size: "3.2 MB",
-    uploaded: "May 5, 2025",
-  },
-  {
-    id: 4,
-    name: "Shakespeare Analysis Slides",
-    course: "English Literature",
-    type: "PPT",
-    size: "5.7 MB",
-    uploaded: "May 3, 2025",
-  },
-  {
-    id: 5,
-    name: "Algorithm Design Examples",
-    course: "Computer Science",
-    type: "DOCX",
-    size: "1.8 MB",
-    uploaded: "May 1, 2025",
-  },
-]
-
-const courseFolders = [
-  {
-    id: 1,
-    name: "Mathematics",
-    fileCount: "15",
-    color: "bg-blue-100",
-  },
-  {
-    id: 2,
-    name: "Computer Science",
-    fileCount: "23",
-    color: "bg-purple-100",
-  },
-  {
-    id: 3,
-    name: "Physics",
-    fileCount: "12",
-    color: "bg-amber-100",
-  },
-  {
-    id: 4,
-    name: "English Literature",
-    fileCount: "8",
-    color: "bg-green-100",
-  },
-  {
-    id: 5,
-    name: "History",
-    fileCount: "5",
-    color: "bg-red-100",
-  },
-  {
-    id: 6,
-    name: "Study Materials",
-    fileCount: "19",
-    color: "bg-gray-100",
-  },
-]

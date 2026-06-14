@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { Sun, Moon, Menu, X, User } from "lucide-react"
 import { useAuth } from "@/components/auth-context"
@@ -11,6 +11,7 @@ import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 
 export default function Navbar() {
   const router = useRouter()
+  const pathname = usePathname()
   const { theme, setTheme } = useTheme()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -45,6 +46,16 @@ export default function Navbar() {
       default:
         return '#'
     }
+  }
+
+  // Hide the public navbar on all dashboard route trees.
+  const isDashboardRoute =
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/lecturer") ||
+    pathname.startsWith("/student")
+
+  if (isDashboardRoute) {
+    return null
   }
 
   return (

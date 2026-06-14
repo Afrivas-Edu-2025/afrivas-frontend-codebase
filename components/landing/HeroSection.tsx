@@ -39,7 +39,7 @@ export function HeroSection() {
               </p>
               
               <div className="flex flex-wrap gap-4 pt-4">
-                <Link href="/auth/signup">
+                <Link href="/login">
                   <Button 
                     size="lg" 
                     className="bg-primary-100 hover:bg-primary-100/90 text-white shadow-neon-primary hover:shadow-neon-primary transition-all duration-300 px-8 py-4 text-lg font-semibold rounded-xl group"

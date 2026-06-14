@@ -45,19 +45,19 @@ export async function registerUser(formData: SignupFormData): Promise<ApiRespons
     let requestData = {}
 
     if (formData.role.toLowerCase() === "student") {
-      url = "http://localhost:3303/api/v1/auth/signup"
+      url = "http://localhost:5050/api/v1/auth/signup"
       requestData = {
         email: formData.email,
         password: formData.password,
         firstName,
         lastName,
-        gender, 
+        gender,
         dob,
         role: "STUDENT",
         institutionId,
       }
     } else if (formData.role.toLowerCase() === "lecturer") {
-      url = "http://localhost:5000/api/v1/lecturer/signup"
+      url = "http://localhost:5050/api/v1/lecturer/signup"
       requestData = {
         firstName,
         lastName,

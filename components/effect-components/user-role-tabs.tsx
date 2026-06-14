@@ -42,7 +42,7 @@ const Feature108 = ({
         description:
           "Access all your courses, assignments, and grades in one place. Stay organized and connected with your teachers and peers. Track your academic progress in real-time, submit assignments and receive feedback, access learning resources anytime, anywhere, communicate with teachers and classmates, and get notified about important deadlines.",
         buttonText: "Sign Up as Student",
-        imageSrc: "/images/STUDENT.png",
+        imageSrc: "/landing -page-slider-imgs/magnific_black-sierra-leonean-coll_2901335271.png",
         imageAlt: "Student dashboard",
       },
     },
@@ -70,14 +70,14 @@ const Feature108 = ({
         description:
           "Stay informed about your child's education. Monitor progress, communicate with teachers, and support learning. Monitor your child's academic progress, view attendance and assignment completion, communicate directly with teachers, receive notifications about important events, and access school announcements and updates.",
         buttonText: "Sign Up as Parent",
-        imageSrc: "/placeholder.svg?height=600&width=300",
-        imageAlt: "Parent dashboard",
+        imageSrc: "/landing -page-slider-imgs/magnific_create-an-image-of-a-joyf_2901352897.png",
+        imageAlt: "Afrivas diverse Sierra Leonean professionals collaboration",
       },
     },
   ],
 }: Feature108Props) => {
   return (
-    <section className="py-20 bg-white dark:bg-gray-900">
+    <section className="py-20 bg-white dark:bg-gray-900/50">
       <div className="container mx-auto">
         <div className="flex flex-col items-center gap-4 text-center">
           <Badge variant="outline" className="bg-secondary-300/25 border border-secondary-300">{badge}</Badge>

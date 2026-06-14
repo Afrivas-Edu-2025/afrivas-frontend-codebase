@@ -1,377 +1,178 @@
+'use client';
+
+import { useState, useMemo } from 'react';
 import {
-  Filter,
-  Search,
-  Clock,
-  Calendar,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react"
+  FileText, Clock, Calendar, CheckCircle, AlertTriangle, Search, BookOpen, Download
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { TextGenerateEffect } from '@/components/aceternity/text-generate-effect';
+import { cn } from '@/lib/utils';
+import { useGetMyAssignmentsQuery } from '@/services/studentApi';
+
+const getDueStatus = (dueDate: string) => {
+  const due = new Date(dueDate);
+  const now = new Date();
+  const diff = (due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+  if (diff < 0) return { label: 'Overdue', color: 'text-rose-500 bg-rose-500/10 border-rose-500/20', urgent: true };
+  if (diff <= 3) return { label: 'Due Soon', color: 'text-amber-500 bg-amber-500/10 border-amber-500/20', urgent: true };
+  return { label: 'Upcoming', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20', urgent: false };
+};
+
+const formatDue = (dueDate: string) => {
+  const due = new Date(dueDate);
+  const now = new Date();
+  const diff = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  if (diff < 0) return `${Math.abs(diff)} days ago`;
+  if (diff === 0) return 'Due today';
+  if (diff === 1) return 'Due tomorrow';
+  return `Due in ${diff} days`;
+};
 
 export default function AssignmentsPage() {
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('ALL');
+  const { data, isLoading } = useGetMyAssignmentsQuery();
+  const assignments = data?.data || [];
+
+  const filtered = useMemo(() => {
+    return assignments.filter((a) => {
+      const status = getDueStatus(a.dueDate);
+      const matchesSearch = a.title.toLowerCase().includes(search.toLowerCase()) ||
+        a.module.moduleName.toLowerCase().includes(search.toLowerCase());
+      const matchesFilter = filter === 'ALL' ||
+        (filter === 'OVERDUE' && status.label === 'Overdue') ||
+        (filter === 'DUE_SOON' && status.label === 'Due Soon') ||
+        (filter === 'UPCOMING' && status.label === 'Upcoming');
+      return matchesSearch && matchesFilter;
+    });
+  }, [assignments, search, filter]);
+
+  const counts = useMemo(() => ({
+    total: assignments.length,
+    overdue: assignments.filter((a) => getDueStatus(a.dueDate).label === 'Overdue').length,
+    dueSoon: assignments.filter((a) => getDueStatus(a.dueDate).label === 'Due Soon').length,
+    upcoming: assignments.filter((a) => getDueStatus(a.dueDate).label === 'Upcoming').length,
+  }), [assignments]);
+
+  if (isLoading) return (
+    <div className="flex items-center justify-center h-[60vh]">
+      <div className="w-10 h-10 border-4 border-primary-100/30 border-t-primary-100 rounded-full animate-spin" />
+    </div>
+  );
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Assignments</h1>
-        <p className="text-gray-500">Track and manage your course assignments</p>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <SummaryCard
-          title="TOTAL ASSIGNMENTS"
-          value="24"
-          description="This semester"
-          icon={<Calendar className="h-5 w-5 text-blue-500" />}
-          color="bg-blue-50"
-        />
-        <SummaryCard
-          title="COMPLETED"
-          value="18"
-          description="75% completion rate"
-          icon={<CheckCircle className="h-5 w-5 text-green-500" />}
-          color="bg-green-50"
-        />
-        <SummaryCard
-          title="PENDING"
-          value="4"
-          description="Due this week"
-          icon={<Clock className="h-5 w-5 text-amber-500" />}
-          color="bg-amber-50"
-        />
-        <SummaryCard
-          title="OVERDUE"
-          value="2"
-          description="Needs immediate attention"
-          icon={<XCircle className="h-5 w-5 text-red-500" />}
-          color="bg-red-50"
-        />
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white rounded-lg border p-4 shadow-sm">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex-1 min-w-[200px]">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-              <input
-                type="text"
-                placeholder="Search assignments..."
-                className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+    <div className="space-y-8 animate-in fade-in duration-700">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="inline-flex items-center px-3 py-1 mb-2 rounded-full bg-primary-100/10 border border-primary-100/20">
+            <span className="text-primary-100 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5">
+              <FileText className="w-3 h-3" /> Assignments
+            </span>
           </div>
-
-          <div className="flex-1 min-w-[200px]">
-            <select className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-              <option value="all">All Courses</option>
-              <option value="math">Mathematics</option>
-              <option value="cs">Computer Science</option>
-              <option value="physics">Physics</option>
-              <option value="english">English</option>
-            </select>
-          </div>
-
-          <div className="flex-1 min-w-[200px]">
-            <select className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-              <option value="all">All Status</option>
-              <option value="completed">Completed</option>
-              <option value="pending">Pending</option>
-              <option value="overdue">Overdue</option>
-            </select>
-          </div>
-
-          <div className="flex items-end">
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-md flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              Apply Filters
-            </button>
-          </div>
+          <TextGenerateEffect words="My Assignments"
+            className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent" />
+          <p className="text-muted-foreground font-medium mt-1">Track assignments across all your enrolled modules</p>
         </div>
       </div>
 
-      {/* Upcoming Assignments */}
-      <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
-        <div className="p-4 border-b">
-          <h2 className="text-lg font-medium">Upcoming Assignments</h2>
-        </div>
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Total', value: counts.total, color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/20', filter: 'ALL' },
+          { label: 'Upcoming', value: counts.upcoming, color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/20', filter: 'UPCOMING' },
+          { label: 'Due Soon', value: counts.dueSoon, color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/20', filter: 'DUE_SOON' },
+          { label: 'Overdue', value: counts.overdue, color: 'text-rose-500', bg: 'bg-rose-500/10 border-rose-500/20', filter: 'OVERDUE' },
+        ].map((s) => (
+          <Card key={s.label}
+            className={cn('border backdrop-blur-xl rounded-2xl cursor-pointer transition-all hover:shadow-lg', s.bg, filter === s.filter ? 'ring-2 ring-offset-2 ring-primary-100/30' : '')}
+            onClick={() => setFilter(s.filter)}>
+            <CardContent className="p-4 text-center">
+              <div className={cn('text-3xl font-black tracking-tight', s.color)}>{s.value}</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1">{s.label}</div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-        <div className="divide-y">
-          {upcomingAssignments.map((assignment) => (
-            <div key={assignment.id} className="p-4 hover:bg-gray-50 transition-colors">
-              <div className="flex items-start gap-4">
-                <div
-                  className={`w-10 h-10 rounded-lg ${assignment.bgColor} flex items-center justify-center flex-shrink-0`}
-                >
-                  {assignment.icon}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-medium">{assignment.title}</h3>
-                      <p className="text-sm text-gray-500">{assignment.course}</p>
-                    </div>
-                    <span
-                      className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${assignment.statusColor}`}
-                    >
-                      {assignment.status}
-                    </span>
-                  </div>
-                  <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-500">Assigned: {assignment.assignedDate}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-500">Due: {assignment.dueDate}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <AlertTriangle className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm text-gray-500">Points: {assignment.points}</span>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-full bg-gray-200 rounded-full h-2.5 max-w-[200px]">
-                        <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: assignment.progress }}></div>
+      {/* Search */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input placeholder="Search assignments..." value={search} onChange={(e) => setSearch(e.target.value)}
+          className="pl-9 rounded-xl bg-white/50 dark:bg-slate-800/50 border-white/20" />
+      </div>
+
+      {/* Assignments List */}
+      {filtered.length === 0 ? (
+        <Card className="bg-white/20 dark:bg-slate-900/20 border border-dashed border-white/20 rounded-3xl">
+          <CardContent className="py-16 text-center opacity-40">
+            <FileText className="w-12 h-12 mx-auto mb-3" />
+            <p className="font-bold text-sm">No assignments found</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((assignment) => {
+            const status = getDueStatus(assignment.dueDate);
+            const relativeTime = formatDue(assignment.dueDate);
+            return (
+              <Card key={assignment.id}
+                className={cn(
+                  'bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 rounded-2xl group hover:shadow-lg transition-all duration-300',
+                  status.urgent && 'border-l-4 border-l-current' + (status.label === 'Overdue' ? ' border-l-rose-500' : ' border-l-amber-500')
+                )}>
+                <CardContent className="p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-4 flex-1 min-w-0">
+                      <div className={cn('shrink-0 p-2.5 rounded-xl border mt-0.5', status.color)}>
+                        {status.label === 'Overdue'
+                          ? <AlertTriangle className="w-4 h-4" />
+                          : status.label === 'Due Soon'
+                            ? <Clock className="w-4 h-4" />
+                            : <FileText className="w-4 h-4" />
+                        }
                       </div>
-                      <span className="text-xs text-gray-500">{assignment.progress}</span>
+                      <div className="min-w-0">
+                        <div className="font-bold text-base leading-tight group-hover:text-primary-100 transition-colors">
+                          {assignment.title}
+                        </div>
+                        {assignment.description && (
+                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{assignment.description}</p>
+                        )}
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          <Badge variant="outline" className="text-primary-100 border-primary-100/20 text-[10px]">
+                            {assignment.module.moduleCode} — {assignment.module.moduleName}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground">Max: {assignment.maxScore} pts</span>
+                        </div>
+                      </div>
                     </div>
-                    <button className="px-3 py-1 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-md">
-                      View Details
-                    </button>
+                    <div className="text-right shrink-0 space-y-2">
+                      <span className={cn('inline-block px-2.5 py-1 rounded-full text-[10px] font-black uppercase border', status.color)}>
+                        {status.label}
+                      </span>
+                      <div className="text-xs text-muted-foreground">{relativeTime}</div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {new Date(assignment.dueDate).toLocaleDateString()}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Completed Assignments */}
-      <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
-        <div className="p-4 border-b">
-          <h2 className="text-lg font-medium">Completed Assignments</h2>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Assignment
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Course
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Due Date
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Submitted
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Grade
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {completedAssignments.map((assignment) => (
-                <tr key={assignment.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="text-sm font-medium text-gray-900">{assignment.title}</div>
+                  {assignment.filePath && (
+                    <div className="mt-3 pt-3 border-t border-white/10">
+                      <Button variant="outline" size="sm" className="rounded-lg text-xs gap-1.5 h-7">
+                        <Download className="w-3 h-3" /> Download Brief
+                      </Button>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{assignment.course}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{assignment.dueDate}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{assignment.submittedDate}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium">{assignment.grade}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${assignment.statusColor}`}
-                    >
-                      {assignment.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
-
-        {/* Pagination */}
-        <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200">
-          <div className="text-sm text-gray-700">
-            Showing <span className="font-medium">1</span> to <span className="font-medium">5</span> of{" "}
-            <span className="font-medium">18</span> assignments
-          </div>
-          <div className="flex items-center space-x-2">
-            <button className="p-1 rounded-md border border-gray-300 text-gray-500 hover:bg-gray-50">
-              <ChevronLeft size={16} />
-            </button>
-            <button className="px-3 py-1 rounded-md text-sm font-medium bg-blue-600 text-white">1</button>
-            <button className="px-3 py-1 rounded-md text-sm font-medium text-gray-500 hover:bg-gray-50">2</button>
-            <button className="px-3 py-1 rounded-md text-sm font-medium text-gray-500 hover:bg-gray-50">3</button>
-            <button className="p-1 rounded-md border border-gray-300 text-gray-500 hover:bg-gray-50">
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
-  )
+  );
 }
-
-function SummaryCard({ title, value, description, icon, color }) {
-  return (
-    <div className={`rounded-lg border p-6 shadow-sm ${color}`}>
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-medium text-gray-500">{title}</h3>
-        <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">{icon}</div>
-      </div>
-      <p className="text-2xl font-bold">{value}</p>
-      <p className="text-sm text-gray-500 mt-1">{description}</p>
-    </div>
-  )
-}
-
-const upcomingAssignments = [
-  {
-    id: 1,
-    title: "Linear Algebra Problem Set",
-    course: "Mathematics",
-    assignedDate: "May 5, 2025",
-    dueDate: "May 15, 2025",
-    points: "100",
-    status: "In Progress",
-    statusColor: "bg-blue-100 text-blue-800",
-    progress: "60%",
-    bgColor: "bg-blue-100",
-    icon: <Calendar className="h-5 w-5 text-blue-500" />,
-  },
-  {
-    id: 2,
-    title: "Algorithm Design Challenge",
-    course: "Computer Science",
-    assignedDate: "May 8, 2025",
-    dueDate: "May 18, 2025",
-    points: "150",
-    status: "Not Started",
-    statusColor: "bg-gray-100 text-gray-800",
-    progress: "0%",
-    bgColor: "bg-purple-100",
-    icon: <Calendar className="h-5 w-5 text-purple-500" />,
-  },
-  {
-    id: 3,
-    title: "Physics Lab Report",
-    course: "Physics",
-    assignedDate: "May 1, 2025",
-    dueDate: "May 12, 2025",
-    points: "75",
-    status: "Due Soon",
-    statusColor: "bg-amber-100 text-amber-800",
-    progress: "80%",
-    bgColor: "bg-amber-100",
-    icon: <Calendar className="h-5 w-5 text-amber-500" />,
-  },
-  {
-    id: 4,
-    title: "Literary Analysis Essay",
-    course: "English Literature",
-    assignedDate: "April 25, 2025",
-    dueDate: "May 10, 2025",
-    points: "100",
-    status: "Overdue",
-    statusColor: "bg-red-100 text-red-800",
-    progress: "50%",
-    bgColor: "bg-red-100",
-    icon: <Calendar className="h-5 w-5 text-red-500" />,
-  },
-]
-
-const completedAssignments = [
-  {
-    id: 1,
-    title: "Calculus Problem Set",
-    course: "Mathematics",
-    dueDate: "April 28, 2025",
-    submittedDate: "April 27, 2025",
-    grade: "92/100",
-    status: "Graded",
-    statusColor: "bg-green-100 text-green-800",
-  },
-  {
-    id: 2,
-    title: "Data Structures Analysis",
-    course: "Computer Science",
-    dueDate: "April 25, 2025",
-    submittedDate: "April 24, 2025",
-    grade: "88/100",
-    status: "Graded",
-    statusColor: "bg-green-100 text-green-800",
-  },
-  {
-    id: 3,
-    title: "Mechanics Lab Report",
-    course: "Physics",
-    dueDate: "April 20, 2025",
-    submittedDate: "April 19, 2025",
-    grade: "95/100",
-    status: "Graded",
-    statusColor: "bg-green-100 text-green-800",
-  },
-  {
-    id: 4,
-    title: "Shakespeare Analysis",
-    course: "English Literature",
-    dueDate: "April 15, 2025",
-    submittedDate: "April 15, 2025",
-    grade: "85/100",
-    status: "Graded",
-    statusColor: "bg-green-100 text-green-800",
-  },
-  {
-    id: 5,
-    title: "Programming Quiz",
-    course: "Computer Science",
-    dueDate: "April 10, 2025",
-    submittedDate: "April 10, 2025",
-    grade: "90/100",
-    status: "Graded",
-    statusColor: "bg-green-100 text-green-800",
-  },
-]

@@ -25,7 +25,7 @@ export type SignupFormData = {
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost', // Base URL; endpoints will append specific paths
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5050/api/v1', // Base URL
   }),
   endpoints: (builder) => ({
     registerUser: builder.mutation<ApiResponse, SignupFormData>({
@@ -45,7 +45,7 @@ export const authApi = createApi({
         let requestData = {};
 
         if (formData.role.toLowerCase() === 'student') {
-          url = '/3303/api/v1/auth/signup';
+          url = '/auth/signup';
           requestData = {
             email: formData.email,
             password: formData.password,
@@ -57,7 +57,7 @@ export const authApi = createApi({
             institutionId,
           };
         } else if (formData.role.toLowerCase() === 'lecturer') {
-          url = '/5000/api/v1/lecturer/signup';
+          url = '/lecturer/signup';
           requestData = {
             firstName,
             lastName,
@@ -94,7 +94,7 @@ export const authApi = createApi({
     // Add more endpoints (e.g., login) as needed
     loginUser: builder.mutation<ApiResponse, { email: string; password: string }>({
       query: (credentials) => ({
-        url: '/3303/api/v1/auth/login', // Adjust URL based on your API
+        url: '/auth/login', // Adjust URL based on your API
         method: 'POST',
         body: credentials,
         headers: {

@@ -32,7 +32,7 @@ export type LoginUserRequest = {
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'http://0.0.0.0:3303/api/v1', // Base URL for API
+    baseUrl: 'http://0.0.0.0:5050/api/v1', // Base URL for API
   }),
   endpoints: (builder) => ({
     // General signup mutation
@@ -57,7 +57,7 @@ export const authApi = createApi({
     // Login mutation
     loginUser: builder.mutation<ApiResponse, LoginUserRequest>({
       query: (data) => ({
-        url: '/auth/signin',
+        url: '/auth/login',
         method: 'POST',
         body: data,
         headers: { 'Content-Type': 'application/json' },

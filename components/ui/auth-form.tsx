@@ -8,6 +8,7 @@ import { Eye, EyeOff, CheckCircle, Users, Shield, Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { useLoginUserMutation } from "@/services/authServices";
 import { useAuth } from "@/components/auth-context";
+import { collectClientDeviceContext } from "@/lib/security/device-context";
 import {
   Dialog,
   DialogContent,
@@ -23,11 +24,34 @@ export function AuthForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     password: "",
   });
 
   const [loginUser, { isLoading, error }] = useLoginUserMutation();
+
+  const parseLoginError = (err: any): { statusCode?: number; message: string; fieldErrors: Record<string, string> } => {
+    const statusCode = err?.status ?? err?.originalStatus;
+    const payload = err?.data ?? err;
+    const message =
+      payload?.message ||
+      err?.error ||
+      err?.message ||
+      "An unexpected error occurred.";
+
+    const detailsErrors =
+      payload?.error?.details?.errors ||
+      payload?.details?.errors ||
+      (Array.isArray(payload?.data) ? payload.data : []);
+    const fieldErrors = Array.isArray(detailsErrors)
+      ? detailsErrors.reduce((acc: Record<string, string>, item: { field?: string; message?: string }) => {
+          if (item?.field && item?.message) acc[item.field] = item.message;
+          return acc;
+        }, {})
+      : {};
+
+    return { statusCode, message, fieldErrors };
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -41,9 +65,9 @@ export function AuthForm() {
     const errors: string[] = [];
     const newFieldErrors: Record<string, string> = {};
 
-    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.push("Valid email is required");
-      newFieldErrors.email = "Valid email is required";
+    if (!formData.username || formData.username.trim().length < 3) {
+      errors.push("Username must be at least 3 characters");
+      newFieldErrors.username = "Username must be at least 3 characters";
     }
     if (!formData.password) {
       errors.push("Password is required");
@@ -61,12 +85,15 @@ export function AuthForm() {
     }
 
     try {
-      const loginData = {
-        email: formData.email,
-        password: formData.password,
-      };
+      // Ensure stale/invalid tokens do not interfere with a fresh login attempt.
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("accessToken");
 
-      console.log("Sending loginData:", JSON.stringify(loginData, null, 2));
+      const loginData = {
+        username: formData.username.toLowerCase().trim(),
+        password: formData.password,
+        clientContext: collectClientDeviceContext(),
+      };
 
       const result = await loginUser(loginData).unwrap();
       if (!result.success) {
@@ -74,7 +101,11 @@ export function AuthForm() {
       }
 
       // Store user and token in AuthContext and localStorage
-      login(result.data.user, result.data.tokens.accessToken);
+      login(
+        result.data.user,
+        result.data.tokens.accessToken,
+        result.data.tokens.refreshToken,
+      );
 
       toast({
         title: "Login Successful",
@@ -82,37 +113,27 @@ export function AuthForm() {
       });
 
       // Redirect based on user role
+      const role = String(result.data.user.role || "").toUpperCase();
       const dashboardRoute =
-        result.data.user.role === "student"
+        role === "STUDENT"
           ? "/student/dashboard"
-          : result.data.user.role === "lecturer"
+          : role === "LECTURER"
           ? "/lecturer/dashboard"
+          : role === "SUPER_ADMIN"
+          ? "/super-admin/dashboard"
+          : role === "STAFF"
+          ? "/staff/dashboard"
+          : !Boolean((result.data.user as any)?.onboardingCompletedAt)
+          ? "/admin/onboarding"
           : "/admin/dashboard";
       setTimeout(() => router.push(dashboardRoute), 2000);
     } catch (err: any) {
-      console.error("Login error:", err);
-      const apiError = err?.data?.error || err?.data || {};
-      const errorMessage = apiError.message || err.message || "An unexpected error occurred.";
-      const errorDetails = apiError.details?.errors
-        ? apiError.details.errors
-            .map((e: { field: string; message: string }) => `${e.field}: ${e.message}`)
-            .join(", ")
-        : "";
-
-      if (apiError.details?.errors) {
-        setFieldErrors(
-          apiError.details.errors.reduce((acc: Record<string, string>, e: { field: string; message: string }) => {
-            acc[e.field] = e.message;
-            return acc;
-          }, {})
-        );
-      } else {
-        setFieldErrors({});
-      }
+      const normalized = parseLoginError(err);
+      setFieldErrors(normalized.fieldErrors);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: errorDetails ? `${errorMessage} (${errorDetails})` : errorMessage,
+        title: normalized.statusCode ? `Error (${normalized.statusCode})` : "Error",
+        description: normalized.message,
       });
     }
   };
@@ -173,19 +194,19 @@ export function AuthForm() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email Input */}
+            {/* Username Input */}
             <div>
-              <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
+              <label htmlFor="username" className="text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
               <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="your.email@afrivas.edu"
-                value={formData.email}
+                id="username"
+                name="username"
+                type="text"
+                placeholder="Enter your username"
+                value={formData.username}
                 onChange={handleChange}
                 className="mt-1.5 h-11 bg-background-gray-50 dark:bg-gray-900/50 border-border-gray-200 dark:border-gray-700 focus:border-gray-600 dark:focus:border-secondary-300"
               />
-              {fieldErrors.email && <span className="text-red-600 text-sm mt-1">{fieldErrors.email}</span>}
+              {fieldErrors.username && <span className="text-red-600 text-sm mt-1">{fieldErrors.username}</span>}
             </div>
 
             {/* Password Input */}
@@ -212,7 +233,7 @@ export function AuthForm() {
               </div>
               {fieldErrors.password && <span className="text-red-600 text-sm mt-1">{fieldErrors.password}</span>}
               <div className="text-right mt-2">
-                <a href="/auth/reset-password" className="text-sm text-primary-100 dark:text-lemon-100 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+                <a href="/forgot-password" className="text-sm text-primary-100 dark:text-lemon-100 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
                   Forgot password?
                 </a>
               </div>
@@ -222,7 +243,7 @@ export function AuthForm() {
             <Button
               type="submit"
               className="w-full h-11 bg-secondary-100 hover:bg-secondary-100/90 dark:bg-lemon-100 dark:hover:bg-lemon-200 text-white dark:text-secondary-100 font-medium transition-all duration-200"
-              disabled={isLoading || !formData.email || !formData.password}
+              disabled={isLoading || !formData.username || !formData.password}
             >
               {isLoading ? (
                 <>
@@ -237,9 +258,7 @@ export function AuthForm() {
             {/* Error Display */}
             {error && (
               <div className="text-center mt-4 text-sm text-red-600">
-                {((error as any).data as { error?: { message?: string }; message?: string })?.error?.message ||
-                  ((error as any).data as { message?: string })?.message ||
-                  "An error occurred during login."}
+                {parseLoginError(error).message}
               </div>
             )}
 

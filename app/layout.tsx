@@ -1,14 +1,15 @@
 // app/layout.tsx
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import ReduxProvider from '@/components/ReduxProvider';
 import { AuthProvider } from '@/components/auth-context';
 import { ThemeProvider } from '@/components/theme-provider';
+import ReactQueryProvider from '@/lib/react-query/ReactQueryProvider';
+import BootstrapQueries from './_components/BootstrapQueries';
+import OfflineBanner from './_components/OfflineBanner';
 import Navbar from "@/components/Navbar"
 import Footer from "@/components/footer"
-
-const inter = Inter({ subsets: ['latin'] });
+import VisitTracker from "@/components/visit-tracker";
 
 export const metadata: Metadata = {
   title: 'Afrivas Learning Platform',
@@ -27,24 +28,29 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head />
-      <body className={inter.className} suppressHydrationWarning>
+      <body className="font-sans" suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
-          <ReduxProvider>
-            <AuthProvider>
-              <div className="navbar">
-                <Navbar />
-              </div>
-              {children}
-              <div className="footer">
-                <Footer />
-              </div>
-            </AuthProvider>
-          </ReduxProvider>
+          <ReactQueryProvider>
+            <ReduxProvider>
+              <AuthProvider>
+                <VisitTracker />
+                <OfflineBanner />
+                <BootstrapQueries />
+                <div className="navbar">
+                  <Navbar />
+                </div>
+                {children}
+                <div className="footer">
+                  <Footer />
+                </div>
+              </AuthProvider>
+            </ReduxProvider>
+          </ReactQueryProvider>
         </ThemeProvider>
       </body>
     </html>

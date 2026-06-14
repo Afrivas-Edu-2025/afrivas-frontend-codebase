@@ -1,498 +1,175 @@
-import { Search, Filter, BarChart3, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react"
+'use client';
+
+import { useMemo, useState } from 'react';
+import { Award, BookOpen, TrendingUp, Search, ChevronDown, ChevronUp, Sparkles, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { TextGenerateEffect } from '@/components/aceternity/text-generate-effect';
+import { cn } from '@/lib/utils';
+import { useGetMyGradesQuery } from '@/services/studentApi';
+
+const gradeColor = (pct: number) => {
+  if (pct >= 80) return 'text-emerald-500';
+  if (pct >= 60) return 'text-amber-500';
+  if (pct >= 50) return 'text-orange-500';
+  return 'text-rose-500';
+};
+const gradeBg = (pct: number) => {
+  if (pct >= 80) return 'bg-emerald-500/10 border-emerald-500/20';
+  if (pct >= 60) return 'bg-amber-500/10 border-amber-500/20';
+  if (pct >= 50) return 'bg-orange-500/10 border-orange-500/20';
+  return 'bg-rose-500/10 border-rose-500/20';
+};
+const StatusIcon = ({ status }: { status: string }) => {
+  if (status === 'GRADED') return <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />;
+  if (status === 'SUBMITTED') return <Clock className="w-3.5 h-3.5 text-amber-500" />;
+  return <AlertCircle className="w-3.5 h-3.5 text-rose-500" />;
+};
 
 export default function GradesPage() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Grades</h1>
-        <p className="text-gray-500">View and track your academic performance</p>
-      </div>
+  const [search, setSearch] = useState('');
+  const [expanded, setExpanded] = useState<number | null>(null);
+  const { data, isLoading } = useGetMyGradesQuery();
+  const enrollments = data?.data || [];
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <SummaryCard
-          title="CURRENT GPA"
-          value="3.8"
-          description="Out of 4.0"
-          icon={<TrendingUp className="h-5 w-5 text-blue-500" />}
-          color="bg-blue-50"
-        />
-        <SummaryCard
-          title="TOTAL CREDITS"
-          value="45"
-          description="15 credits this semester"
-          icon={<BarChart3 className="h-5 w-5 text-purple-500" />}
-          color="bg-purple-50"
-        />
-        <SummaryCard
-          title="CLASS RANK"
-          value="12/120"
-          description="Top 10% of class"
-          icon={<BarChart3 className="h-5 w-5 text-green-500" />}
-          color="bg-green-50"
-        />
-      </div>
+  const filtered = useMemo(() =>
+    enrollments.filter((e) =>
+      e.module.moduleName.toLowerCase().includes(search.toLowerCase()) ||
+      e.module.moduleCode.toLowerCase().includes(search.toLowerCase())
+    ), [enrollments, search]);
 
-      {/* Filters */}
-      <div className="bg-white rounded-lg border p-4 shadow-sm">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex-1 min-w-[200px]">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-              <input
-                type="text"
-                placeholder="Search courses..."
-                className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
+  const validGPs = enrollments.filter((e) => e.gradePoint > 0).map((e) => e.gradePoint);
+  const gpa = validGPs.length > 0 ? (validGPs.reduce((a, b) => a + b, 0) / validGPs.length).toFixed(2) : '0.00';
+  const avgPct = enrollments.length > 0 ? Math.round(enrollments.reduce((a, e) => a + e.finalPercentage, 0) / enrollments.length) : 0;
 
-          <div className="flex-1 min-w-[200px]">
-            <select className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-              <option value="current">Current Semester</option>
-              <option value="previous">Previous Semester</option>
-              <option value="all">All Semesters</option>
-            </select>
-          </div>
-
-          <div className="flex-1 min-w-[200px]">
-            <select className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-              <option value="all">All Grades</option>
-              <option value="a">A Grades</option>
-              <option value="b">B Grades</option>
-              <option value="c">C Grades</option>
-              <option value="d">D Grades</option>
-              <option value="f">F Grades</option>
-            </select>
-          </div>
-
-          <div className="flex items-end">
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-md flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              Apply Filters
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Current Semester Grades */}
-      <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
-        <div className="p-4 border-b">
-          <h2 className="text-lg font-medium">Current Semester Grades</h2>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Course
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Code
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Credits
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Instructor
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Grade
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  GPA
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {currentSemesterGrades.map((course) => (
-                <tr key={course.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{course.name}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{course.code}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{course.credits}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{course.instructor}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className={`text-sm font-medium ${getGradeColor(course.grade)}`}>{course.grade}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{course.gpa}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(course.status)}`}
-                    >
-                      {course.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Grade Distribution */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg border p-6 shadow-sm">
-          <h2 className="text-lg font-medium mb-4">Grade Distribution</h2>
-          <div className="h-64">
-            <GradeDistributionChart />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg border p-6 shadow-sm">
-          <h2 className="text-lg font-medium mb-4">GPA Trend</h2>
-          <div className="h-64">
-            <GPATrendChart />
-          </div>
-        </div>
-      </div>
-
-      {/* Academic History */}
-      <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
-        <div className="p-4 border-b">
-          <h2 className="text-lg font-medium">Academic History</h2>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Semester
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Credits
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  GPA
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Cumulative GPA
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Standing
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {academicHistory.map((semester) => (
-                <tr key={semester.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{semester.name}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{semester.credits}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{semester.gpa}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{semester.cumulativeGPA}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStandingColor(semester.standing)}`}
-                    >
-                      {semester.standing}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200">
-          <div className="text-sm text-gray-700">
-            Showing <span className="font-medium">1</span> to <span className="font-medium">4</span> of{" "}
-            <span className="font-medium">4</span> semesters
-          </div>
-          <div className="flex items-center space-x-2">
-            <button className="p-1 rounded-md border border-gray-300 text-gray-500 hover:bg-gray-50">
-              <ChevronLeft size={16} />
-            </button>
-            <button className="px-3 py-1 rounded-md text-sm font-medium bg-blue-600 text-white">1</button>
-            <button className="p-1 rounded-md border border-gray-300 text-gray-500 hover:bg-gray-50">
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-      </div>
+  if (isLoading) return (
+    <div className="flex items-center justify-center h-[60vh]">
+      <div className="w-10 h-10 border-4 border-primary-100/30 border-t-primary-100 rounded-full animate-spin" />
     </div>
-  )
-}
-
-function SummaryCard({ title, value, description, icon, color }) {
-  return (
-    <div className={`rounded-lg border p-6 shadow-sm ${color}`}>
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-medium text-gray-500">{title}</h3>
-        <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">{icon}</div>
-      </div>
-      <p className="text-2xl font-bold">{value}</p>
-      <p className="text-sm text-gray-500 mt-1">{description}</p>
-    </div>
-  )
-}
-
-function getGradeColor(grade) {
-  if (grade.startsWith("A")) return "text-green-600"
-  if (grade.startsWith("B")) return "text-blue-600"
-  if (grade.startsWith("C")) return "text-amber-600"
-  if (grade.startsWith("D")) return "text-orange-600"
-  if (grade.startsWith("F")) return "text-red-600"
-  return "text-gray-600"
-}
-
-function getStatusColor(status) {
-  switch (status) {
-    case "Completed":
-      return "bg-green-100 text-green-800"
-    case "In Progress":
-      return "bg-blue-100 text-blue-800"
-    case "Pending":
-      return "bg-amber-100 text-amber-800"
-    default:
-      return "bg-gray-100 text-gray-800"
-  }
-}
-
-function getStandingColor(standing) {
-  switch (standing) {
-    case "Dean's List":
-      return "bg-green-100 text-green-800"
-    case "Good Standing":
-      return "bg-blue-100 text-blue-800"
-    case "Academic Warning":
-      return "bg-amber-100 text-amber-800"
-    case "Academic Probation":
-      return "bg-red-100 text-red-800"
-    default:
-      return "bg-gray-100 text-gray-800"
-  }
-}
-
-function GradeDistributionChart() {
-  const grades = [
-    { grade: "A", count: 8 },
-    { grade: "B", count: 5 },
-    { grade: "C", count: 2 },
-    { grade: "D", count: 0 },
-    { grade: "F", count: 0 },
-  ]
+  );
 
   return (
-    <div className="w-full h-full flex items-end justify-around">
-      {grades.map((grade, index) => (
-        <div key={index} className="flex flex-col items-center">
-          <div
-            className={`w-16 rounded-t-sm ${getBarColor(grade.grade)}`}
-            style={{ height: `${grade.count * 20}px` }}
-          ></div>
-          <p className="mt-2 font-medium">{grade.grade}</p>
-          <p className="text-sm text-gray-500">{grade.count} courses</p>
+    <div className="space-y-8 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="inline-flex items-center px-3 py-1 mb-2 rounded-full bg-primary-100/10 border border-primary-100/20">
+            <span className="text-primary-100 text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5">
+              <Award className="w-3 h-3" /> Academic Performance
+            </span>
+          </div>
+          <TextGenerateEffect words="My Grades"
+            className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent" />
+          <p className="text-muted-foreground font-medium mt-1">Track your grades and academic performance</p>
         </div>
-      ))}
-    </div>
-  )
-}
-
-function getBarColor(grade) {
-  switch (grade) {
-    case "A":
-      return "bg-green-500"
-    case "B":
-      return "bg-blue-500"
-    case "C":
-      return "bg-amber-500"
-    case "D":
-      return "bg-orange-500"
-    case "F":
-      return "bg-red-500"
-    default:
-      return "bg-gray-500"
-  }
-}
-
-function GPATrendChart() {
-  return (
-    <div className="w-full h-full relative">
-      <div className="absolute inset-0 grid grid-cols-4 grid-rows-4 border-l border-b">
-        {/* Y-axis labels */}
-        <div className="absolute -left-8 top-0 h-full flex flex-col justify-between text-xs text-gray-500">
-          <span>4.0</span>
-          <span>3.0</span>
-          <span>2.0</span>
-          <span>1.0</span>
-          <span>0.0</span>
-        </div>
-
-        {/* X-axis labels */}
-        <div className="absolute bottom-[-20px] left-0 w-full flex justify-between text-xs text-gray-500">
-          <span>Sem 1</span>
-          <span>Sem 2</span>
-          <span>Sem 3</span>
-          <span>Current</span>
-        </div>
-
-        {/* Grid lines */}
-        <div className="absolute inset-0 grid grid-rows-4">
-          <div className="border-t border-gray-100"></div>
-          <div className="border-t border-gray-100"></div>
-          <div className="border-t border-gray-100"></div>
-          <div className="border-t border-gray-100"></div>
-        </div>
-
-        {/* Chart line */}
-        <svg className="absolute inset-0" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <path d="M0,30 L33,25 L66,20 L100,15" fill="none" stroke="#3b82f6" strokeWidth="2" />
-          <path d="M0,30 L33,25 L66,20 L100,15" fill="url(#blue-gradient)" strokeWidth="0" opacity="0.2" />
-          <defs>
-            <linearGradient id="blue-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#3b82f6" />
-              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-        </svg>
+        <Button variant="premium" className="rounded-xl px-6 shadow-neon-primary group h-11">
+          <Sparkles className="mr-2 h-4 w-4 group-hover:animate-pulse" /> Performance Insights
+        </Button>
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {[
+          { label: 'Cumulative GPA', value: gpa, icon: Award, color: 'text-amber-500', desc: 'Grade Point Average' },
+          { label: 'Average Score', value: `${avgPct}%`, icon: TrendingUp, color: 'text-emerald-500', desc: 'Across all modules' },
+          { label: 'Courses Enrolled', value: enrollments.length, icon: BookOpen, color: 'text-blue-500', desc: 'Total enrollments' },
+        ].map((s) => (
+          <Card key={s.label} className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 rounded-2xl">
+            <CardContent className="p-5 flex items-center gap-4">
+              <div className={cn('p-3 rounded-2xl bg-white/50 dark:bg-slate-800/50 border border-white/20', s.color)}>
+                <s.icon className="w-5 h-5" />
+              </div>
+              <div>
+                <div className={cn('text-2xl font-black tracking-tight', s.color)}>{s.value}</div>
+                <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{s.label}</div>
+                <div className="text-[10px] text-muted-foreground opacity-70">{s.desc}</div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input placeholder="Search modules..." value={search} onChange={(e) => setSearch(e.target.value)}
+          className="pl-9 rounded-xl bg-white/50 dark:bg-slate-800/50 border-white/20 dark:border-slate-700/50" />
+      </div>
+
+      {filtered.length === 0 ? (
+        <Card className="bg-white/20 dark:bg-slate-900/20 border border-dashed border-white/20 rounded-3xl">
+          <CardContent className="py-16 text-center opacity-40">
+            <Award className="w-12 h-12 mx-auto mb-3" />
+            <p className="font-bold text-sm">No grades available yet</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((enrollment) => {
+            const isOpen = expanded === enrollment.id;
+            const pct = enrollment.finalPercentage;
+            return (
+              <Card key={enrollment.id} className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 rounded-2xl overflow-hidden group hover:shadow-lg transition-all duration-300">
+                <div className="p-5 cursor-pointer" onClick={() => setExpanded(isOpen ? null : enrollment.id)}>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <div className={cn('shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm border', gradeBg(pct), gradeColor(pct))}>
+                        {enrollment.letterGrade || '—'}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-base leading-tight truncate group-hover:text-primary-100 transition-colors">
+                          {enrollment.module.moduleName}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className="text-primary-100 border-primary-100/20 text-[10px]">
+                            {enrollment.module.moduleCode}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground">
+                            {enrollment.semester.semesterName} {enrollment.semester.year}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className={cn('text-2xl font-black tracking-tight', gradeColor(pct))}>
+                        {pct > 0 ? `${pct.toFixed(1)}%` : '—'}
+                      </div>
+                      <div className="text-[10px] font-bold text-muted-foreground uppercase">
+                        {enrollment.gradePoint > 0 ? `${enrollment.gradePoint.toFixed(1)} GP` : 'Pending'}
+                      </div>
+                    </div>
+                    {isOpen ? <ChevronUp className="w-4 h-4 text-primary-100 shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />}
+                  </div>
+                  {pct > 0 && <Progress value={pct} className="h-1.5 rounded-full mt-3" />}
+                </div>
+
+                {isOpen && enrollment.grade.length > 0 && (
+                  <div className="border-t border-white/10 bg-white/5 dark:bg-slate-900/20 p-4 space-y-2">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3">Assessment Breakdown</div>
+                    {enrollment.grade.map((g) => (
+                      <div key={g.id} className="flex items-center justify-between p-3 rounded-xl bg-white/30 dark:bg-slate-800/30 border border-white/10">
+                        <div className="flex items-center gap-2.5">
+                          <StatusIcon status={g.status} />
+                          <div>
+                            <div className="text-sm font-semibold">{g.assessment.title}</div>
+                            <div className="text-[10px] text-muted-foreground uppercase">{g.assessment.type} • Weight: {g.assessment.weight}%</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className={cn('font-black text-sm', gradeColor(g.percentage))}>
+                            {g.status === 'GRADED' ? `${g.score}/${g.assessment.maxScore}` : g.status}
+                          </div>
+                          {g.status === 'GRADED' && <div className="text-[10px] text-muted-foreground">{g.percentage.toFixed(1)}%</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
-  )
+  );
 }
-
-const currentSemesterGrades = [
-  {
-    id: 1,
-    name: "Advanced Mathematics",
-    code: "MATH 301",
-    credits: 3,
-    instructor: "Dr. Robert Chen",
-    grade: "A",
-    gpa: "4.0",
-    status: "In Progress",
-  },
-  {
-    id: 2,
-    name: "Introduction to Computer Science",
-    code: "CS 101",
-    credits: 4,
-    instructor: "Prof. Maria Garcia",
-    grade: "A-",
-    gpa: "3.7",
-    status: "In Progress",
-  },
-  {
-    id: 3,
-    name: "Physics 101",
-    code: "PHYS 101",
-    credits: 4,
-    instructor: "Dr. James Wilson",
-    grade: "B+",
-    gpa: "3.3",
-    status: "In Progress",
-  },
-  {
-    id: 4,
-    name: "English Literature",
-    code: "ENG 201",
-    credits: 3,
-    instructor: "Prof. Emily Johnson",
-    grade: "A",
-    gpa: "4.0",
-    status: "In Progress",
-  },
-  {
-    id: 5,
-    name: "Introduction to Psychology",
-    code: "PSYC 101",
-    credits: 3,
-    instructor: "Dr. Michael Brown",
-    grade: "B",
-    gpa: "3.0",
-    status: "In Progress",
-  },
-]
-
-const academicHistory = [
-  {
-    id: 1,
-    name: "Fall 2024",
-    credits: 15,
-    gpa: "3.8",
-    cumulativeGPA: "3.8",
-    standing: "Dean's List",
-  },
-  {
-    id: 2,
-    name: "Spring 2024",
-    credits: 16,
-    gpa: "3.6",
-    cumulativeGPA: "3.7",
-    standing: "Dean's List",
-  },
-  {
-    id: 3,
-    name: "Fall 2023",
-    credits: 14,
-    gpa: "3.5",
-    cumulativeGPA: "3.5",
-    standing: "Good Standing",
-  },
-  {
-    id: 4,
-    name: "Current (Spring 2025)",
-    credits: 17,
-    gpa: "3.8 (Projected)",
-    cumulativeGPA: "3.7",
-    standing: "In Progress",
-  },
-]

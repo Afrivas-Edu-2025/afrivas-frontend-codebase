@@ -6,7 +6,7 @@ export default function Teachers() {
   const router = useRouter()
 
   useEffect(() => {
-    router.push("/teacher/dashboard")
+    router.push("/lecturer/dashboard")
   }, [router])
 
   return (
