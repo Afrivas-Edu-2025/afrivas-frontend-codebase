@@ -6,21 +6,6 @@ type ApiResponse = {
   data?: any;
 };
 
-export type SignupUserRequest = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  gender: string;
-  dob: string;
-  role: string;
-  year?: string;
-  semester?: string;
-  faculty?: string;
-  department?: string;
-  institutionId: string;
-};
-
 // login now uses username, not email
 export type LoginUserRequest = {
   username: string;
@@ -53,20 +38,6 @@ export const authApi = createApi({
     },
   }),
   endpoints: (builder) => ({
-    signupUser: builder.mutation<ApiResponse, SignupUserRequest>({
-      query: (data) => ({ url: '/auth/signup', method: 'POST', body: data }),
-      transformResponse: (response: any): ApiResponse => ({
-        success: response.success,
-        message: response.message || 'User registration successful',
-        data: response.data,
-      }),
-      transformErrorResponse: (response: any): ApiResponse => ({
-        success: false,
-        message: response.data?.message || 'User registration failed',
-        data: response.data?.errors || [],
-      }),
-    }),
-
     loginUser: builder.mutation<ApiResponse, LoginUserRequest>({
       query: (data) => ({ url: '/auth/login', method: 'POST', body: data }),
       transformResponse: (response: any): ApiResponse => ({
@@ -116,7 +87,6 @@ export const authApi = createApi({
 });
 
 export const {
-  useSignupUserMutation,
   useLoginUserMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
