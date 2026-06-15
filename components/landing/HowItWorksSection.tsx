@@ -137,7 +137,7 @@ export function HowItWorksSection() {
 
         {/* CTA */}
         <div className="mt-12 text-center">
-          <Link href="/auth/signup">
+          <Link href="/login">
             <Button size="lg" className="gap-2">
               Start Your Journey
               <ArrowRight className="h-4 w-4" />

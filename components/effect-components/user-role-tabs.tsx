@@ -116,7 +116,7 @@ const Feature108 = ({
                     {tab.content.description}
                   </p>
                   <Button className="mt-2.5 w-fit gap-2" size="lg" asChild>
-                    <a href="/auth/student/signup"> {/* Adjust href based on role if needed */}
+                    <a href="/login">
                       {tab.content.buttonText}
                     </a>
                   </Button>

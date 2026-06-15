@@ -45,7 +45,7 @@ export function CTASection() {
                 </p>
                 
                 <div className="flex flex-wrap gap-4">
-                  <Link href="/auth/signup">
+                  <Link href="/login">
                     <Button 
                       size="lg" 
                       className="bg-white text-primary-100 hover:bg-gray-100 shadow-3d hover:shadow-3d-hover transition-all duration-300 px-8 py-4 text-lg font-semibold rounded-xl group"
