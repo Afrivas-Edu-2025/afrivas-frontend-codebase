@@ -523,7 +523,7 @@ export const adminApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ['Faculty', 'Department', 'User', 'Stats', 'Grade', 'Course', 'Class', 'Student', 'Lecturer', 'Semester', 'Message', 'CalendarEvent', 'Timetable'],
+  tagTypes: ['Faculty', 'Department', 'User', 'Stats', 'Grade', 'Course', 'Class', 'Student', 'Lecturer', 'Semester', 'Message', 'CalendarEvent', 'Timetable', 'Attendance'],
   endpoints: (builder) => ({
     // Dashboard Stats
     getDashboardStats: builder.query<ApiResponse<DashboardStats>, void>({
@@ -1459,7 +1459,10 @@ export const adminApi = createApi({
     // ---- Attendance Management ----
     markAttendance: builder.mutation<ApiResponse<any[]>, { classId: number; date: string; records: Array<{ studentId: number; status: string; note?: string }> }>({
       query: (data) => ({ url: '/attendance', method: 'POST', body: data }),
-      invalidatesTags: ['Student'],
+      invalidatesTags: (result, error, { classId, date }) => [
+        'Attendance',
+        { type: 'Attendance', id: `${classId}-${date}` },
+      ],
     }),
 
     getAllAttendance: builder.query<ApiResponse<any[]>, { classId?: number; studentId?: number; date?: string } | void>({
@@ -1471,16 +1474,17 @@ export const adminApi = createApi({
         const qs = p.toString();
         return `/attendance${qs ? `?${qs}` : ''}`;
       },
-      providesTags: ['Student'],
+      providesTags: ['Attendance'],
     }),
 
     getAttendanceByClass: builder.query<ApiResponse<any[]>, { classId: number; date?: string }>({
       query: ({ classId, date }) => `/attendance/class/${classId}${date ? `?date=${date}` : ''}`,
-      providesTags: ['Student'],
+      providesTags: (result, error, { classId, date }) => [{ type: 'Attendance', id: `${classId}-${date ?? 'all'}` }],
     }),
 
-    getClassStudentsForAttendance: builder.query<ApiResponse<any[]>, number>({
-      query: (classId) => `/attendance/class/${classId}/students`,
+    getClassStudentsForAttendance: builder.query<ApiResponse<any[]>, { classId: number; moduleId?: number }>({
+      query: ({ classId, moduleId }) =>
+        `/attendance/class/${classId}/students${moduleId ? `?moduleId=${moduleId}` : ''}`,
       providesTags: ['Student'],
     }),
 

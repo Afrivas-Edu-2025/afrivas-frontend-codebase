@@ -275,6 +275,11 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
           ],
           Teaching: [
             {
+              href: "/lecturer/dashboard/attendance",
+              icon: <ClipboardList size={20} />,
+              label: "Attendance",
+            },
+            {
               href: "/lecturer/dashboard/grades",
               icon: <GraduationCap size={20} />,
               label: "Grades",

@@ -25,7 +25,7 @@ import {
 } from '@/services/studentApi';
 import Link from 'next/link';
 
-const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const DAY_ORDER = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
 
 function formatTime(t: string) {
   if (!t) return '';
@@ -59,7 +59,7 @@ export default function StudentDashboard() {
 
   // Group timetable by day
   const timetableByDay = timetableEntries.reduce<Record<string, typeof timetableEntries>>((acc, entry) => {
-    const day = entry.day || 'Unknown';
+    const day = (entry.day || 'Unknown').trim().toUpperCase();
     if (!acc[day]) acc[day] = [];
     acc[day].push(entry);
     return acc;
