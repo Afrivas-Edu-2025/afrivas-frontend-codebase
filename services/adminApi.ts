@@ -25,17 +25,19 @@ const safeArray = <T = any>(value: unknown): T[] => {
   return Array.isArray(value) ? (value as T[]) : [];
 };
 
-const isUsableJwt = (token: string): boolean => {
+const isExpiredJwt = (token: string): boolean => {
   const parts = token.split('.');
   if (parts.length !== 3) return false;
 
   try {
-    const payload = JSON.parse(atob(parts[1]));
+    // JWT uses base64URL encoding — replace chars before decoding
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(atob(base64));
     if (typeof payload?.exp === 'number') {
       const now = Math.floor(Date.now() / 1000);
-      if (payload.exp <= now) return false;
+      return payload.exp <= now;
     }
-    return true;
+    return false;
   } catch {
     return false;
   }
@@ -44,19 +46,14 @@ const isUsableJwt = (token: string): boolean => {
 const getStoredToken = (): string | null => {
   if (typeof window === 'undefined') return null;
 
-  const candidates = [
-    localStorage.getItem('authToken'),
-    localStorage.getItem('accessToken'),
-  ].filter((value): value is string => Boolean(value));
+  const token =
+    localStorage.getItem('accessToken') ||
+    localStorage.getItem('authToken') ||
+    null;
 
-  const validToken = candidates.find(isUsableJwt) || null;
+  if (!token || isExpiredJwt(token)) return null;
 
-  if (!validToken && candidates.length > 0) {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('accessToken');
-  }
-
-  return validToken;
+  return token;
 };
 
 const mapFaculty = (faculty: any): Faculty => ({
@@ -352,13 +349,7 @@ export type Course = {
   name: string;
   code: string;
   description?: string;
-  credits: number;
-  level: string;
-  semester: string;
-  departmentId: string;
-  department?: Department;
-  lecturerId?: string;
-  lecturer?: Lecturer;
+  lecturers?: { id: string; firstName: string; lastName: string }[];
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -368,11 +359,7 @@ export type CreateCourseRequest = {
   name: string;
   code: string;
   description?: string;
-  credits: number;
-  level: string;
-  semester: string;
-  departmentId: string;
-  lecturerId?: string;
+  lecturerIds?: string[];
 };
 
 // Class Types
@@ -380,19 +367,17 @@ export type Class = {
   id: string;
   name: string;
   code: string;
-  courseId: string;
-  moduleId?: string;
-  course?: Course;
-  lecturerId?: string;
-  lecturer?: Lecturer;
-  academicYear: string;
+  facultyId: string;
+  departmentId: string;
+  levelId: string;
   semesterId?: string;
-  semester: string;
-  room?: string;
-  schedule?: string;
   capacity: number;
-  enrolledCount: number;
-  isActive: boolean;
+  faculty?: { id: string; facultyName: string };
+  department?: { id: string; deptName: string };
+  level?: { id: string; levelName: string };
+  semester?: { id: string; semesterName: string; year: string };
+  _count?: { timeTable: number };
+  timeTable?: Timetable[];
   createdAt: string;
   updatedAt: string;
 };
@@ -400,17 +385,54 @@ export type Class = {
 export type CreateClassRequest = {
   name: string;
   code: string;
-  courseId?: string;
-  moduleId?: string;
-  lecturerId?: string;
-  academicYear: string;
-  semester?: string;
-  semesterId?: string;
-  room?: string;
-  schedule?: string;
-  day?: string;
-  time?: string;
+  facultyId: number | string;
+  departmentId: number | string;
+  levelName: string;
+  semesterName?: string;
   capacity: number;
+};
+
+// Timetable Types
+export type Timetable = {
+  id: string;
+  classId: string;
+  moduleId: string;
+  lecturerId?: string;
+  classroomId?: string;
+  day: string;
+  startTime: string;
+  endTime: string;
+  module?: Course;
+  lecturer?: { id: string; user: { firstName: string; lastName: string } };
+  classroom?: Classroom;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateTimetableRequest = {
+  classId: number | string;
+  moduleId: number | string;
+  lecturerId?: number | string;
+  classroomId?: number | string;
+  day: string;
+  startTime: string;
+  endTime: string;
+};
+
+// Classroom Types
+export type Classroom = {
+  id: string;
+  name: string;
+  location?: string;
+  capacity?: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateClassroomRequest = {
+  name: string;
+  location?: string;
+  capacity?: number;
 };
 
 // Analytics Types
@@ -501,7 +523,7 @@ export const adminApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ['Faculty', 'Department', 'User', 'Stats', 'Grade', 'Course', 'Class', 'Student', 'Lecturer', 'Semester', 'Message', 'CalendarEvent'],
+  tagTypes: ['Faculty', 'Department', 'User', 'Stats', 'Grade', 'Course', 'Class', 'Student', 'Lecturer', 'Semester', 'Message', 'CalendarEvent', 'Timetable'],
   endpoints: (builder) => ({
     // Dashboard Stats
     getDashboardStats: builder.query<ApiResponse<DashboardStats>, void>({
@@ -741,11 +763,11 @@ export const adminApi = createApi({
             name: module?.moduleName ?? '',
             code: module?.moduleCode ?? '',
             description: module?.description,
-            credits: module?.creditHour ?? 0,
-            level: String(module?.levelId ?? ''),
-            semester: module?.semester ?? '',
-            departmentId: String(module?.deptId ?? ''),
-            lecturerId: module?.lecturerId ? String(module.lecturerId) : undefined,
+            lecturers: (module?.moduleLecturers ?? []).map((ml: any) => ({
+              id: String(ml?.lecturer?.id ?? ''),
+              firstName: ml?.lecturer?.user?.firstName ?? '',
+              lastName: ml?.lecturer?.user?.lastName ?? '',
+            })),
             isActive: true,
             createdAt: module?.createdAt ?? new Date().toISOString(),
             updatedAt: module?.updatedAt ?? module?.createdAt ?? new Date().toISOString(),
@@ -772,10 +794,8 @@ export const adminApi = createApi({
         body: {
           moduleName: data.name,
           moduleCode: data.code,
-          creditHour: toNumber(data.credits) ?? 0,
-          deptId: toNumber(data.departmentId),
-          facultyId: toNumber((data as any).facultyId) ?? 1,
-          levelId: toNumber(data.level) ?? 1,
+          description: data.description,
+          lecturerIds: (data.lecturerIds ?? []).map(Number).filter(Boolean),
         },
       }),
       invalidatesTags: ['Course'],
@@ -802,35 +822,28 @@ export const adminApi = createApi({
     getClasses: builder.query<ApiResponse<Class[]>, void>({
       query: () => '/classes',
       transformResponse: (response: any): ApiResponse<Class[]> => {
-        const rawData = safeArray(response?.data);
+        const raw = response?.data;
+        const arr = Array.isArray(raw) ? raw : (raw?.data ?? []);
         return {
           success: true,
           message: 'Classes fetched successfully',
-          data: rawData.map((item: any) => {
-            const moduleData = item?.module ?? {};
-            const semesterData = item?.semester ?? {};
-            return {
-              id: String(item?.id ?? ''),
-              name: moduleData?.moduleName
-                ? `${moduleData.moduleName} - Class ${item?.id ?? ''}`
-                : `Class ${item?.id ?? ''}`,
-              code: moduleData?.moduleCode ?? '',
-              courseId: String(item?.moduleId ?? ''),
-              lecturerId: moduleData?.lecturerId ? String(moduleData.lecturerId) : '',
-              semesterId: String(item?.semesterId ?? ''),
-              semester: semesterData?.semesterName ?? '',
-              academicYear: semesterData?.year ? String(semesterData.year) : '',
-              schedule: item?.day
-                ? `${item.day}${item?.time ? ` ${new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}`
-                : '',
-              room: '',
-              capacity: 50,
-              enrolledCount: 0,
-              isActive: true,
-              createdAt: item?.createdAt ?? new Date().toISOString(),
-              updatedAt: item?.updatedAt ?? item?.createdAt ?? new Date().toISOString(),
-            };
-          }),
+          data: arr.map((item: any) => ({
+            id: String(item?.id ?? ''),
+            name: item?.name ?? '',
+            code: item?.code ?? '',
+            facultyId: String(item?.facultyId ?? ''),
+            departmentId: String(item?.departmentId ?? ''),
+            levelId: String(item?.levelId ?? ''),
+            semesterId: item?.semesterId ? String(item.semesterId) : undefined,
+            capacity: item?.capacity ?? 50,
+            faculty: item?.faculty ?? undefined,
+            department: item?.department ?? undefined,
+            level: item?.level ?? undefined,
+            semester: item?.semester ?? undefined,
+            _count: item?._count ?? undefined,
+            createdAt: item?.createdAt ?? '',
+            updatedAt: item?.updatedAt ?? '',
+          })),
         };
       },
       providesTags: ['Class'],
@@ -838,6 +851,27 @@ export const adminApi = createApi({
 
     getClassById: builder.query<ApiResponse<Class>, string>({
       query: (id) => `/classes/${id}`,
+      transformResponse: (response: any): ApiResponse<Class> => ({
+        success: true,
+        message: 'Class fetched',
+        data: {
+          id: String(response?.data?.id ?? ''),
+          name: response?.data?.name ?? '',
+          code: response?.data?.code ?? '',
+          facultyId: String(response?.data?.facultyId ?? ''),
+          departmentId: String(response?.data?.departmentId ?? ''),
+          levelId: String(response?.data?.levelId ?? ''),
+          semesterId: response?.data?.semesterId ? String(response.data.semesterId) : undefined,
+          capacity: response?.data?.capacity ?? 50,
+          faculty: response?.data?.faculty,
+          department: response?.data?.department,
+          level: response?.data?.level,
+          semester: response?.data?.semester,
+          timeTable: safeArray(response?.data?.timeTable),
+          createdAt: response?.data?.createdAt ?? '',
+          updatedAt: response?.data?.updatedAt ?? '',
+        },
+      }),
       providesTags: (result, error, id) => [{ type: 'Class', id }],
     }),
 
@@ -851,11 +885,13 @@ export const adminApi = createApi({
         url: '/classes',
         method: 'POST',
         body: {
-          courseId: toNumber((data as any).courseId ?? (data as any).moduleId),
-          semesterId: toNumber((data as any).semesterId ?? (data as any).semester),
-          schedule: (data as any).schedule,
-          day: (data as any).day,
-          time: (data as any).time,
+          name: data.name,
+          code: data.code,
+          facultyId: toNumber(data.facultyId),
+          departmentId: toNumber(data.departmentId),
+          levelName: data.levelName,
+          semesterName: data.semesterName || undefined,
+          capacity: data.capacity,
         },
       }),
       invalidatesTags: ['Class'],
@@ -864,21 +900,15 @@ export const adminApi = createApi({
     updateClass: builder.mutation<ApiResponse<Class>, { id: string; data: Partial<CreateClassRequest> }>({
       query: ({ id, data }) => ({
         url: `/classes/${id}`,
-        method: 'PUT',
+        method: 'PATCH',
         body: {
-          courseId: (data as any).courseId
-            ? toNumber((data as any).courseId)
-            : (data as any).moduleId
-              ? toNumber((data as any).moduleId)
-              : undefined,
-          semesterId: (data as any).semesterId
-            ? toNumber((data as any).semesterId)
-            : (data as any).semester
-              ? toNumber((data as any).semester)
-              : undefined,
-          schedule: (data as any).schedule,
-          day: (data as any).day,
-          time: (data as any).time,
+          name: data.name,
+          code: data.code,
+          facultyId: data.facultyId ? toNumber(data.facultyId) : undefined,
+          departmentId: data.departmentId ? toNumber(data.departmentId) : undefined,
+          levelName: data.levelName || undefined,
+          semesterName: data.semesterName,
+          capacity: data.capacity,
         },
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Class', id }, 'Class'],
@@ -890,6 +920,102 @@ export const adminApi = createApi({
         method: 'DELETE',
       }),
       invalidatesTags: ['Class'],
+    }),
+
+    // Timetable Management
+    getTimetablesByClass: builder.query<ApiResponse<Timetable[]>, string>({
+      query: (classId) => `/timetable/class/${classId}`,
+      transformResponse: (response: any): ApiResponse<Timetable[]> => ({
+        success: true,
+        message: 'Timetable fetched',
+        data: safeArray(response?.data).map((item: any) => ({
+          id: String(item.id),
+          classId: String(item.classId),
+          moduleId: String(item.moduleId ?? ''),
+          lecturerId: item.lecturerId ? String(item.lecturerId) : undefined,
+          classroomId: item.classroomId ? String(item.classroomId) : undefined,
+          day: item.day ?? '',
+          startTime: item.startTime ?? '',
+          endTime: item.endTime ?? '',
+          module: item.module ?? undefined,
+          lecturer: item.lecturer ?? undefined,
+          classroom: item.classroom ?? undefined,
+          createdAt: item.createdAt ?? '',
+          updatedAt: item.updatedAt ?? '',
+        })),
+      }),
+      providesTags: (result, error, classId) => [{ type: 'Class', id: `tt-${classId}` }],
+    }),
+
+    createTimetable: builder.mutation<ApiResponse<Timetable>, CreateTimetableRequest>({
+      query: (data) => ({
+        url: '/timetable',
+        method: 'POST',
+        body: {
+          classId: toNumber(data.classId),
+          moduleId: toNumber(data.moduleId),
+          lecturerId: data.lecturerId ? toNumber(data.lecturerId) : undefined,
+          classroomId: data.classroomId ? toNumber(data.classroomId) : undefined,
+          day: data.day,
+          startTime: data.startTime,
+          endTime: data.endTime,
+        },
+      }),
+      invalidatesTags: (result, error, data) => [{ type: 'Class', id: `tt-${data.classId}` }, { type: 'Class', id: String(data.classId) }],
+    }),
+
+    updateTimetable: builder.mutation<ApiResponse<Timetable>, { id: string; data: Partial<CreateTimetableRequest> }>({
+      query: ({ id, data }) => ({
+        url: `/timetable/${id}`,
+        method: 'PATCH',
+        body: {
+          moduleId: data.moduleId ? toNumber(data.moduleId) : undefined,
+          lecturerId: data.lecturerId ? toNumber(data.lecturerId) : undefined,
+          classroomId: data.classroomId ? toNumber(data.classroomId) : undefined,
+          day: data.day,
+          startTime: data.startTime,
+          endTime: data.endTime,
+        },
+      }),
+      invalidatesTags: (result, error, { data }) => [{ type: 'Class', id: `tt-${data.classId}` }],
+    }),
+
+    deleteTimetable: builder.mutation<ApiResponse<void>, { id: string; classId: string }>({
+      query: ({ id }) => ({ url: `/timetable/${id}`, method: 'DELETE' }),
+      invalidatesTags: (result, error, { classId }) => [{ type: 'Class', id: `tt-${classId}` }],
+    }),
+
+    // Classroom Management
+    getClassrooms: builder.query<ApiResponse<Classroom[]>, void>({
+      query: () => '/classrooms',
+      transformResponse: (response: any): ApiResponse<Classroom[]> => ({
+        success: true,
+        message: 'Classrooms fetched',
+        data: safeArray(response?.data).map((item: any) => ({
+          id: String(item.id),
+          name: item.name ?? '',
+          location: item.location ?? '',
+          capacity: item.capacity ?? undefined,
+          createdAt: item.createdAt ?? '',
+          updatedAt: item.updatedAt ?? '',
+        })),
+      }),
+      providesTags: ['Timetable'],
+    }),
+
+    createClassroom: builder.mutation<ApiResponse<Classroom>, CreateClassroomRequest>({
+      query: (data) => ({ url: '/classrooms', method: 'POST', body: data }),
+      invalidatesTags: ['Timetable'],
+    }),
+
+    updateClassroom: builder.mutation<ApiResponse<Classroom>, { id: string; data: Partial<CreateClassroomRequest> }>({
+      query: ({ id, data }) => ({ url: `/classrooms/${id}`, method: 'PATCH', body: data }),
+      invalidatesTags: ['Timetable'],
+    }),
+
+    deleteClassroom: builder.mutation<ApiResponse<void>, string>({
+      query: (id) => ({ url: `/classrooms/${id}`, method: 'DELETE' }),
+      invalidatesTags: ['Timetable'],
     }),
 
     // Student Management
@@ -1492,6 +1618,18 @@ export const {
   useCreateClassMutation,
   useUpdateClassMutation,
   useDeleteClassMutation,
+
+  // Timetable hooks
+  useGetTimetablesByClassQuery,
+  useCreateTimetableMutation,
+  useUpdateTimetableMutation,
+  useDeleteTimetableMutation,
+
+  // Classroom hooks
+  useGetClassroomsQuery,
+  useCreateClassroomMutation,
+  useUpdateClassroomMutation,
+  useDeleteClassroomMutation,
 
   // Student hooks
   useGetStudentsQuery,

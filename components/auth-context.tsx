@@ -22,7 +22,9 @@ const isUsableJwt = (token: string): boolean => {
   if (parts.length !== 3) return false;
 
   try {
-    const payload = JSON.parse(atob(parts[1]));
+    // JWT uses base64URL encoding — convert to standard base64 before atob()
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(atob(base64));
     if (typeof payload?.exp === 'number') {
       const now = Math.floor(Date.now() / 1000);
       if (payload.exp <= now) return false;
