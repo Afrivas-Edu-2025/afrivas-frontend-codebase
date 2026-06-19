@@ -34,7 +34,6 @@ import {
   Layers,
   Download,
   ChartBar,
-  CheckCircle,
 } from "lucide-react"
 
 // Define the navigation item type
@@ -168,7 +167,6 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
               href: "/admin/classes",
               icon: <Layers size={20} />,
               label: "Classes",
-              disabled: true,
             },
             {
               href: "/admin/grades",
@@ -185,16 +183,6 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
               href: "/admin/departments",
               icon: <Building2 size={20} />,
               label: "Departments",
-            },
-            {
-              href: "/admin/attendance",
-              icon: <CheckCircle size={20} />,
-              label: "Attendance",
-            },
-            {
-              href: "/admin/assignments",
-              icon: <FileText size={20} />,
-              label: "Assignments",
             },
             {
               href: "/admin/notices",
@@ -462,6 +450,26 @@ export default function UnifiedSidebar({ userRole, logoSrc = "../images/logo.web
                                   </span>
                                 )}
                               </div>
+                            ) : item.onClick && !item.href ? (
+                              <button
+                                onClick={item.onClick}
+                                className={cn(
+                                  "w-full flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-300 group relative overflow-hidden",
+                                  item.label === "Logout"
+                                    ? "text-rose-500 border border-rose-500/40 bg-transparent hover:bg-rose-500 hover:text-white hover:border-rose-500"
+                                    : "text-gray-600 dark:text-gray-400 hover:text-primary-100 dark:hover:text-primary-100 hover:bg-primary-100/5",
+                                  isCollapsed && "justify-center",
+                                )}
+                              >
+                                <span className="relative z-10 transition-transform duration-300 group-hover:scale-110">
+                                  {item.icon}
+                                </span>
+                                {!isCollapsed && (
+                                  <span className="relative z-10 ml-3 truncate font-medium">
+                                    {item.label}
+                                  </span>
+                                )}
+                              </button>
                             ) : (
                               <Link
                                 href={item.href || "#"}

@@ -7,16 +7,34 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   BookOpen, Calendar, CheckCircle, Clock, FileText, GraduationCap,
-  LineChart, Award, Sparkles, ChevronRight, TrendingUp, ArrowRight,
-  Bell, Activity
+  Award, Sparkles, ChevronRight, TrendingUp, ArrowRight,
+  Bell, Activity, Download, MapPin
 } from 'lucide-react';
 import { TextGenerateEffect } from '@/components/aceternity/text-generate-effect';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/components/auth-context';
-import { useGetMyDashboardStatsQuery, useGetMyCoursesQuery, useGetMyAssignmentsQuery, useGetMyNoticesQuery } from '@/services/studentApi';
+import {
+  useGetMyDashboardStatsQuery,
+  useGetMyCoursesQuery,
+  useGetMyAssignmentsQuery,
+  useGetMyNoticesQuery,
+  useGetMyTimetableQuery,
+  useGetMyNotesQuery,
+} from '@/services/studentApi';
 import Link from 'next/link';
+
+const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+function formatTime(t: string) {
+  if (!t) return '';
+  try {
+    return new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch {
+    return t;
+  }
+}
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -24,23 +42,38 @@ export default function StudentDashboard() {
   const { data: coursesData, isLoading: coursesLoading } = useGetMyCoursesQuery();
   const { data: assignmentsData } = useGetMyAssignmentsQuery();
   const { data: noticesData } = useGetMyNoticesQuery();
+  const { data: timetableData, isLoading: timetableLoading } = useGetMyTimetableQuery();
+  const { data: notesData, isLoading: notesLoading } = useGetMyNotesQuery();
 
   const stats = statsData?.data;
   const courses = coursesData?.data || [];
   const assignments = assignmentsData?.data || [];
   const notices = noticesData?.data || [];
+  const timetableEntries = timetableData?.data || [];
+  const notes = notesData?.data || [];
 
   const upcomingAssignments = assignments.filter((a) => {
     const diff = (new Date(a.dueDate).getTime() - Date.now()) / 86400000;
     return diff >= 0 && diff <= 7;
   }).slice(0, 3);
 
+  // Group timetable by day
+  const timetableByDay = timetableEntries.reduce<Record<string, typeof timetableEntries>>((acc, entry) => {
+    const day = entry.day || 'Unknown';
+    if (!acc[day]) acc[day] = [];
+    acc[day].push(entry);
+    return acc;
+  }, {});
+  const sortedDays = Object.keys(timetableByDay).sort(
+    (a, b) => (DAY_ORDER.indexOf(a) ?? 99) - (DAY_ORDER.indexOf(b) ?? 99)
+  );
+
   const statCards = [
     {
       title: 'Courses Enrolled',
       value: statsLoading ? '—' : String(stats?.enrolledCourses ?? courses.length),
       icon: BookOpen,
-      desc: 'Active Curriculum',
+      desc: 'Currently studying',
       color: 'text-indigo-500',
       glow: 'shadow-indigo-500/10',
       trend: `${stats?.completedCourses ?? 0} completed`,
@@ -49,7 +82,7 @@ export default function StudentDashboard() {
       title: 'Pending Assignments',
       value: statsLoading ? '—' : String(assignments.filter((a) => new Date(a.dueDate) >= new Date()).length),
       icon: FileText,
-      desc: 'Upcoming Deadlines',
+      desc: 'Still to submit',
       color: 'text-primary-100',
       glow: 'shadow-primary-100/10',
       trend: `${assignments.filter((a) => { const d = (new Date(a.dueDate).getTime() - Date.now()) / 86400000; return d >= 0 && d <= 3; }).length} due soon`,
@@ -58,47 +91,47 @@ export default function StudentDashboard() {
       title: 'Attendance Rate',
       value: statsLoading ? '—' : `${stats?.attendanceRate ?? 0}%`,
       icon: CheckCircle,
-      desc: 'Scholastic Presence',
+      desc: 'Classes attended',
       color: 'text-emerald-500',
       glow: 'shadow-emerald-500/10',
-      trend: stats?.attendanceRate && stats.attendanceRate >= 75 ? 'Good Standing' : 'Needs Improvement',
+      trend: stats?.attendanceRate && stats.attendanceRate >= 75 ? 'Good standing' : 'Needs improvement',
     },
     {
-      title: 'Cumulative GPA',
+      title: 'Your GPA',
       value: statsLoading ? '—' : String(stats?.averageGPA ?? 0),
       icon: Award,
-      desc: 'Grade Point Average',
+      desc: 'Grade point average',
       color: 'text-amber-500',
       glow: 'shadow-amber-500/10',
-      trend: stats?.averageGPA && stats.averageGPA >= 3.5 ? 'Excellent' : stats?.averageGPA && stats.averageGPA >= 2.5 ? 'Good' : 'Needs Improvement',
+      trend: stats?.averageGPA && stats.averageGPA >= 3.5 ? 'Excellent' : stats?.averageGPA && stats.averageGPA >= 2.5 ? 'Good' : 'Needs improvement',
     },
   ];
 
   return (
     <div className="space-y-12 p-2 animate-in fade-in duration-700">
-      {/* Header Section */}
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
         <div className="space-y-2">
           <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-primary-100/10 border border-primary-100/20 text-[11px] font-bold text-primary-100 uppercase tracking-widest">
-            <Activity className="w-3.5 h-3.5 mr-2" /> Scholastic Command
+            <Activity className="w-3.5 h-3.5 mr-2" /> Student Dashboard
           </div>
           <TextGenerateEffect
-            words="Strategic Overview"
+            words="My Learning"
             className="text-5xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent"
           />
           <p className="text-muted-foreground font-medium max-w-2xl text-lg">
             Welcome back, <span className="text-primary-100 font-bold">{user?.username || 'Student'}</span>.
             {stats?.attendanceRate && stats.attendanceRate >= 80
-              ? ' Your academic trajectory is at optimal capacity.'
-              : ' Keep up with your studies to stay on track.'}
+              ? " You're doing great — keep it up!"
+              : ' Stay on top of your studies to stay on track.'}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="rounded-xl border-white/20 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl font-black uppercase tracking-widest text-[10px] h-12 px-6">
-            Full Archive
+            View All
           </Button>
           <Button variant="premium" className="rounded-xl px-6 h-12 shadow-neon-primary group">
-            <Sparkles className="mr-2 h-4 w-4 group-hover:animate-pulse" /> Insight Report
+            <Sparkles className="mr-2 h-4 w-4 group-hover:animate-pulse" /> My Progress
           </Button>
         </div>
       </div>
@@ -112,11 +145,13 @@ export default function StudentDashboard() {
 
       {/* Main Tabs */}
       <Tabs defaultValue="courses" className="space-y-10">
-        <div className="flex items-center justify-between">
-          <TabsList className="bg-white/30 dark:bg-slate-900/30 backdrop-blur-2xl border border-white/20 dark:border-slate-800/50 p-1.5 rounded-3xl h-16 flex w-fit">
-            <TabsTrigger value="courses" className="rounded-2xl px-8 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm">Curriculum</TabsTrigger>
-            <TabsTrigger value="upcoming" className="rounded-2xl px-8 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm">Deadlines</TabsTrigger>
-            <TabsTrigger value="notices" className="rounded-2xl px-8 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm">Notices</TabsTrigger>
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <TabsList className="bg-white/30 dark:bg-slate-900/30 backdrop-blur-2xl border border-white/20 dark:border-slate-800/50 p-1.5 rounded-3xl h-16 flex w-fit overflow-x-auto">
+            <TabsTrigger value="courses" className="rounded-2xl px-6 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm whitespace-nowrap">My Courses</TabsTrigger>
+            <TabsTrigger value="timetable" className="rounded-2xl px-6 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm whitespace-nowrap">Timetable</TabsTrigger>
+            <TabsTrigger value="resources" className="rounded-2xl px-6 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm whitespace-nowrap">Resources</TabsTrigger>
+            <TabsTrigger value="upcoming" className="rounded-2xl px-6 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm whitespace-nowrap">Assignments</TabsTrigger>
+            <TabsTrigger value="notices" className="rounded-2xl px-6 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm whitespace-nowrap">Notices</TabsTrigger>
           </TabsList>
           <div className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/5">
             <Clock className="w-3.5 h-3.5 text-primary-100" />
@@ -143,8 +178,8 @@ export default function StudentDashboard() {
             <div className="grid gap-6 md:grid-cols-2">
               {courses.slice(0, 4).map((enrollment) => {
                 const progress = Math.min(enrollment.finalPercentage || 0, 100);
-                const instructor = enrollment.module.lecturer?.user;
-                const nextClass = enrollment.module.class?.[0];
+                const firstLecturer = enrollment.module.moduleLecturers?.[0]?.lecturer?.user;
+                const nextSession = enrollment.module.timeTable?.[0];
                 return (
                   <Card key={enrollment.id}
                     className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/10 dark:border-slate-800/50 rounded-3xl overflow-hidden group hover:shadow-xl transition-all duration-500 relative">
@@ -157,7 +192,7 @@ export default function StudentDashboard() {
                           {enrollment.module.moduleName}
                         </CardTitle>
                         <CardDescription className="font-bold text-primary-100 text-[10px] uppercase tracking-[0.15em] mt-1">
-                          {instructor ? `${instructor.firstName} ${instructor.lastName}` : 'TBA'}
+                          {firstLecturer ? `${firstLecturer.firstName} ${firstLecturer.lastName}` : 'TBA'}
                         </CardDescription>
                       </div>
                     </CardHeader>
@@ -173,7 +208,7 @@ export default function StudentDashboard() {
                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary-100/5 border border-primary-100/10">
                           <Clock className="h-3 w-3 text-primary-100" />
                           <span className="text-[9px] font-black text-gray-700 dark:text-gray-300 uppercase tracking-widest">
-                            {nextClass ? `${nextClass.day}` : 'No class scheduled'}
+                            {nextSession ? `${nextSession.day}` : 'No session scheduled'}
                           </span>
                         </div>
                         <Badge variant="outline" className={cn(
@@ -200,7 +235,122 @@ export default function StudentDashboard() {
           )}
         </TabsContent>
 
-        {/* Deadlines Tab */}
+        {/* Timetable Tab */}
+        <TabsContent value="timetable" className="space-y-6 animate-in slide-in-from-bottom-4 duration-700">
+          {timetableLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <div className="w-8 h-8 border-4 border-primary-100/30 border-t-primary-100 rounded-full animate-spin" />
+            </div>
+          ) : timetableEntries.length === 0 ? (
+            <Card className="bg-white/20 dark:bg-slate-900/20 border border-dashed border-white/20 rounded-3xl">
+              <CardContent className="py-16 text-center opacity-40">
+                <Calendar className="w-12 h-12 mx-auto mb-3" />
+                <p className="font-bold text-sm">No timetable entries yet</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/20 dark:border-slate-800/50 rounded-3xl overflow-hidden shadow-xl">
+              <CardHeader className="border-b border-white/10 pb-6">
+                <CardTitle className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+                  Weekly Schedule
+                </CardTitle>
+                <CardDescription className="font-medium">Your class sessions this week</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-white/5">
+                  {sortedDays.map((day) => (
+                    <div key={day} className="p-6 space-y-3">
+                      <h3 className="text-xs font-black text-primary-100 uppercase tracking-[0.2em]">{day}</h3>
+                      <div className="space-y-2">
+                        {timetableByDay[day].map((entry) => (
+                          <div key={entry.id} className="flex items-center justify-between p-4 bg-white/30 dark:bg-slate-800/30 rounded-2xl border border-white/10 dark:border-slate-700/30 hover:bg-white/50 dark:hover:bg-slate-800/50 transition-all">
+                            <div className="flex items-center gap-4">
+                              <div className="w-1.5 h-10 rounded-full bg-gradient-to-b from-primary-100 to-cyan-400 shadow-neon-primary/30 flex-shrink-0" />
+                              <div>
+                                <p className="font-bold text-sm text-gray-900 dark:text-white">
+                                  {entry.module.moduleName}
+                                </p>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-0.5">
+                                  {entry.module.moduleCode}
+                                  {entry.class ? ` · ${entry.class.name}` : ''}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3 text-right">
+                              {entry.classroom && (
+                                <div className="hidden sm:flex items-center gap-1 text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                                  <MapPin className="w-3 h-3" />
+                                  {entry.classroom.name}
+                                </div>
+                              )}
+                              <div className="text-xs font-black text-primary-100 bg-primary-100/10 border border-primary-100/20 rounded-xl px-3 py-1.5">
+                                {formatTime(entry.startTime)} – {formatTime(entry.endTime)}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Resources / Notes Tab */}
+        <TabsContent value="resources" className="space-y-6 animate-in slide-in-from-bottom-4 duration-700">
+          {notesLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <div className="w-8 h-8 border-4 border-primary-100/30 border-t-primary-100 rounded-full animate-spin" />
+            </div>
+          ) : notes.length === 0 ? (
+            <Card className="bg-white/20 dark:bg-slate-900/20 border border-dashed border-white/20 rounded-3xl">
+              <CardContent className="py-16 text-center opacity-40">
+                <FileText className="w-12 h-12 mx-auto mb-3" />
+                <p className="font-bold text-sm">No resources uploaded yet</p>
+                <p className="text-xs mt-1">Your lecturers will upload study materials here</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {notes.map((note) => (
+                <Card key={note.id}
+                  className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 rounded-2xl group hover:shadow-lg transition-all duration-300">
+                  <CardContent className="p-5">
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 rounded-xl bg-primary-100/10 border border-primary-100/20 text-primary-100 shrink-0">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm group-hover:text-primary-100 transition-colors leading-tight truncate">
+                          {note.title}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                          <Badge variant="outline" className="text-primary-100 border-primary-100/20 text-[10px]">
+                            {note.module.moduleCode}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                            {note.fileType?.split('/').pop()?.toUpperCase() || 'FILE'} · {note.fileSize ? `${(note.fileSize / 1024).toFixed(0)} KB` : ''}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-1.5">
+                          {new Date(note.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <a href={note.filePath} target="_blank" rel="noopener noreferrer"
+                        className="p-2 rounded-xl bg-primary-100/10 border border-primary-100/20 text-primary-100 hover:bg-primary-100/20 transition-colors shrink-0">
+                        <Download className="w-4 h-4" />
+                      </a>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Assignments Tab */}
         <TabsContent value="upcoming" className="animate-in slide-in-from-bottom-4 duration-700">
           <Card className="border-white/20 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl rounded-3xl overflow-hidden shadow-2xl">
             <CardHeader className="p-8 border-b border-white/10">

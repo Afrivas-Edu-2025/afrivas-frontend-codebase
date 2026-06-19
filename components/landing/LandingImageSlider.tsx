@@ -44,9 +44,7 @@ export function LandingImageSlider() {
   if (SLIDER_IMAGES.length === 0) return null
 
   return (
-    <div className="relative w-[768px] mx-auto p-4   rounded-xl shadow-lg
-    backdrop-blur-xl p-4 shadow-glass border transition-all duration-500 bg-white/60 dark:bg-gray-900/60 border-white/20 dark:border-gray-700/20 shadow-glass
-    ">
+    <div className="relative w-full max-w-[768px] mx-auto p-3 sm:p-4 rounded-xl backdrop-blur-xl border transition-all duration-500 bg-white/60 dark:bg-gray-900/60 border-white/20 dark:border-gray-700/20 shadow-glass">
       <div className="overflow-hidden rounded-lg border border-gray-300 shadow-inner">
         <div
           className="flex transition-transform duration-500 ease-out"
@@ -54,7 +52,7 @@ export function LandingImageSlider() {
         >
           {SLIDER_IMAGES.map((image, index) => (
             <div key={image.src} className="min-w-full flex items-center justify-center">
-              <div className="relative w-full aspect-[4/3] max-h-[360px]">
+              <div className="relative w-full aspect-[4/3] max-h-[220px] sm:max-h-[360px]">
                 <Image
                   src={image.src}
                   alt={image.alt}

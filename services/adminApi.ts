@@ -1332,6 +1332,26 @@ export const adminApi = createApi({
       }),
     }),
 
+    // Get modules assigned to the authenticated lecturer
+    getLecturerAssignedModules: builder.query<ApiResponse<any[]>, void>({
+      query: () => '/users/lecturer/assign-module',
+      transformResponse: (response: any) => ({
+        success: true,
+        message: response?.message || 'Modules fetched successfully',
+        data: response?.data || [],
+      }),
+    }),
+
+    // Get timetable/schedule for the authenticated lecturer
+    getLecturerSchedule: builder.query<ApiResponse<any[]>, void>({
+      query: () => '/users/lecturer/lecturer-timetable',
+      transformResponse: (response: any) => ({
+        success: true,
+        message: response?.message || 'Timetable fetched successfully',
+        data: response?.data || [],
+      }),
+    }),
+
     // Level Management
     getLevels: builder.query<ApiResponse<Array<{ id: number; levelName: string }>>, void>({
       query: () => '/level',
@@ -1655,6 +1675,8 @@ export const {
   useGetLecturerDetailsQuery,
   useGetMyStudentsQuery,
   useGetMyClassesQuery,
+  useGetLecturerAssignedModulesQuery,
+  useGetLecturerScheduleQuery,
   useDeleteLecturerFromUsersMutation,
 
   // Grade statistics hooks

@@ -7,34 +7,117 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import {
   BookOpen,
   Clock,
-  FileText,
   GraduationCap,
   Users,
   Calendar,
   Activity,
-  Zap,
-  ChevronRight
+  MapPin,
+  ChevronRight,
+  Layers,
+  UserCheck,
 } from "lucide-react"
 import { TextGenerateEffect } from "@/components/aceternity/text-generate-effect"
-import { Button } from "@/components/ui/button" 
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/components/auth-context"
+import {
+  useGetMyClassesQuery,
+  useGetMyStudentsQuery,
+  useGetLecturerAssignedModulesQuery,
+  useGetLecturerScheduleQuery,
+} from "@/services/adminApi"
+import Link from "next/link"
+
+const DAY_ORDER = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+function formatTime(t: string) {
+  if (!t) return ''
+  try {
+    return new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  } catch {
+    return t
+  }
+}
 
 export default function LecturerDashboard() {
-  const { user } = useAuth();
-  
+  const { user } = useAuth()
+
+  const { data: classesData, isLoading: classesLoading } = useGetMyClassesQuery()
+  const { data: studentsData, isLoading: studentsLoading } = useGetMyStudentsQuery()
+  const { data: modulesData, isLoading: modulesLoading } = useGetLecturerAssignedModulesQuery()
+  const { data: scheduleData, isLoading: scheduleLoading } = useGetLecturerScheduleQuery()
+
+  const classes = classesData?.data || []
+  const students = studentsData?.data?.students || []
+  const modules = modulesData?.data || []
+  const schedule = scheduleData?.data || []
+
+  // Deduplicate classes by classId
+  const uniqueClasses = classes.reduce<Record<number, any>>((acc, entry) => {
+    if (!acc[entry.classId]) acc[entry.classId] = { ...entry, sessions: [] }
+    acc[entry.classId].sessions.push({ day: entry.day, startTime: entry.startTime, endTime: entry.endTime, moduleCode: entry.moduleCode, classroomName: entry.classroomName })
+    return acc
+  }, {})
+  const classList = Object.values(uniqueClasses)
+
+  // Group schedule by day
+  const scheduleByDay = schedule.reduce<Record<string, any[]>>((acc, entry) => {
+    const day = entry.day || 'Unknown'
+    if (!acc[day]) acc[day] = []
+    acc[day].push(entry)
+    return acc
+  }, {})
+  const sortedDays = Object.keys(scheduleByDay).sort(
+    (a, b) => (DAY_ORDER.indexOf(a) ?? 99) - (DAY_ORDER.indexOf(b) ?? 99)
+  )
+
+  // Unique students (by studentId)
+  const uniqueStudentIds = new Set(students.map((s: any) => s.studentId))
+
   const statCards = [
-    { title: "Active Classes", value: "5", icon: BookOpen, desc: "3 sessions scheduled today", color: "text-blue-500", glow: "shadow-blue-500/10", trend: "+1 New Track" },
-    { title: "Total Students", value: "187", icon: Users, desc: "Active Scholastic Nodes", color: "text-purple-500", glow: "shadow-purple-500/10", trend: "+12 Ingress" },
-    { title: "Assignments", value: "24", icon: FileText, desc: "Pending Evaluations", color: "text-amber-500", glow: "shadow-amber-500/10", trend: "8 Critical" },
-    { title: "Success Index", value: "88%", icon: GraduationCap, desc: "Average Performance", color: "text-emerald-500", glow: "shadow-emerald-500/10", trend: "+2.1% Momentum" },
-  ];
+    {
+      title: "Classes",
+      value: classesLoading ? "—" : String(classList.length),
+      icon: BookOpen,
+      desc: "Classes you teach",
+      color: "text-blue-500",
+      glow: "shadow-blue-500/10",
+      trend: `${classes.length} sessions/week`,
+    },
+    {
+      title: "Students",
+      value: studentsLoading ? "—" : String(uniqueStudentIds.size),
+      icon: Users,
+      desc: "Enrolled in your modules",
+      color: "text-purple-500",
+      glow: "shadow-purple-500/10",
+      trend: "across all modules",
+    },
+    {
+      title: "Modules",
+      value: modulesLoading ? "—" : String(modules.length),
+      icon: Layers,
+      desc: "Assigned to you",
+      color: "text-emerald-500",
+      glow: "shadow-emerald-500/10",
+      trend: "this semester",
+    },
+    {
+      title: "Sessions / Week",
+      value: scheduleLoading ? "—" : String(schedule.length),
+      icon: Calendar,
+      desc: "Scheduled sessions",
+      color: "text-amber-500",
+      glow: "shadow-amber-500/10",
+      trend: `${sortedDays.length} days active`,
+    },
+  ]
 
   return (
     <div className="space-y-12 p-2 animate-in fade-in duration-700">
@@ -42,27 +125,19 @@ export default function LecturerDashboard() {
         <div className="space-y-2">
           <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-primary-100/10 dark:bg-primary-100/5 backdrop-blur-md border border-primary-100/20 text-[11px] font-bold text-primary-100 tracking-wide uppercase">
             <Activity className="w-3.5 h-3.5 mr-2" />
-            Educator Command
+            Lecturer Dashboard
           </div>
           <TextGenerateEffect
-            words="Academic Control"
+            words="My Classes"
             className="text-5xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent"
           />
           <p className="text-muted-foreground font-medium max-w-xl text-lg">
-            Welcome back, {user?.username || 'Professor'}! Synchronizing class diagnostics and performance telemetry.
+            Welcome back, <span className="text-primary-100 font-bold">{user?.firstName || user?.username || 'Professor'}</span>! Here is a snapshot of your teaching activity.
           </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" className="rounded-2xl border-white/20 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl font-bold h-12 px-6">
-            Generate Report
-          </Button>
-          <Button variant="premium" className="rounded-2xl px-6 h-12 shadow-neon-primary group">
-            <Zap className="mr-2 h-4 w-4 group-hover:animate-pulse" />
-            Class Analytics
-          </Button>
         </div>
       </div>
 
+      {/* Stats */}
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((card, idx) => (
           <SummaryCard
@@ -80,177 +155,262 @@ export default function LecturerDashboard() {
 
       <Tabs defaultValue="classes" className="space-y-10">
         <TabsList className="bg-white/30 dark:bg-slate-900/30 backdrop-blur-2xl border border-white/20 dark:border-slate-800/50 p-1.5 rounded-3xl h-16 flex w-fit">
-          <TabsTrigger value="classes" className="rounded-2xl px-10 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm">Registry</TabsTrigger>
-          <TabsTrigger value="schedule" className="rounded-2xl px-10 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm">Schedule</TabsTrigger>
-          <TabsTrigger value="assignments" className="rounded-2xl px-10 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm">Evaluations</TabsTrigger>
+          <TabsTrigger value="classes" className="rounded-2xl px-8 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm">My Classes</TabsTrigger>
+          <TabsTrigger value="schedule" className="rounded-2xl px-8 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm">Schedule</TabsTrigger>
+          <TabsTrigger value="modules" className="rounded-2xl px-8 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm">My Modules</TabsTrigger>
+          <TabsTrigger value="students" className="rounded-2xl px-8 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm">Students</TabsTrigger>
         </TabsList>
+
+        {/* My Classes */}
         <TabsContent value="classes" className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
-          <div className="grid gap-6 md:grid-cols-2">
-            {[
-              {
-                title: "Advanced Programming",
-                students: 42,
-                progress: 65,
-                nextClass: "Today, 2:00 PM",
-                icon: <BookOpen className="h-6 w-6 text-blue-500" />,
-              },
-              {
-                title: "Data Structures",
-                students: 38,
-                progress: 50,
-                nextClass: "Tomorrow, 10:00 AM",
-                icon: <GraduationCap className="h-6 w-6 text-purple-500" />,
-              },
-              {
-                title: "Web Development",
-                students: 45,
-                progress: 75,
-                nextClass: "Wednesday, 1:30 PM",
-                icon: <FileText className="h-6 w-6 text-emerald-500" />,
-              },
-              {
-                title: "Database Systems",
-                students: 32,
-                progress: 40,
-                nextClass: "Thursday, 11:00 AM",
-                icon: <Users className="h-6 w-6 text-amber-500" />,
-              },
-            ].map((course, i) => (
-              <Card key={i} className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/20 dark:border-slate-800/50 rounded-3xl overflow-hidden group hover:shadow-xl transition-all duration-300">
-                <CardHeader className="flex flex-row items-center gap-4">
-                  <div className="p-3 bg-white/50 dark:bg-slate-800/50 rounded-2xl shadow-sm border border-white/20 dark:border-slate-700/50">
-                    {course.icon}
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl font-bold">{course.title}</CardTitle>
-                    <CardDescription className="font-semibold text-primary-100">{course.students} students enrolled</CardDescription>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm font-bold">
-                      <span className="text-muted-foreground uppercase tracking-widest">Course Progress</span>
-                      <span className="text-primary-100">{course.progress}%</span>
-                    </div>
-                    <div className="relative h-3 w-full bg-gray-100 dark:bg-slate-800 rounded-full overflow-hidden border border-white/20 dark:border-slate-800">
-                      <div
-                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary-100 to-cyan-400 rounded-full shadow-neon-primary transition-all duration-1000 ease-out"
-                        style={{ width: `${course.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 p-3 bg-primary-100/5 dark:bg-primary-100/10 rounded-2xl border border-primary-100/10">
-                    <Clock className="h-4 w-4 text-primary-100" />
-                    <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Next class: {course.nextClass}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-        <TabsContent value="schedule" className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
-          <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/20 dark:border-slate-800/50 rounded-3xl overflow-hidden shadow-xl shadow-slate-200/50 dark:shadow-none">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">Weekly Schedule</CardTitle>
-              <CardDescription className="font-medium">Your upcoming classes and office hours</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-8">
-                {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day) => (
-                  <div key={day} className="space-y-4">
-                    <h3 className="text-sm font-bold text-primary-100 uppercase tracking-[0.2em] px-2">{day}</h3>
-                    <div className="grid gap-3">
-                      {[1, 2].map((i) => (
-                        <div
-                          key={i}
-                          className="flex items-center justify-between p-4 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/20 dark:border-slate-700/50 rounded-2xl group hover:bg-white dark:hover:bg-slate-800 transition-all duration-300"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className={cn(
-                              "w-1.5 h-12 rounded-full shadow-lg",
-                              i === 1 ? "bg-gradient-to-b from-blue-500 to-cyan-500 shadow-blue-500/20" : "bg-gradient-to-b from-emerald-500 to-teal-500 shadow-emerald-500/20"
-                            )} />
-                            <div>
-                              <p className="font-bold text-gray-800 dark:text-gray-100">{i === 1 ? "Advanced Programming" : "Office Hours"}</p>
-                              <p className="text-xs font-semibold text-gray-500 flex items-center gap-1.5 flex flex-row">
-                                <Clock className="h-3 w-3" />
-                                {i === 1 ? "10:00 AM - 11:30 AM" : "2:00 PM - 4:00 PM"}
-                              </p>
+          {classesLoading ? (
+            <div className="flex items-center justify-center h-40">
+              <div className="w-8 h-8 border-4 border-primary-100/30 border-t-primary-100 rounded-full animate-spin" />
+            </div>
+          ) : classList.length === 0 ? (
+            <Card className="bg-white/20 dark:bg-slate-900/20 border border-dashed border-white/20 rounded-3xl">
+              <CardContent className="py-16 text-center opacity-40">
+                <BookOpen className="w-12 h-12 mx-auto mb-3" />
+                <p className="font-bold text-sm">No classes assigned yet</p>
+                <p className="text-xs mt-1">You will see your classes here once timetable entries are created</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2">
+              {classList.map((cls: any) => {
+                const studentCount = students.filter((s: any) =>
+                  classes.some((c: any) => c.classId === cls.classId && c.moduleCode === s.moduleCode)
+                ).length
+                return (
+                  <Card key={cls.classId}
+                    className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/20 dark:border-slate-800/50 rounded-3xl overflow-hidden group hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="flex flex-row items-start gap-4 pb-4">
+                      <div className="p-3 bg-white/50 dark:bg-slate-800/50 rounded-2xl shadow-sm border border-white/20 dark:border-slate-700/50">
+                        <GraduationCap className="h-6 w-6 text-primary-100" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-lg font-bold leading-tight">{cls.className}</CardTitle>
+                        <CardDescription className="font-semibold text-primary-100 text-xs mt-0.5">{cls.classCode}</CardDescription>
+                        {cls.levelName && (
+                          <Badge variant="outline" className="text-[10px] border-white/20 mt-1.5">{cls.levelName}</Badge>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        {cls.sessions?.slice(0, 2).map((session: any, i: number) => (
+                          <div key={i} className="flex items-center justify-between p-3 bg-white/30 dark:bg-slate-800/30 rounded-xl border border-white/10">
+                            <div className="flex items-center gap-2">
+                              <div className="w-1 h-6 rounded-full bg-gradient-to-b from-primary-100 to-cyan-400" />
+                              <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{session.moduleCode}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground">
+                              <Clock className="w-3 h-3" />
+                              <span className="uppercase tracking-wider">{session.day}</span>
+                              <span>{formatTime(session.startTime)} – {formatTime(session.endTime)}</span>
                             </div>
                           </div>
-                          <div className={cn(
-                            "text-xs font-bold border px-3 py-1.5 rounded-xl uppercase tracking-wider shadow-sm",
-                            i === 1 ? "bg-blue-100/10 text-blue-500 border-blue-500/20" : "bg-emerald-100/10 text-emerald-500 border-emerald-500/20"
-                          )}>
-                            {i === 1 ? "Room 201" : "Office 305"}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                        ))}
+                        {cls.sessions?.length > 2 && (
+                          <p className="text-[10px] text-muted-foreground text-right px-1">+{cls.sessions.length - 2} more sessions</p>
+                        )}
+                      </div>
+                      <Link href={`/admin/classes/${cls.classId}`}>
+                        <Button variant="outline" size="sm" className="w-full rounded-2xl border-white/20 text-xs font-bold hover:bg-primary-100/10 hover:text-primary-100 transition-all">
+                          View Class <ChevronRight className="ml-1 w-3 h-3" />
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          )}
         </TabsContent>
-        <TabsContent value="assignments" className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
-          <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/20 dark:border-slate-800/50 rounded-3xl overflow-hidden shadow-xl shadow-slate-200/50 dark:shadow-none">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">Pending Assignments</CardTitle>
-              <CardDescription className="font-medium">Assignments that need grading</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="flex items-center justify-between p-6 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/20 dark:border-slate-700/50 rounded-2xl group hover:bg-white dark:hover:bg-slate-800 transition-all duration-300">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 bg-amber-100/50 dark:bg-amber-500/10 rounded-xl text-amber-600 border border-amber-500/20">
-                        <FileText className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-gray-800 dark:text-gray-100">Final Project Submission</p>
-                        <p className="text-sm font-semibold text-gray-500 uppercase tracking-widest">{42 - i} submissions</p>
+
+        {/* Schedule */}
+        <TabsContent value="schedule" className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
+          {scheduleLoading ? (
+            <div className="flex items-center justify-center h-40">
+              <div className="w-8 h-8 border-4 border-primary-100/30 border-t-primary-100 rounded-full animate-spin" />
+            </div>
+          ) : schedule.length === 0 ? (
+            <Card className="bg-white/20 dark:bg-slate-900/20 border border-dashed border-white/20 rounded-3xl">
+              <CardContent className="py-16 text-center opacity-40">
+                <Calendar className="w-12 h-12 mx-auto mb-3" />
+                <p className="font-bold text-sm">No schedule entries yet</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/20 dark:border-slate-800/50 rounded-3xl overflow-hidden shadow-xl">
+              <CardHeader className="border-b border-white/10">
+                <CardTitle className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+                  Weekly Schedule
+                </CardTitle>
+                <CardDescription className="font-medium">Your teaching sessions this week</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-white/5">
+                  {sortedDays.map((day) => (
+                    <div key={day} className="p-6 space-y-3">
+                      <h3 className="text-xs font-black text-primary-100 uppercase tracking-[0.2em]">{day}</h3>
+                      <div className="space-y-2">
+                        {scheduleByDay[day].map((entry: any) => (
+                          <div key={entry.id}
+                            className="flex items-center justify-between p-4 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/20 dark:border-slate-700/50 rounded-2xl hover:bg-white dark:hover:bg-slate-800 transition-all duration-300">
+                            <div className="flex items-center gap-4">
+                              <div className="w-1.5 h-12 rounded-full bg-gradient-to-b from-primary-100 to-cyan-400 shadow-neon-primary/30 flex-shrink-0" />
+                              <div>
+                                <p className="font-bold text-gray-800 dark:text-gray-100">{entry.module?.moduleName || 'Unknown Module'}</p>
+                                <p className="text-xs font-semibold text-gray-500 flex items-center gap-1.5 mt-0.5">
+                                  <GraduationCap className="h-3 w-3" />
+                                  {entry.class?.name || 'No class'}
+                                  {entry.classroom && (
+                                    <>
+                                      <span className="text-white/20">·</span>
+                                      <MapPin className="h-3 w-3" />
+                                      {entry.classroom.name}
+                                    </>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-xs font-bold border px-3 py-1.5 rounded-xl uppercase tracking-wider bg-primary-100/10 text-primary-100 border-primary-100/20">
+                              {formatTime(entry.startTime)} – {formatTime(entry.endTime)}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                    <button className="px-5 py-2 text-sm font-bold bg-primary-100 text-white rounded-xl shadow-neon-primary hover:scale-105 transition-all">Grade</button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/20 dark:border-slate-800/50 rounded-3xl overflow-hidden shadow-xl shadow-slate-200/50 dark:shadow-none">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">Top Performing Students</CardTitle>
-              <CardDescription className="font-medium">Students with highest grades across your courses</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="flex items-center justify-between group p-3 rounded-2xl hover:bg-primary-100/5 transition-all duration-300">
-                    <div className="flex items-center gap-4">
-                      <div className="relative">
-                        <div className="absolute -inset-1 rounded-full bg-primary-100 opacity-0 group-hover:opacity-20 blur transition-all" />
-                        <Avatar className="h-12 w-12 border-2 border-white dark:border-slate-800 shadow-sm relative z-10">
-                          <AvatarImage src={`/placeholder.svg?height=48&width=48`} />
-                          <AvatarFallback className="font-bold text-primary-100">S{i}</AvatarFallback>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* My Modules */}
+        <TabsContent value="modules" className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
+          {modulesLoading ? (
+            <div className="flex items-center justify-center h-40">
+              <div className="w-8 h-8 border-4 border-primary-100/30 border-t-primary-100 rounded-full animate-spin" />
+            </div>
+          ) : modules.length === 0 ? (
+            <Card className="bg-white/20 dark:bg-slate-900/20 border border-dashed border-white/20 rounded-3xl">
+              <CardContent className="py-16 text-center opacity-40">
+                <Layers className="w-12 h-12 mx-auto mb-3" />
+                <p className="font-bold text-sm">No modules assigned yet</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {modules.map((mod: any) => {
+                const modStudents = students.filter((s: any) => s.moduleId === mod.id)
+                const modSessions = schedule.filter((s: any) => s.moduleId === mod.id)
+                return (
+                  <Card key={mod.id}
+                    className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 rounded-2xl group hover:shadow-lg transition-all duration-300">
+                    <CardContent className="p-6 space-y-4">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2.5 rounded-xl bg-primary-100/10 border border-primary-100/20 text-primary-100 shrink-0">
+                          <BookOpen className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-sm group-hover:text-primary-100 transition-colors leading-tight">
+                            {mod.moduleName}
+                          </p>
+                          <Badge variant="outline" className="text-primary-100 border-primary-100/20 text-[10px] mt-1.5">
+                            {mod.moduleCode}
+                          </Badge>
+                        </div>
+                      </div>
+                      {mod.description && (
+                        <p className="text-xs text-muted-foreground line-clamp-2">{mod.description}</p>
+                      )}
+                      <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
+                          <Users className="w-3 h-3" />
+                          {modStudents.length} student{modStudents.length !== 1 ? 's' : ''}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
+                          <Calendar className="w-3 h-3" />
+                          {modSessions.length} session{modSessions.length !== 1 ? 's' : ''}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Students */}
+        <TabsContent value="students" className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
+          {studentsLoading ? (
+            <div className="flex items-center justify-center h-40">
+              <div className="w-8 h-8 border-4 border-primary-100/30 border-t-primary-100 rounded-full animate-spin" />
+            </div>
+          ) : students.length === 0 ? (
+            <Card className="bg-white/20 dark:bg-slate-900/20 border border-dashed border-white/20 rounded-3xl">
+              <CardContent className="py-16 text-center opacity-40">
+                <Users className="w-12 h-12 mx-auto mb-3" />
+                <p className="font-bold text-sm">No students enrolled yet</p>
+                <p className="text-xs mt-1">Students will appear here once they enroll in your modules</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/20 dark:border-slate-800/50 rounded-3xl overflow-hidden shadow-xl">
+              <CardHeader className="border-b border-white/10">
+                <CardTitle className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+                  Enrolled Students
+                </CardTitle>
+                <CardDescription className="font-medium">{uniqueStudentIds.size} student{uniqueStudentIds.size !== 1 ? 's' : ''} across your modules</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-white/5">
+                  {students.slice(0, 20).map((student: any, i: number) => (
+                    <div key={`${student.studentId}-${student.moduleId}-${i}`}
+                      className="flex items-center justify-between p-5 hover:bg-white/10 transition-colors group">
+                      <div className="flex items-center gap-4">
+                        <Avatar className="h-10 w-10 border-2 border-white/20 dark:border-slate-700">
+                          <AvatarFallback className="font-bold text-primary-100 bg-primary-100/10 text-xs">
+                            {student.firstName?.[0]}{student.lastName?.[0]}
+                          </AvatarFallback>
                         </Avatar>
+                        <div>
+                          <p className="font-bold text-sm group-hover:text-primary-100 transition-colors">
+                            {student.firstName} {student.lastName}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">
+                            {student.email}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-bold text-gray-800 dark:text-gray-100">Student Name {i}</p>
-                        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">ID: STU-{1000 + i}</p>
+                      <div className="flex items-center gap-3">
+                        <div className="hidden sm:flex flex-col items-end gap-1">
+                          <Badge variant="outline" className="text-primary-100 border-primary-100/20 text-[10px]">
+                            {student.moduleCode}
+                          </Badge>
+                          {student.levelName && (
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">{student.levelName}</span>
+                          )}
+                        </div>
+                        <UserCheck className="w-4 h-4 text-emerald-500 opacity-60" />
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-lg font-extrabold text-primary-100">{96 - i}%</div>
-                      <div className="text-xs font-bold px-3 py-1.5 bg-emerald-100/20 text-emerald-500 border border-emerald-500/20 rounded-xl uppercase tracking-wider">
-                        A{i === 1 ? "+" : ""}
-                      </div>
-                    </div>
+                  ))}
+                </div>
+                {students.length > 20 && (
+                  <div className="p-4 border-t border-white/5 text-center">
+                    <p className="text-xs font-bold text-muted-foreground">
+                      Showing 20 of {students.length} enrollment records
+                    </p>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>
@@ -274,10 +434,6 @@ function SummaryCard({ title, value, description, icon, color, glow, trend }: an
           <Activity className="w-3 h-3 text-primary-100/20" />
         </div>
       </CardContent>
-      {/* Ghost background decoration */}
-      <div className="absolute -bottom-4 -right-4 opacity-5 pointer-events-none group-hover:scale-150 transition-transform duration-1000">
-        {icon}
-      </div>
     </Card>
   )
 }

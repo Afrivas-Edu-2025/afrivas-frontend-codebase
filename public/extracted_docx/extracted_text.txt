@@ -1,0 +1,101 @@
+AFRIVAS LLC Legal &amp; Security Compliance Document
+1. Terms of Service
+1.1 Introduction
+Welcome to Afrivas LLC, an EdTech platform providing digital learning resources, online courses, and educational tools (“Services”). By accessing or using Afrivas’ platform, mobile application, or website (“Platform”), you agree to these Terms of Service (“Terms”). Please read them carefully.
+1.2 Acceptance of Terms
+By creating an account, accessing, or using Afrivas Services, you confirm that you:
+Are at least 13 years old (Peter and Edward pls check the age for social media in Sierra Leone),
+Have read, understood, and agreed to these Terms,
+Will comply with all applicable local and international laws.
+If you do not agree, do not use the Platform.
+1.3 User Accounts
+Users must register with accurate information. You are responsible for maintaining the confidentiality of your login credentials and for all activities under your account.
+Afrivas reserves the right to suspend or terminate accounts for:
+Misuse, violation of policies, or illegal activity,
+Corruption, malpractice and bribery,
+Attempting to compromise system security,
+Fraudulent behavior or content misuse.
+1.4 Intellectual Property
+All materials, trademarks, code, design, and educational content on Afrivas are owned by Afrivas EdTech Ltd. or its licensors. You may not copy, distribute, or modify Afrivas content without written permission.
+1.5 User-Generated Content
+You may post comments, projects, tests, exams, or assignments. By doing so, you grant Afrivas a non-exclusive, royalty-free license to use, display, and promote such content within the Platform.
+1.6 Limitation of Liability
+Afrivas is not liable for:
+Service interruptions or technical errors,
+Loss of data or unauthorized access,
+Damages resulting from reliance on information provided on the Platform.
+Use Afrivas Services at your own risk.
+1.7 Termination
+Afrivas may suspend or terminate your account without notice if you breach these Terms. Upon termination, all rights granted to you will cease immediately.
+2. Privacy Policy
+2.1 Data We Collect
+Afrivas collects:
+Personal information: Name, email, phone number, date of birth (if required for age verification),
+Usage data: Browser type, device info, IP address, course progress,
+Payment data: Billing details (processed securely via third-party payment processors such as bank or any via online payment).
+2.2 How We Use Data
+We use your data to:
+Provide and improve learning services,
+Personalize content and recommendations,
+Communicate important updates and promotions (with your consent),
+Ensure system security and fraud prevention.
+2.3 Legal Basis for Processing (GDPR)
+Afrivas processes personal data under the following bases:
+Consent,
+Contractual necessity,
+Legitimate interest,
+Legal compliance.
+2.4 Data Retention
+We retain user data as long as necessary to fulfill the purposes above, or as required by law. Users may request data deletion at any time (check salone law about data usage).
+2.5 Data Sharing
+Afrivas does not sell personal data. We share limited data with:
+Authorized service providers (e.g., cloud hosting, payment gateways),
+Legal authorities, when required by law.
+2.6 International Data Transfers
+If you access Afrivas from outside the data storage region, your data may be transferred internationally with adequate protection measures under GDPR and other regulations.
+2.7 User Rights
+Users have the right to:
+Access, correct, or delete their data,
+Withdraw consent,
+Request data portability,
+File a complaint with their local Data Protection Authority.
+Contact: afrivasllcslltd@gmail.com (privacy@afrivas.com) in the future to create a support email team
+3. Cookie Policy
+3.1 What Are Cookies
+Cookies are small text files stored on your device to enhance user experience and track preferences.
+3.2 Types of Cookies Used
+Essential Cookies: Necessary for login, navigation, and platform functionality.
+Analytics Cookies: Help us understand usage and improve our services.
+Marketing Cookies: Used to personalize content and ads (with user consent).
+3.3 Managing Cookies
+You can modify cookie settings in your browser or decline non-essential cookies via our consent banner.
+For details, contact afrivasllcslltd@gmail.com (cookies@afrivas.com) in the future to create a support email team
+4. Data Protection &amp; Security Compliance
+4.1 Security Measures
+Afrivas employs industry-standard security controls:
+Encryption: SSL/TLS for all data transmissions.
+Access Controls: Role-based permissions for employees.
+Data Backup: Regular encrypted backups on secure cloud servers.
+Vulnerability Testing: Routine penetration and risk assessments.
+4.2 Compliance Frameworks
+Afrivas aligns with: (check salone law about social edtech usage).
+GDPR (EU General Data Protection Regulation)
+CCPA (California Consumer Privacy Act)
+FERPA (U.S. Family Educational Rights and Privacy Act) for educational records.
+COPPA (Children’s Online Privacy Protection Act) for minors under 13 (where applicable).
+4.3 Breach Notification
+In the event of a data breach, Afrivas will notify affected users and regulatory authorities within 72 hours, following any country of operations standards.
+5. Accessibility Policy
+5.1 Commitment to Inclusion
+Afrivas is committed to making its learning platform accessible to all users, including those with disabilities.
+5.2 Accessibility Standards
+Our design follows:
+Afrivas follow Sierra Leone standard of operation
+Support for screen readers and keyboard navigation,
+Adjustable text sizes, captions, and high-contrast mode.
+5.3 Reporting Accessibility Issues
+Users can report accessibility barriers at afrivasllcslltd@gmail.com (accessibility@afrivas.com) in the future to create a support email team.Afrivas reviews and resolves issues promptly.
+6. Contact Information
+For questions, legal requests, or concerns:Afrivas LLC EdTech Ltd.Email: afrivasllcslltd@gmail.comWebsite: https://www.afrivas.org/ Address: 8150 n 61st Ave Arizona USA ( you can find an address in sierra leone if you want)
+7. Updates to This Policy
+Afrivas may update these terms periodically. Continued use of the platform after updates means acceptance of the revised version. The latest version will always be available on our website.

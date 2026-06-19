@@ -100,10 +100,10 @@ export default function AdminDashboard() {
           <div className="p-4 rounded-full bg-rose-500/10 text-rose-500 w-fit mx-auto mb-6">
             <AlertCircle className="h-12 w-12" />
           </div>
-          <h2 className="text-2xl font-bold text-rose-500 tracking-tight mb-2">Protocol Failure</h2>
-          <p className="text-muted-foreground font-medium text-sm mb-8 leading-relaxed">System diagnostics failed to synchronize with the institutional core. Please re-initialize authentication.</p>
+          <h2 className="text-2xl font-bold text-rose-500 tracking-tight mb-2">Something went wrong</h2>
+          <p className="text-muted-foreground font-medium text-sm mb-8 leading-relaxed">We couldn't load your dashboard data. Please refresh the page to try again.</p>
           <Button variant="outline" className="rounded-2xl border-rose-500/20 text-rose-500 hover:bg-rose-500/10 font-bold text-sm" onClick={() => window.location.reload()}>
-            Re-Initialize Sync
+            Refresh Page
           </Button>
         </div>
       </div>
@@ -111,10 +111,10 @@ export default function AdminDashboard() {
   }
 
   const statCards = [
-    { title: "Student Population", value: formatNumber(overview.totalStudents), icon: Users, desc: "Active Scholastic Nodes", color: "text-blue-500", glow: "shadow-blue-500/10", trend: "+42 Ingress" },
-    { title: "Curriculum Units", value: formatNumber(overview.totalCourses), icon: BookOpen, desc: "Verified Academic Tracks", color: "text-purple-500", glow: "shadow-purple-500/10", trend: "+8 Structural" },
-    { title: "Faculty Leads", value: formatNumber(overview.totalFaculties), icon: LayoutGrid, desc: "Primary Academic Sectors", color: "text-amber-500", glow: "shadow-amber-500/10", trend: "0 Deviation" },
-    { title: "Completion Index", value: `${overview.completionRate}%`, icon: Award, desc: "Mastery Fulfillment Rate", color: "text-emerald-500", glow: "shadow-emerald-500/10", trend: "+2.4% Momentum" },
+    { title: "Total Students", value: formatNumber(overview.totalStudents), icon: Users, desc: "Active students this term", color: "text-blue-500", glow: "shadow-blue-500/10", trend: "+42 this month" },
+    { title: "Total Courses", value: formatNumber(overview.totalCourses), icon: BookOpen, desc: "Active courses running", color: "text-purple-500", glow: "shadow-purple-500/10", trend: "+8 added" },
+    { title: "Faculties", value: formatNumber(overview.totalFaculties), icon: LayoutGrid, desc: "Academic departments", color: "text-amber-500", glow: "shadow-amber-500/10", trend: "No change" },
+    { title: "Completion Rate", value: `${overview.completionRate}%`, icon: Award, desc: "Courses completed on time", color: "text-emerald-500", glow: "shadow-emerald-500/10", trend: "+2.4% this term" },
   ];
 
   return (
@@ -127,14 +127,14 @@ export default function AdminDashboard() {
         <div className="space-y-2">
           <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-primary-100/10 dark:bg-primary-100/5 backdrop-blur-md border border-primary-100/20 text-[11px] font-bold text-primary-100 tracking-wide">
             <Activity className="w-3.5 h-3.5 mr-2" />
-            Institutional Overview
+            School Overview
           </div>
           <TextGenerateEffect
-            words="Command Control"
+            words="Admin Dashboard"
             className="text-5xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent"
           />
           <p className="text-muted-foreground font-medium max-w-xl text-lg">
-            Atmospheric telemetry of institutional performance metrics, pedagogical trajectory, and structural health diagnostics.
+            A real-time look at your school's performance, staff, and student activity.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -180,9 +180,9 @@ export default function AdminDashboard() {
 
       <Tabs defaultValue="overview" className="space-y-10">
         <TabsList className="bg-white/30 dark:bg-slate-900/30 backdrop-blur-2xl border border-white/20 dark:border-slate-800/50 p-1.5 rounded-3xl h-16 flex w-fit">
-          <TabsTrigger value="overview" className="rounded-2xl px-10 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm">Registry</TabsTrigger>
+          <TabsTrigger value="overview" className="rounded-2xl px-10 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm">Overview</TabsTrigger>
           <TabsTrigger value="analytics" className="rounded-2xl px-10 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm">Analytics</TabsTrigger>
-          <TabsTrigger value="reports" className="rounded-2xl px-10 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm">Documentation</TabsTrigger>
+          <TabsTrigger value="reports" className="rounded-2xl px-10 py-3 data-[state=active]:bg-primary-100 data-[state=active]:text-white data-[state=active]:shadow-neon-primary transition-all duration-500 font-bold text-sm">Reports</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-10 animate-in fade-in zoom-in-95 duration-500">
@@ -191,8 +191,8 @@ export default function AdminDashboard() {
               <CardHeader className="p-8 border-b border-white/5 bg-white/5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent italic">Enrollment Heuristics</CardTitle>
-                    <CardDescription className="text-xs font-bold mt-1">Temporal analysis of structural ingress (12 months)</CardDescription>
+                    <CardTitle className="text-xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent italic">Enrollment Trends</CardTitle>
+                    <CardDescription className="text-xs font-bold mt-1">Student enrollment over the past 12 months</CardDescription>
                   </div>
                   <Badge variant="glass" className={cn("bg-primary-100/10 text-primary-100 border-primary-100/20 px-3 font-bold text-[10px] flex items-center gap-1.5", isFetching && "opacity-70")}>
                     {isFetching ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" />}
@@ -215,8 +215,8 @@ export default function AdminDashboard() {
               <CardHeader className="p-8 border-b border-white/5 bg-white/5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent italic">Sector Distribution</CardTitle>
-                    <CardDescription className="text-xs font-bold mt-1">Weighted metric by academic department</CardDescription>
+                    <CardTitle className="text-xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent italic">Department Breakdown</CardTitle>
+                    <CardDescription className="text-xs font-bold mt-1">Students by department</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -235,8 +235,8 @@ export default function AdminDashboard() {
             <Card className="lg:col-span-1 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 rounded-[2.5rem] overflow-hidden shadow-2xl">
               <CardHeader className="p-8 border-b border-white/5 bg-white/5 flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle className="text-xl font-bold tracking-tight text-primary-100">Temporal Logs</CardTitle>
-                  <CardDescription className="text-xs font-bold mt-1 italic">Real-time institutional activity</CardDescription>
+                  <CardTitle className="text-xl font-bold tracking-tight text-primary-100">Recent Activity</CardTitle>
+                  <CardDescription className="text-xs font-bold mt-1 italic">What's happening right now</CardDescription>
                 </div>
                 {isFetching
                   ? <Loader2 size={18} className="text-primary-100 opacity-60 animate-spin" />
@@ -268,12 +268,12 @@ export default function AdminDashboard() {
                   ) : (
                     <div className="text-center py-20 opacity-20 grayscale">
                       <Layers size={40} className="mx-auto mb-4" />
-                      <p className="text-xs font-bold tracking-widest">Zero Activity Detected</p>
+                      <p className="text-xs font-bold tracking-widest">No activity yet</p>
                     </div>
                   )}
                 </div>
                 <Button variant="ghost" className="w-full mt-6 rounded-xl font-bold text-xs text-primary-100 hover:bg-primary-100/10">
-                  Audit Detailed Activity Logs
+                  View All Activity
                 </Button>
               </CardContent>
             </Card>
@@ -282,8 +282,8 @@ export default function AdminDashboard() {
               <CardHeader className="p-8 border-b border-white/5 bg-white/5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">Efficiency Metrics</CardTitle>
-                    <CardDescription className="text-xs font-bold mt-1">Scholastic output fulfillment by curriculum node</CardDescription>
+                    <CardTitle className="text-xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">Course Completion</CardTitle>
+                    <CardDescription className="text-xs font-bold mt-1">Completion rates by course</CardDescription>
                   </div>
                   <Target size={20} className="text-emerald-500 opacity-20" />
                 </div>
@@ -303,10 +303,10 @@ export default function AdminDashboard() {
         <TabsContent value="reports" className="space-y-8 animate-in fade-in zoom-in-95 duration-500 pb-10">
           <div className="grid gap-8 md:grid-cols-2 px-1">
             {[
-              { title: "Institutional Quarter Node", date: "May 15, 2026", type: "Summative", icon: <FileText className="h-6 w-6" />, color: "text-blue-500", bg: "bg-blue-500/10" },
-              { title: "Faculty Resource Allocation", date: "May 12, 2026", type: "Structural", icon: <Layers className="h-6 w-6" />, color: "text-purple-500", bg: "bg-purple-500/10" },
-              { title: "Scholastic Momentum Drift", date: "May 08, 2026", type: "Predictive", icon: <TrendingUp className="h-6 w-6" />, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-              { title: "Security Matrix Audit", date: "May 02, 2026", type: "Verified", icon: <ShieldCheck className="h-6 w-6" />, color: "text-indigo-500", bg: "bg-indigo-500/10" },
+              { title: "Quarterly Report", date: "May 15, 2026", type: "Summary", icon: <FileText className="h-6 w-6" />, color: "text-blue-500", bg: "bg-blue-500/10" },
+              { title: "Faculty Resources", date: "May 12, 2026", type: "Staffing", icon: <Layers className="h-6 w-6" />, color: "text-purple-500", bg: "bg-purple-500/10" },
+              { title: "Student Progress Trends", date: "May 08, 2026", type: "Academic", icon: <TrendingUp className="h-6 w-6" />, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+              { title: "Security Audit", date: "May 02, 2026", type: "Compliance", icon: <ShieldCheck className="h-6 w-6" />, color: "text-indigo-500", bg: "bg-indigo-500/10" },
             ].map((report, i) => (
               <div key={i} className="flex items-center justify-between p-8 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 rounded-[2.5rem] group hover:bg-white dark:hover:bg-slate-800 transition-all duration-500 hover:shadow-2xl hover:shadow-primary-100/5 relative overflow-hidden">
                 <div className="flex items-center gap-6 relative z-10">
@@ -316,14 +316,14 @@ export default function AdminDashboard() {
                   <div>
                     <h3 className="text-lg font-bold tracking-tight group-hover:text-primary-100 transition-colors leading-tight">{report.title}</h3>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="text-[11px] font-bold text-muted-foreground">{report.type} Protocol</span>
+                      <span className="text-[11px] font-bold text-muted-foreground">{report.type}</span>
                       <span className="w-1 h-1 rounded-full bg-white/10" />
-                      <span className="text-[10px] font-medium text-muted-foreground opacity-60">Synchronized: {report.date}</span>
+                      <span className="text-[10px] font-medium text-muted-foreground opacity-60">Issued: {report.date}</span>
                     </div>
                   </div>
                 </div>
                 <Button variant="premium" className="px-6 h-11 rounded-2xl text-[11px] font-bold shadow-neon-primary hover:scale-105 transition-all relative z-10">
-                  Retrieve Asset
+                  Download
                 </Button>
                 {/* Decoration */}
                 <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-5 transition-opacity">
@@ -334,8 +334,8 @@ export default function AdminDashboard() {
           </div>
           <Card className="bg-primary-100/5 border border-dashed border-primary-100/20 rounded-[2.5rem] p-12 text-center group cursor-pointer hover:bg-primary-100/10 transition-colors">
             <LayoutGrid size={40} className="mx-auto text-primary-100 opacity-30 mb-6 group-hover:rotate-45 transition-transform duration-700" />
-            <h3 className="text-xl font-bold tracking-tight text-primary-100">Global Archive Sync</h3>
-            <p className="max-w-md mx-auto text-sm font-medium opacity-60 mt-2 leading-relaxed">Initialize a comprehensive diagnostic dump of all institutional assets into an encrypted neural archive.</p>
+            <h3 className="text-xl font-bold tracking-tight text-primary-100">Download Full Report</h3>
+            <p className="max-w-md mx-auto text-sm font-medium opacity-60 mt-2 leading-relaxed">Export a complete report of all school data in one file.</p>
           </Card>
         </TabsContent>
       </Tabs>

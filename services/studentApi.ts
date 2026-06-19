@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5050/api/v1';
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5050/api/v1';
 
 const getToken = (): string | null => {
   if (typeof window === 'undefined') return null;
@@ -31,9 +31,10 @@ export type EnrolledCourse = {
     id: number;
     moduleName: string;
     moduleCode: string;
-    creditHour: number;
-    lecturer?: { user: { firstName: string; lastName: string } };
-    class: Array<{ id: number; day: string; time: string; semester: { semesterName: string; year: number } }>;
+    moduleLecturers?: Array<{
+      lecturer: { user: { firstName: string; lastName: string } };
+    }>;
+    timeTable?: Array<{ day: string; startTime: string; endTime: string }>;
   };
   semester: { semesterName: string; year: number };
 };
@@ -116,14 +117,20 @@ export type Note = {
 export type TimetableEntry = {
   id: number;
   moduleId: number;
+  classId: number;
   day: string;
-  time: string;
+  startTime: string;
+  endTime: string;
   module: {
+    id: number;
     moduleName: string;
     moduleCode: string;
-    lecturer?: { user: { firstName: string; lastName: string } };
+    moduleLecturers?: Array<{
+      lecturer: { user: { firstName: string; lastName: string } };
+    }>;
   };
-  semester: { semesterName: string; year: number };
+  class?: { id: number; name: string; code: string };
+  classroom?: { name: string; location: string | null } | null;
 };
 
 export type StudentDashboardStats = {

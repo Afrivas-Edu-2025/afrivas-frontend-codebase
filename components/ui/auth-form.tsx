@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, CheckCircle, Users, Shield, Loader2 } from "lucide-react";
+import { Eye, EyeOff, CheckCircle, Users, Shield, Loader2, AlertCircle, X } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { useLoginUserMutation } from "@/services/authServices";
 import { useAuth } from "@/components/auth-context";
@@ -18,17 +18,29 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+function sanitizeErrorMessage(raw: string): string {
+  // Hide raw Prisma / database internals from the user
+  if (/prisma|database server|connection pool|supabase|pooler|aws-/i.test(raw)) {
+    return "We are having trouble connecting to the server. Please try again in a moment.";
+  }
+  if (/invalid.*invocation/i.test(raw)) {
+    return "A server error occurred. Please try again later.";
+  }
+  return raw;
+}
+
 export function AuthForm() {
   const router = useRouter();
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
 
-  const [loginUser, { isLoading, error }] = useLoginUserMutation();
+  const [loginUser, { isLoading }] = useLoginUserMutation();
 
   const parseLoginError = (err: any): { statusCode?: number; message: string; fieldErrors: Record<string, string> } => {
     const statusCode = err?.status ?? err?.originalStatus;
@@ -57,6 +69,7 @@ export function AuthForm() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    if (submitError) setSubmitError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,6 +97,7 @@ export function AuthForm() {
       return;
     }
 
+    setSubmitError(null);
     try {
       // Ensure stale/invalid tokens do not interfere with a fresh login attempt.
       localStorage.removeItem("authToken");
@@ -130,10 +144,12 @@ export function AuthForm() {
     } catch (err: any) {
       const normalized = parseLoginError(err);
       setFieldErrors(normalized.fieldErrors);
+      const friendly = sanitizeErrorMessage(normalized.message);
+      setSubmitError(friendly);
       toast({
         variant: "destructive",
-        title: normalized.statusCode ? `Error (${normalized.statusCode})` : "Error",
-        description: normalized.message,
+        title: "Sign In Failed",
+        description: friendly,
       });
     }
   };
@@ -255,10 +271,19 @@ export function AuthForm() {
               )}
             </Button>
 
-            {/* Error Display */}
-            {error && (
-              <div className="text-center mt-4 text-sm text-red-600">
-                {parseLoginError(error).message}
+            {/* Error Banner */}
+            {submitError && (
+              <div className="flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-50 dark:bg-red-500/10 px-4 py-3">
+                <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                <p className="text-sm font-medium text-red-700 dark:text-red-400 flex-1 leading-snug">{submitError}</p>
+                <button
+                  type="button"
+                  onClick={() => setSubmitError(null)}
+                  className="text-red-400 hover:text-red-600 transition-colors flex-shrink-0"
+                  aria-label="Dismiss"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
             )}
 
